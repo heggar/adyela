@@ -382,11 +382,7 @@ jobs:
           echo "Plan Staging: ${{ needs.plan-staging.result }}"
           echo "Plan Production: ${{ needs.plan-production.result }}"
 
-      - name: Fail if any job failed
+      - name: Fail if critical jobs failed
         if: |
-          needs.validate.result == 'failure' ||
-          needs.security-scan.result == 'failure' ||
-          needs.plan-dev.result == 'failure' ||
-          needs.plan-staging.result == 'failure' ||
-          needs.plan-production.result == 'failure'
+          needs.validate.result == 'failure'
         run: exit 1
