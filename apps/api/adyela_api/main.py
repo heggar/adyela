@@ -1,5 +1,7 @@
 """FastAPI application entry point."""
 
+import logging
+
 import structlog
 from fastapi import FastAPI, status
 from fastapi.middleware.cors import CORSMiddleware
@@ -9,8 +11,9 @@ from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
 
 from adyela_api.config import get_settings
-from adyela_api.presentation.api.v1 import api_router
-from adyela_api.presentation.middleware import LoggingMiddleware, TenantMiddleware
+
+# Initialize settings first
+settings = get_settings()
 
 # Configure structured logging
 structlog.configure(
@@ -20,18 +23,18 @@ structlog.configure(
         structlog.processors.StackInfoRenderer(),
         structlog.dev.set_exc_info,
         structlog.processors.TimeStamper(fmt="iso"),
-        structlog.dev.ConsoleRenderer() if get_settings().debug else structlog.processors.JSONRenderer(),
+        structlog.dev.ConsoleRenderer() if settings.debug else structlog.processors.JSONRenderer(),
     ],
-    wrapper_class=structlog.make_filtering_bound_logger(get_settings().log_level),
+    wrapper_class=structlog.make_filtering_bound_logger(logging.INFO),
     context_class=dict,
     logger_factory=structlog.PrintLoggerFactory(),
     cache_logger_on_first_use=True,
 )
 
-logger = structlog.get_logger()
+from adyela_api.presentation.api.v1 import api_router
+from adyela_api.presentation.middleware import LoggingMiddleware, TenantMiddleware
 
-# Initialize settings
-settings = get_settings()
+logger = structlog.get_logger()
 
 # Initialize rate limiter
 limiter = Limiter(key_func=get_remote_address)
