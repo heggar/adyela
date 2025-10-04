@@ -1,0 +1,32 @@
+# CODEOWNERS
+# Cada línea es un patrón de archivo seguido de uno o más owners.
+
+# Owners por defecto
+* @adyela/core-team
+
+# Backend
+/apps/api/ @adyela/backend-team
+/apps/api/src/domain/ @adyela/backend-team @adyela/architects
+
+# Frontend
+/apps/web/ @adyela/frontend-team
+/packages/ui/ @adyela/frontend-team
+
+# Infraestructura
+/infra/ @adyela/devops-team
+/.github/workflows/ @adyela/devops-team
+
+# Shared packages
+/packages/core/ @adyela/backend-team @adyela/frontend-team
+/packages/config/ @adyela/core-team
+
+# Documentación
+/docs/ @adyela/architects
+/docs/adrs/ @adyela/architects
+*.md @adyela/core-team
+
+# Configuración crítica
+package.json @adyela/core-team
+pnpm-workspace.yaml @adyela/core-team
+turbo.json @adyela/core-team
+.github/ @adyela/core-team
