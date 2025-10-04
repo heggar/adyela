@@ -1,0 +1,42 @@
+{
+  "common": {
+    "loading": "Cargando...",
+    "error": "Error",
+    "success": "Éxito",
+    "cancel": "Cancelar",
+    "save": "Guardar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "search": "Buscar",
+    "filter": "Filtrar",
+    "logout": "Cerrar sesión"
+  },
+  "auth": {
+    "login": "Iniciar sesión",
+    "email": "Correo electrónico",
+    "password": "Contraseña",
+    "forgotPassword": "¿Olvidaste tu contraseña?",
+    "welcomeBack": "¡Bienvenido de nuevo!",
+    "loginToContinue": "Inicia sesión para continuar"
+  },
+  "dashboard": {
+    "title": "Panel de control",
+    "upcomingAppointments": "Próximas citas",
+    "todayAppointments": "Citas de hoy",
+    "totalPatients": "Total de pacientes"
+  },
+  "appointments": {
+    "title": "Citas",
+    "new": "Nueva cita",
+    "upcoming": "Próximas",
+    "past": "Pasadas",
+    "patient": "Paciente",
+    "doctor": "Doctor",
+    "date": "Fecha",
+    "time": "Hora",
+    "status": "Estado",
+    "type": "Tipo",
+    "videoCall": "Videollamada",
+    "inPerson": "Presencial"
+  }
+}
