@@ -1,0 +1,33 @@
+import { useTranslation } from "react-i18next";
+
+export function DashboardPage() {
+  const { t } = useTranslation();
+
+  return (
+    <div>
+      <h1 className="mb-6 text-3xl font-bold text-secondary-900">
+        {t("dashboard.title")}
+      </h1>
+      <div className="grid gap-6 md:grid-cols-3">
+        <div className="card p-6">
+          <h3 className="mb-2 text-sm font-medium text-secondary-600">
+            {t("dashboard.todayAppointments")}
+          </h3>
+          <p className="text-3xl font-bold text-secondary-900">12</p>
+        </div>
+        <div className="card p-6">
+          <h3 className="mb-2 text-sm font-medium text-secondary-600">
+            {t("dashboard.upcomingAppointments")}
+          </h3>
+          <p className="text-3xl font-bold text-secondary-900">45</p>
+        </div>
+        <div className="card p-6">
+          <h3 className="mb-2 text-sm font-medium text-secondary-600">
+            {t("dashboard.totalPatients")}
+          </h3>
+          <p className="text-3xl font-bold text-secondary-900">328</p>
+        </div>
+      </div>
+    </div>
+  );
+}
