@@ -1,0 +1,454 @@
+name: CD - Staging
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to deploy (e.g., v1.2.3 or commit SHA)"
+        required: true
+        type: string
+      skip_e2e:
+        description: "Skip E2E tests"
+        required: false
+        type: boolean
+        default: false
+
+env:
+  ENVIRONMENT: staging
+  GCP_REGION: us-central1
+  API_SERVICE_NAME: adyela-api-staging
+  WEB_BUCKET_NAME: adyela-web-staging
+
+permissions:
+  contents: read
+  id-token: write
+  deployments: write
+
+jobs:
+  approval:
+    name: Deployment Approval
+    runs-on: ubuntu-latest
+    environment:
+      name: staging-approval
+    steps:
+      - name: Manual approval checkpoint
+        run: |
+          echo "Deploying version: ${{ inputs.version }}"
+          echo "Skip E2E: ${{ inputs.skip_e2e }}"
+
+  build-api:
+    name: Build API Docker Image
+    runs-on: ubuntu-latest
+    needs: [approval]
+    outputs:
+      image-tag: ${{ steps.meta.outputs.tags }}
+      image-digest: ${{ steps.build.outputs.digest }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.version }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT_STAGING }}
+
+      - name: Configure Docker for GCR
+        run: |
+          gcloud auth configure-docker ${{ env.GCP_REGION }}-docker.pkg.dev
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID_STAGING }}/adyela/${{ env.API_SERVICE_NAME }}
+          tags: |
+            type=raw,value=${{ inputs.version }}
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest
+
+      - name: Build and push Docker image
+        id: build
+        uses: docker/build-push-action@v5
+        with:
+          context: apps/api
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            ENVIRONMENT=${{ env.ENVIRONMENT }}
+          provenance: true
+          sbom: true
+
+      - name: Sign container image
+        if: ${{ secrets.COSIGN_PRIVATE_KEY != '' }}
+        run: |
+          cosign sign --key env://COSIGN_PRIVATE_KEY \
+            ${{ env.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID_STAGING }}/adyela/${{ env.API_SERVICE_NAME }}@${{ steps.build.outputs.digest }}
+        env:
+          COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
+
+  deploy-api:
+    name: Deploy API to Cloud Run
+    runs-on: ubuntu-latest
+    needs: [build-api]
+    environment:
+      name: staging
+      url: ${{ steps.deploy.outputs.url }}
+    outputs:
+      api-url: ${{ steps.deploy.outputs.url }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.version }}
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT_STAGING }}
+
+      - name: Setup GCP SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Deploy to Cloud Run
+        id: deploy
+        run: |
+          gcloud run deploy ${{ env.API_SERVICE_NAME }} \
+            --image ${{ needs.build-api.outputs.image-tag }} \
+            --region ${{ env.GCP_REGION }} \
+            --platform managed \
+            --allow-unauthenticated \
+            --set-env-vars="ENVIRONMENT=${{ env.ENVIRONMENT }},VERSION=${{ inputs.version }}" \
+            --set-secrets="SECRET_KEY=api-secret-key:latest,FIREBASE_PROJECT_ID=firebase-project-id:latest" \
+            --min-instances=1 \
+            --max-instances=20 \
+            --memory=1Gi \
+            --cpu=2 \
+            --timeout=300s \
+            --concurrency=80 \
+            --port=8000 \
+            --service-account=${{ secrets.GCP_SERVICE_ACCOUNT_STAGING }} \
+            --vpc-connector=adyela-vpc-connector \
+            --labels="environment=staging,version=${{ inputs.version }},deployed-by=github-actions"
+
+          URL=$(gcloud run services describe ${{ env.API_SERVICE_NAME }} --region ${{ env.GCP_REGION }} --format='value(status.url)')
+          echo "url=$URL" >> $GITHUB_OUTPUT
+
+      - name: Wait for deployment stabilization
+        run: |
+          echo "Waiting for Cloud Run service to stabilize..."
+          sleep 30
+
+      - name: Verify deployment health
+        run: |
+          MAX_RETRIES=5
+          RETRY_COUNT=0
+
+          while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+            if curl -f ${{ steps.deploy.outputs.url }}/health; then
+              echo "Health check passed"
+              exit 0
+            fi
+
+            RETRY_COUNT=$((RETRY_COUNT + 1))
+            echo "Health check failed. Retry $RETRY_COUNT/$MAX_RETRIES"
+            sleep 10
+          done
+
+          echo "Health check failed after $MAX_RETRIES retries"
+          exit 1
+
+  build-web:
+    name: Build Web Application
+    runs-on: ubuntu-latest
+    needs: [approval]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.version }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build application
+        working-directory: apps/web
+        env:
+          VITE_API_URL: ${{ secrets.VITE_API_URL_STAGING }}
+          VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
+          VITE_FIREBASE_PROJECT_ID: ${{ secrets.VITE_FIREBASE_PROJECT_ID }}
+          VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}
+          VITE_FIREBASE_STORAGE_BUCKET: ${{ secrets.VITE_FIREBASE_STORAGE_BUCKET }}
+          VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}
+          VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
+          VITE_JITSI_DOMAIN: meet.jit.si
+          VITE_ENV: ${{ env.ENVIRONMENT }}
+        run: pnpm build
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-dist-staging
+          path: apps/web/dist
+          retention-days: 7
+
+  deploy-web:
+    name: Deploy Web to GCS + CDN
+    runs-on: ubuntu-latest
+    needs: [build-web, deploy-api]
+    environment:
+      name: staging
+      url: https://staging.adyela.com
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.version }}
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: web-dist-staging
+          path: dist
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT_STAGING }}
+
+      - name: Setup GCP SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Backup current version
+        run: |
+          BACKUP_DIR="gs://${{ env.WEB_BUCKET_NAME }}-backups/$(date +%Y%m%d-%H%M%S)"
+          gsutil -m cp -r gs://${{ env.WEB_BUCKET_NAME }}/* $BACKUP_DIR/ || true
+          echo "Backup created at: $BACKUP_DIR"
+
+      - name: Upload to GCS
+        run: |
+          gsutil -m rsync -r -d dist gs://${{ env.WEB_BUCKET_NAME }}
+
+          # Set cache control headers
+          gsutil -m setmeta -h "Cache-Control:public, max-age=31536000, immutable" \
+            "gs://${{ env.WEB_BUCKET_NAME }}/assets/**"
+
+          gsutil -m setmeta -h "Cache-Control:public, max-age=0, must-revalidate" \
+            "gs://${{ env.WEB_BUCKET_NAME }}/index.html"
+
+          gsutil -m setmeta -h "Cache-Control:public, max-age=3600" \
+            "gs://${{ env.WEB_BUCKET_NAME }}/manifest.webmanifest"
+
+          # Set metadata
+          gsutil -m setmeta -h "x-goog-meta-version:${{ inputs.version }}" \
+            -h "x-goog-meta-deployed-at:$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            "gs://${{ env.WEB_BUCKET_NAME }}/index.html"
+
+      - name: Invalidate CDN cache
+        run: |
+          gcloud compute url-maps invalidate-cdn-cache adyela-web-lb-staging \
+            --path "/*" \
+            --async
+
+  e2e-tests:
+    name: Run E2E Tests
+    runs-on: ubuntu-latest
+    needs: [deploy-api, deploy-web]
+    if: ${{ !inputs.skip_e2e }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.version }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Install dependencies
+        run: |
+          if [ -f "tests/e2e/package.json" ]; then
+            cd tests/e2e
+            pnpm install --frozen-lockfile
+          fi
+
+      - name: Install Playwright browsers
+        run: |
+          if [ -f "tests/e2e/package.json" ]; then
+            cd tests/e2e
+            pnpm exec playwright install --with-deps
+          fi
+
+      - name: Run E2E tests
+        run: |
+          if [ -f "tests/e2e/package.json" ]; then
+            cd tests/e2e
+            pnpm exec playwright test
+          else
+            echo "No E2E tests found, skipping..."
+          fi
+        env:
+          BASE_URL: https://staging.adyela.com
+          API_URL: ${{ needs.deploy-api.outputs.api-url }}
+
+      - name: Upload E2E test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-test-results
+          path: |
+            tests/e2e/playwright-report/
+            tests/e2e/test-results/
+          retention-days: 7
+
+  performance-tests:
+    name: Run Performance Tests
+    runs-on: ubuntu-latest
+    needs: [deploy-api, deploy-web]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.version }}
+
+      - name: Run k6 load tests
+        uses: grafana/k6-action@v0.3.1
+        with:
+          filename: tests/performance/load-test.js
+        env:
+          K6_CLOUD_TOKEN: ${{ secrets.K6_CLOUD_TOKEN }}
+          API_BASE_URL: ${{ needs.deploy-api.outputs.api-url }}
+
+      - name: Upload performance results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-test-results
+          path: k6-results.json
+          retention-days: 7
+
+  security-scan:
+    name: Security Scan (Deployed)
+    runs-on: ubuntu-latest
+    needs: [deploy-api, deploy-web]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.version }}
+
+      - name: Run OWASP ZAP scan
+        uses: zaproxy/action-full-scan@v0.10.0
+        with:
+          target: https://staging.adyela.com
+          rules_file_name: ".zap/rules.tsv"
+          cmd_options: "-a"
+
+      - name: Upload ZAP scan results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: zap-scan-results
+          path: report_html.html
+          retention-days: 30
+
+  notify:
+    name: Send Notifications
+    runs-on: ubuntu-latest
+    needs: [deploy-api, deploy-web, e2e-tests, performance-tests, security-scan]
+    if: always()
+    steps:
+      - name: Send Slack notification
+        if: ${{ secrets.SLACK_WEBHOOK_URL != '' }}
+        uses: slackapi/slack-github-action@v1
+        with:
+          payload: |
+            {
+              "text": "Staging Deployment ${{ needs.e2e-tests.result == 'success' && '✅ Successful' || '❌ Failed' }}",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Staging Deployment*\n${{ needs.e2e-tests.result == 'success' && ':white_check_mark: Successful' || ':x: Failed' }}"
+                  }
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Version:*\n${{ inputs.version }}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*API:*\n${{ needs.deploy-api.outputs.api-url }}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Web:*\nhttps://staging.adyela.com"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Triggered by:*\n${{ github.actor }}"
+                    }
+                  ]
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Test Results:*\n• E2E Tests: ${{ needs.e2e-tests.result }}\n• Performance: ${{ needs.performance-tests.result }}\n• Security: ${{ needs.security-scan.result }}"
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  summary:
+    name: Deployment Summary
+    runs-on: ubuntu-latest
+    needs: [deploy-api, deploy-web, e2e-tests, performance-tests, security-scan]
+    if: always()
+    steps:
+      - name: Check deployment results
+        run: |
+          echo "Deploy API: ${{ needs.deploy-api.result }}"
+          echo "Deploy Web: ${{ needs.deploy-web.result }}"
+          echo "E2E Tests: ${{ needs.e2e-tests.result }}"
+          echo "Performance Tests: ${{ needs.performance-tests.result }}"
+          echo "Security Scan: ${{ needs.security-scan.result }}"
+
+      - name: Fail if critical jobs failed
+        if: |
+          needs.deploy-api.result == 'failure' ||
+          needs.deploy-web.result == 'failure' ||
+          needs.e2e-tests.result == 'failure'
+        run: exit 1
