@@ -1,0 +1,392 @@
+name: CI - Infrastructure
+
+on:
+  pull_request:
+    paths:
+      - "infra/**"
+      - ".github/workflows/ci-infra.yml"
+  push:
+    branches:
+      - main
+      - develop
+    paths:
+      - "infra/**"
+      - ".github/workflows/ci-infra.yml"
+
+env:
+  TERRAFORM_VERSION: "1.9.0"
+  WORKING_DIR: infra
+
+permissions:
+  contents: read
+  pull-requests: write
+  id-token: write
+
+jobs:
+  validate:
+    name: Terraform Validate
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        environment: [dev, staging, production]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+
+      - name: Cache Terraform plugins
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ env.WORKING_DIR }}/environments/${{ matrix.environment }}/.terraform
+            ~/.terraform.d/plugin-cache
+          key: ${{ runner.os }}-terraform-${{ hashFiles('**/.terraform.lock.hcl') }}
+          restore-keys: |
+            ${{ runner.os }}-terraform-
+
+      - name: Terraform Init
+        working-directory: ${{ env.WORKING_DIR }}/environments/${{ matrix.environment }}
+        run: terraform init -backend=false
+
+      - name: Terraform Format Check
+        working-directory: ${{ env.WORKING_DIR }}
+        run: terraform fmt -check -recursive
+
+      - name: Terraform Validate
+        working-directory: ${{ env.WORKING_DIR }}/environments/${{ matrix.environment }}
+        run: terraform validate
+
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    needs: [validate]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run tfsec
+        uses: aquasecurity/tfsec-action@v1.0.3
+        with:
+          working_directory: ${{ env.WORKING_DIR }}
+          format: sarif
+          soft_fail: false
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload tfsec results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: tfsec.sarif
+
+      - name: Run Checkov
+        uses: bridgecrewio/checkov-action@master
+        with:
+          directory: ${{ env.WORKING_DIR }}
+          framework: terraform
+          output_format: sarif
+          output_file_path: checkov-results.sarif
+          soft_fail: false
+
+      - name: Upload Checkov results
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: checkov-results.sarif
+
+      - name: Run Terrascan
+        uses: tenable/terrascan-action@main
+        with:
+          iac_type: "terraform"
+          iac_dir: ${{ env.WORKING_DIR }}
+          policy_type: "gcp"
+          sarif_upload: true
+
+  plan-dev:
+    name: Terraform Plan (Dev)
+    runs-on: ubuntu-latest
+    needs: [validate, security-scan]
+    if: github.event_name == 'pull_request'
+    environment: development
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - name: Setup GCP SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Cache Terraform plugins
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ env.WORKING_DIR }}/environments/dev/.terraform
+            ~/.terraform.d/plugin-cache
+          key: ${{ runner.os }}-terraform-dev-${{ hashFiles('**/.terraform.lock.hcl') }}
+          restore-keys: |
+            ${{ runner.os }}-terraform-dev-
+
+      - name: Terraform Init
+        working-directory: ${{ env.WORKING_DIR }}/environments/dev
+        run: terraform init
+
+      - name: Terraform Plan
+        working-directory: ${{ env.WORKING_DIR }}/environments/dev
+        run: |
+          terraform plan -out=tfplan -no-color -input=false
+        env:
+          TF_VAR_project_id: ${{ secrets.GCP_PROJECT_ID_DEV }}
+
+      - name: Save plan to file
+        working-directory: ${{ env.WORKING_DIR }}/environments/dev
+        run: terraform show -no-color tfplan > plan.txt
+
+      - name: Comment PR with plan
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const plan = fs.readFileSync('${{ env.WORKING_DIR }}/environments/dev/plan.txt', 'utf8');
+            const maxLength = 65000;
+            const truncatedPlan = plan.length > maxLength
+              ? plan.substring(0, maxLength) + '\n\n... (truncated)'
+              : plan;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `## Terraform Plan (Dev)\n\`\`\`terraform\n${truncatedPlan}\n\`\`\``
+            });
+
+      - name: Upload plan artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: terraform-plan-dev
+          path: ${{ env.WORKING_DIR }}/environments/dev/tfplan
+          retention-days: 7
+
+  plan-staging:
+    name: Terraform Plan (Staging)
+    runs-on: ubuntu-latest
+    needs: [validate, security-scan]
+    if: github.event_name == 'pull_request'
+    environment: staging
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT_STAGING }}
+
+      - name: Setup GCP SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Cache Terraform plugins
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ env.WORKING_DIR }}/environments/staging/.terraform
+            ~/.terraform.d/plugin-cache
+          key: ${{ runner.os }}-terraform-staging-${{ hashFiles('**/.terraform.lock.hcl') }}
+          restore-keys: |
+            ${{ runner.os }}-terraform-staging-
+
+      - name: Terraform Init
+        working-directory: ${{ env.WORKING_DIR }}/environments/staging
+        run: terraform init
+
+      - name: Terraform Plan
+        working-directory: ${{ env.WORKING_DIR }}/environments/staging
+        run: |
+          terraform plan -out=tfplan -no-color -input=false
+        env:
+          TF_VAR_project_id: ${{ secrets.GCP_PROJECT_ID_STAGING }}
+
+      - name: Save plan to file
+        working-directory: ${{ env.WORKING_DIR }}/environments/staging
+        run: terraform show -no-color tfplan > plan.txt
+
+      - name: Comment PR with plan
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const plan = fs.readFileSync('${{ env.WORKING_DIR }}/environments/staging/plan.txt', 'utf8');
+            const maxLength = 65000;
+            const truncatedPlan = plan.length > maxLength
+              ? plan.substring(0, maxLength) + '\n\n... (truncated)'
+              : plan;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `## Terraform Plan (Staging)\n\`\`\`terraform\n${truncatedPlan}\n\`\`\``
+            });
+
+      - name: Upload plan artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: terraform-plan-staging
+          path: ${{ env.WORKING_DIR }}/environments/staging/tfplan
+          retention-days: 7
+
+  plan-production:
+    name: Terraform Plan (Production)
+    runs-on: ubuntu-latest
+    needs: [validate, security-scan]
+    if: github.event_name == 'pull_request'
+    environment: production
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT_PROD }}
+
+      - name: Setup GCP SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Cache Terraform plugins
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ env.WORKING_DIR }}/environments/production/.terraform
+            ~/.terraform.d/plugin-cache
+          key: ${{ runner.os }}-terraform-production-${{ hashFiles('**/.terraform.lock.hcl') }}
+          restore-keys: |
+            ${{ runner.os }}-terraform-production-
+
+      - name: Terraform Init
+        working-directory: ${{ env.WORKING_DIR }}/environments/production
+        run: terraform init
+
+      - name: Terraform Plan
+        working-directory: ${{ env.WORKING_DIR }}/environments/production
+        run: |
+          terraform plan -out=tfplan -no-color -input=false
+        env:
+          TF_VAR_project_id: ${{ secrets.GCP_PROJECT_ID_PROD }}
+
+      - name: Save plan to file
+        working-directory: ${{ env.WORKING_DIR }}/environments/production
+        run: terraform show -no-color tfplan > plan.txt
+
+      - name: Comment PR with plan
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const plan = fs.readFileSync('${{ env.WORKING_DIR }}/environments/production/plan.txt', 'utf8');
+            const maxLength = 65000;
+            const truncatedPlan = plan.length > maxLength
+              ? plan.substring(0, maxLength) + '\n\n... (truncated)'
+              : plan;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `## Terraform Plan (Production)\n\`\`\`terraform\n${truncatedPlan}\n\`\`\``
+            });
+
+      - name: Upload plan artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: terraform-plan-production
+          path: ${{ env.WORKING_DIR }}/environments/production/tfplan
+          retention-days: 7
+
+  cost-estimation:
+    name: Cost Estimation
+    runs-on: ubuntu-latest
+    needs: [plan-dev, plan-staging, plan-production]
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download plan artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: plans
+
+      - name: Setup Infracost
+        uses: infracost/actions/setup@v3
+        with:
+          api-key: ${{ secrets.INFRACOST_API_KEY }}
+
+      - name: Generate cost estimate
+        run: |
+          # This would generate cost estimates for each environment
+          # Requires Infracost setup and configuration
+          echo "Cost estimation would run here"
+
+      - name: Comment PR with cost estimate
+        uses: actions/github-script@v7
+        if: github.event_name == 'pull_request'
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `## 💰 Monthly Cost Estimate\n\nCost estimation details would appear here.`
+            });
+
+  summary:
+    name: CI Summary
+    runs-on: ubuntu-latest
+    needs: [validate, security-scan, plan-dev, plan-staging, plan-production]
+    if: always()
+    steps:
+      - name: Check job results
+        run: |
+          echo "Validate: ${{ needs.validate.result }}"
+          echo "Security Scan: ${{ needs.security-scan.result }}"
+          echo "Plan Dev: ${{ needs.plan-dev.result }}"
+          echo "Plan Staging: ${{ needs.plan-staging.result }}"
+          echo "Plan Production: ${{ needs.plan-production.result }}"
+
+      - name: Fail if any job failed
+        if: |
+          needs.validate.result == 'failure' ||
+          needs.security-scan.result == 'failure' ||
+          needs.plan-dev.result == 'failure' ||
+          needs.plan-staging.result == 'failure' ||
+          needs.plan-production.result == 'failure'
+        run: exit 1
