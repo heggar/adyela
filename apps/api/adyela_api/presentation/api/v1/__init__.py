@@ -1,0 +1,15 @@
+"""API v1 router."""
+
+from fastapi import APIRouter
+
+from .endpoints import appointments, health
+
+api_router = APIRouter()
+
+# Include health check routes (no auth required)
+api_router.include_router(health.router, tags=["health"])
+
+# Include protected routes
+api_router.include_router(appointments.router, prefix="/api/v1")
+
+__all__ = ["api_router"]
