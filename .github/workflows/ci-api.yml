@@ -323,7 +323,7 @@ jobs:
       - name: Run Schemathesis contract tests
         run: |
           schemathesis run http://localhost:8000/openapi.json \
-            --base-url http://localhost:8000 \
+            --url http://localhost:8000 \
             --checks all \
             --hypothesis-max-examples=50 \
             --hypothesis-deadline=5000 \
