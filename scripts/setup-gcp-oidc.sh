@@ -34,6 +34,9 @@ PROJECT_NUMBER=$(gcloud projects describe $PROJECT_ID --format="value(projectNum
 POOL_NAME="github-actions-pool"
 PROVIDER_NAME="github-actions-provider"
 SERVICE_ACCOUNT_NAME="github-actions-${ENVIRONMENT}"
+# Capitalize environment name (compatible with bash 3.2+)
+ENV_DISPLAY_NAME=$(echo "$ENVIRONMENT" | awk '{print toupper(substr($0,1,1)) tolower(substr($0,2))}')
+ENV_UPPER=$(echo "$ENVIRONMENT" | tr '[:lower:]' '[:upper:]')
 
 echo "📝 Project Number: $PROJECT_NUMBER"
 echo ""
@@ -73,7 +76,7 @@ if gcloud iam service-accounts describe ${SERVICE_ACCOUNT_NAME}@${PROJECT_ID}.ia
   echo "   ⚠️  Service Account already exists, skipping..."
 else
   gcloud iam service-accounts create $SERVICE_ACCOUNT_NAME \
-    --display-name="GitHub Actions - ${ENVIRONMENT^}"
+    --display-name="GitHub Actions - ${ENV_DISPLAY_NAME}"
   echo "   ✅ Service Account created"
 fi
 
@@ -121,19 +124,19 @@ echo "📋 Add these secrets to GitHub:"
 echo "   Repository: https://github.com/$GITHUB_REPO/settings/secrets/actions"
 echo ""
 echo "┌─────────────────────────────────────────────────────────────┐"
-echo "│ Secret Name: WORKLOAD_IDENTITY_PROVIDER_${ENVIRONMENT^^}"
+echo "│ Secret Name: WORKLOAD_IDENTITY_PROVIDER_${ENV_UPPER}"
 echo "│ Value:"
 echo "│ projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/${POOL_NAME}/providers/${PROVIDER_NAME}"
 echo "└─────────────────────────────────────────────────────────────┘"
 echo ""
 echo "┌─────────────────────────────────────────────────────────────┐"
-echo "│ Secret Name: SERVICE_ACCOUNT_${ENVIRONMENT^^}"
+echo "│ Secret Name: SERVICE_ACCOUNT_${ENV_UPPER}"
 echo "│ Value:"
 echo "│ $SERVICE_ACCOUNT_EMAIL"
 echo "└─────────────────────────────────────────────────────────────┘"
 echo ""
 echo "┌─────────────────────────────────────────────────────────────┐"
-echo "│ Secret Name: GCP_PROJECT_ID_${ENVIRONMENT^^}"
+echo "│ Secret Name: GCP_PROJECT_ID_${ENV_UPPER}"
 echo "│ Value:"
 echo "│ $PROJECT_ID"
 echo "└─────────────────────────────────────────────────────────────┘"

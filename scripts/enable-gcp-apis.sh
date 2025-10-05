@@ -50,8 +50,6 @@ CORE_APIS=(
 # Production-only APIs
 PRODUCTION_APIS=(
   "compute.googleapis.com"
-  "cloudcdn.googleapis.com"
-  "cloudarmor.googleapis.com"
   "vpcaccess.googleapis.com"
 )
 

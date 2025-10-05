@@ -120,8 +120,8 @@ jobs:
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
         with:
-          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT_PROD }}
+          workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER_PRODUCTION }}
+          service_account: ${{ secrets.SERVICE_ACCOUNT_PRODUCTION }}
 
       - name: Configure Docker for GCR
         run: |
@@ -131,7 +131,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID_PROD }}/adyela/${{ env.API_SERVICE_NAME }}
+          images: ${{ env.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID_PRODUCTION }}/adyela/${{ env.API_SERVICE_NAME }}
           tags: |
             type=raw,value=${{ needs.pre-flight-checks.outputs.version }}
             type=semver,pattern={{version}},value=${{ needs.pre-flight-checks.outputs.version }}
@@ -156,14 +156,14 @@ jobs:
       - name: Sign container image with Cosign
         run: |
           cosign sign --key env://COSIGN_PRIVATE_KEY \
-            ${{ env.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID_PROD }}/adyela/${{ env.API_SERVICE_NAME }}@${{ steps.build.outputs.digest }}
+            ${{ env.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID_PRODUCTION }}/adyela/${{ env.API_SERVICE_NAME }}@${{ steps.build.outputs.digest }}
         env:
           COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
 
       - name: Scan image for vulnerabilities
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: ${{ env.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID_PROD }}/adyela/${{ env.API_SERVICE_NAME }}@${{ steps.build.outputs.digest }}
+          image-ref: ${{ env.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID_PRODUCTION }}/adyela/${{ env.API_SERVICE_NAME }}@${{ steps.build.outputs.digest }}
           format: "sarif"
           output: "trivy-results.sarif"
           severity: "CRITICAL,HIGH"
@@ -188,8 +188,8 @@ jobs:
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
         with:
-          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT_PROD }}
+          workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER_PRODUCTION }}
+          service_account: ${{ secrets.SERVICE_ACCOUNT_PRODUCTION }}
 
       - name: Setup GCP SDK
         uses: google-github-actions/setup-gcloud@v2
@@ -298,8 +298,8 @@ jobs:
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
         with:
-          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT_PROD }}
+          workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER_PRODUCTION }}
+          service_account: ${{ secrets.SERVICE_ACCOUNT_PRODUCTION }}
 
       - name: Rollback canary traffic
         run: |
@@ -364,8 +364,8 @@ jobs:
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
         with:
-          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT_PROD }}
+          workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER_PRODUCTION }}
+          service_account: ${{ secrets.SERVICE_ACCOUNT_PRODUCTION }}
 
       - name: Setup GCP SDK
         uses: google-github-actions/setup-gcloud@v2
@@ -480,8 +480,8 @@ jobs:
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
         with:
-          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT_PROD }}
+          workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER_PRODUCTION }}
+          service_account: ${{ secrets.SERVICE_ACCOUNT_PRODUCTION }}
 
       - name: Setup GCP SDK
         uses: google-github-actions/setup-gcloud@v2
@@ -553,8 +553,8 @@ jobs:
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
         with:
-          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT_PROD }}
+          workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER_PRODUCTION }}
+          service_account: ${{ secrets.SERVICE_ACCOUNT_PRODUCTION }}
 
       - name: Rollback API
         run: |

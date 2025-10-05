@@ -62,8 +62,8 @@ jobs:
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
         with:
-          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT_STAGING }}
+          workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER_STAGING }}
+          service_account: ${{ secrets.SERVICE_ACCOUNT_STAGING }}
 
       - name: Configure Docker for GCR
         run: |
@@ -119,8 +119,8 @@ jobs:
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
         with:
-          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT_STAGING }}
+          workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER_STAGING }}
+          service_account: ${{ secrets.SERVICE_ACCOUNT_STAGING }}
 
       - name: Setup GCP SDK
         uses: google-github-actions/setup-gcloud@v2
@@ -142,7 +142,7 @@ jobs:
             --timeout=60s \
             --concurrency=80 \
             --port=8000 \
-            --service-account=${{ secrets.GCP_SERVICE_ACCOUNT_STAGING }} \
+            --service-account=${{ secrets.SERVICE_ACCOUNT_STAGING }} \
             --labels="environment=staging,version=${{ inputs.version }},deployed-by=github-actions"
 
           URL=$(gcloud run services describe ${{ env.API_SERVICE_NAME }} --region ${{ env.GCP_REGION }} --format='value(status.url)')
@@ -239,8 +239,8 @@ jobs:
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
         with:
-          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT_STAGING }}
+          workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER_STAGING }}
+          service_account: ${{ secrets.SERVICE_ACCOUNT_STAGING }}
 
       - name: Setup GCP SDK
         uses: google-github-actions/setup-gcloud@v2
