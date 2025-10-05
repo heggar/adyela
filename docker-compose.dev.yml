@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   # FastAPI Backend
   api:
@@ -22,12 +20,11 @@ services:
       # Firebase (Emulator)
       - FIREBASE_PROJECT_ID=adyela-dev
       - FIREBASE_AUTH_EMULATOR_HOST=firebase:9099
-      - FIRESTORE_EMULATOR_HOST=firestore:8080
+      - FIRESTORE_EMULATOR_HOST=firebase:8080
       - FIREBASE_STORAGE_EMULATOR_HOST=firebase:9199
 
       # GCP
       - GCP_PROJECT_ID=adyela-dev
-      - FIRESTORE_EMULATOR_HOST=firestore:8080
 
       # Redis
       - REDIS_URL=redis://redis:6379/0
@@ -41,7 +38,6 @@ services:
       - ./apps/api:/app
       - /app/.venv # Don't override virtual environment
     depends_on:
-      - firestore
       - firebase
       - redis
     command: poetry run uvicorn adyela_api.main:app --reload --host 0.0.0.0 --port 8000
@@ -57,8 +53,8 @@ services:
   # React Web Frontend
   web:
     build:
-      context: ./apps/web
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./apps/web/Dockerfile
       target: development
     container_name: adyela-web-dev
     ports:
@@ -83,8 +79,9 @@ services:
       # Jitsi
       - VITE_JITSI_DOMAIN=meet.jit.si
     volumes:
-      - ./apps/web:/app
-      - /app/node_modules # Don't override node_modules
+      - ./apps/web:/app/apps/web
+      - /app/node_modules # Don't override root node_modules
+      - /app/apps/web/node_modules # Don't override web node_modules
     command: pnpm dev --host 0.0.0.0 --port 3000
     networks:
       - adyela-network
@@ -92,29 +89,13 @@ services:
       - api
       - firebase
 
-  # Firestore Emulator
-  firestore:
-    image: gcr.io/google.com/cloudsdktool/google-cloud-cli:latest
-    container_name: adyela-firestore-emulator
-    ports:
-      - "8080:8080" # Firestore
-    environment:
-      - FIRESTORE_PROJECT_ID=adyela-dev
-    command: >
-      gcloud emulators firestore start
-        --host-port=0.0.0.0:8080
-        --project=adyela-dev
-    networks:
-      - adyela-network
-    volumes:
-      - firestore-data:/opt/data
-
-  # Firebase Emulator Suite (Auth + Storage)
+  # Firebase Emulator Suite (Auth + Firestore + Storage)
   firebase:
     image: andreysenov/firebase-tools:latest
     container_name: adyela-firebase-emulator
     ports:
       - "4000:4000" # Emulator UI
+      - "8080:8080" # Firestore
       - "9099:9099" # Auth
       - "9199:9199" # Storage
       - "5001:5001" # Functions (optional)
@@ -122,6 +103,9 @@ services:
       - FIREBASE_TOKEN=${FIREBASE_TOKEN:-}
     volumes:
       - ./firebase.json:/home/node/firebase.json:ro
+      - ./firestore.rules:/home/node/firestore.rules:ro
+      - ./storage.rules:/home/node/storage.rules:ro
+      - ./firestore.indexes.json:/home/node/firestore.indexes.json:ro
       - ./firebase-data:/home/node/.firebase
     command: firebase emulators:start --project adyela-dev --import=/home/node/.firebase --export-on-exit
     networks:
@@ -176,7 +160,5 @@ networks:
     driver: bridge
 
 volumes:
-  firestore-data:
-    driver: local
   redis-data:
     driver: local

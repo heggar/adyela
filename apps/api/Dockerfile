@@ -1,7 +1,44 @@
 # Multi-stage Dockerfile for Adyela API
 
-# Stage 1: Builder
-FROM python:3.12-slim as builder
+# Development stage - for local development with hot-reload
+FROM python:3.12-slim AS development
+
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PIP_NO_CACHE_DIR=1 \
+    POETRY_VERSION=1.8.5 \
+    POETRY_NO_INTERACTION=1 \
+    POETRY_VIRTUALENVS_IN_PROJECT=true \
+    POETRY_VIRTUALENVS_CREATE=true
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    gcc \
+    g++ \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Poetry
+RUN pip install "poetry==$POETRY_VERSION"
+
+WORKDIR /app
+
+# Copy dependency files
+COPY pyproject.toml poetry.lock* ./
+
+# Install ALL dependencies (including dev)
+RUN poetry install --no-root
+
+# Code will be mounted as volume in docker-compose
+# This allows hot-reload during development
+
+EXPOSE 8000
+
+# Default command (can be overridden in docker-compose)
+CMD ["poetry", "run", "uvicorn", "adyela_api.main:app", "--reload", "--host", "0.0.0.0", "--port", "8000"]
+
+# Stage 1: Builder (for production)
+FROM python:3.12-slim AS builder
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1 \
