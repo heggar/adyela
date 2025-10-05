@@ -86,6 +86,7 @@ override.tf.json
 # GCP
 gcp-credentials.json
 service-account-key.json
+.gcp-config
 
 # Certificates
 *.pem
