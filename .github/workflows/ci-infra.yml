@@ -114,7 +114,7 @@ jobs:
     name: Terraform Plan (Dev)
     runs-on: ubuntu-latest
     needs: [validate, security-scan]
-    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && vars.GCP_CONFIGURED == 'true'
     environment: development
     steps:
       - name: Checkout code
@@ -189,7 +189,7 @@ jobs:
     name: Terraform Plan (Staging)
     runs-on: ubuntu-latest
     needs: [validate, security-scan]
-    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && vars.GCP_CONFIGURED == 'true'
     environment: staging
     steps:
       - name: Checkout code
@@ -264,7 +264,7 @@ jobs:
     name: Terraform Plan (Production)
     runs-on: ubuntu-latest
     needs: [validate, security-scan]
-    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && vars.GCP_CONFIGURED == 'true'
     environment: production
     steps:
       - name: Checkout code
@@ -339,7 +339,11 @@ jobs:
     name: Cost Estimation
     runs-on: ubuntu-latest
     needs: [plan-dev, plan-staging, plan-production]
-    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+    if: |
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      vars.GCP_CONFIGURED == 'true' &&
+      !cancelled()
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -376,16 +380,16 @@ jobs:
   summary:
     name: CI Summary
     runs-on: ubuntu-latest
-    needs: [validate, security-scan, plan-dev, plan-staging, plan-production]
+    needs: [validate, security-scan]
     if: always()
     steps:
       - name: Check job results
         run: |
           echo "Validate: ${{ needs.validate.result }}"
           echo "Security Scan: ${{ needs.security-scan.result }}"
-          echo "Plan Dev: ${{ needs.plan-dev.result }}"
-          echo "Plan Staging: ${{ needs.plan-staging.result }}"
-          echo "Plan Production: ${{ needs.plan-production.result }}"
+          if [ "${{ vars.GCP_CONFIGURED }}" == "true" ]; then
+            echo "Note: Terraform Plan jobs are skipped (GCP not configured)"
+          fi
 
       - name: Fail if critical jobs failed
         if: |
