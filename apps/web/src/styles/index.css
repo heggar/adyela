@@ -9,8 +9,8 @@
   body {
     @apply bg-white text-secondary-900 antialiased;
     font-feature-settings:
-      'rlig' 1,
-      'calt' 1;
+      "rlig" 1,
+      "calt" 1;
   }
 }
 
