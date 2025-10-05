@@ -237,8 +237,7 @@ jobs:
 
       - name: Run Lighthouse CI
         working-directory: ${{ env.WORKING_DIR }}
-        run: |
-          lhci autorun --config=lighthouserc.json || lhci autorun
+        run: lhci autorun
         env:
           LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
 
@@ -290,9 +289,11 @@ jobs:
         working-directory: ${{ env.WORKING_DIR }}
         run: |
           pnpm preview &
-          sleep 5
+          # Wait for server to be ready
+          timeout 30 bash -c 'until curl -f http://localhost:4173; do sleep 1; done' || echo "Server may not be ready"
 
       - name: Run axe accessibility tests
+        working-directory: ${{ env.WORKING_DIR }}
         run: |
           axe http://localhost:4173 --exit
 
