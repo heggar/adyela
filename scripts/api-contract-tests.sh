@@ -61,7 +61,7 @@ echo ""
 schemathesis run "$SPEC_URL" \
     --url "$API_URL" \
     --checks all \
-    --hypothesis-max-examples=50 \
+    --max-examples=50 \
     --workers=4 \
     --request-timeout=5000 \
     --validate-schema=true \
