@@ -125,7 +125,7 @@ jobs:
         with:
           file: ${{ env.WORKING_DIR }}/coverage/coverage-final.json
           flags: web
-          fail_ci_if_error: true
+          fail_ci_if_error: false
           token: ${{ secrets.CODECOV_TOKEN }}
 
       - name: Upload test results

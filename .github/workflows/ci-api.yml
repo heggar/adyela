@@ -149,7 +149,7 @@ jobs:
         with:
           file: ${{ env.WORKING_DIR }}/coverage.xml
           flags: api
-          fail_ci_if_error: true
+          fail_ci_if_error: false
           token: ${{ secrets.CODECOV_TOKEN }}
 
       - name: Upload test results

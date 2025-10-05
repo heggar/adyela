@@ -32,9 +32,7 @@ class BaseRepository(ABC, Generic[T]):
         pass
 
     @abstractmethod
-    async def list(
-        self, skip: int = 0, limit: int = 100, filters: dict | None = None
-    ) -> list[T]:
+    async def list(self, skip: int = 0, limit: int = 100, filters: dict | None = None) -> list[T]:
         """List entities with pagination and filtering."""
         pass
 
