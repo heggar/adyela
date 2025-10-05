@@ -326,7 +326,6 @@ jobs:
             --url http://localhost:8000 \
             --checks all \
             --max-examples=50 \
-            --hypothesis-deadline=5000 \
             --exclude-deprecated \
             --report
 
