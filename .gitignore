@@ -10,6 +10,7 @@ coverage/
 
 # Production
 dist/
+dev-dist/
 build/
 out/
 .next/
@@ -99,3 +100,14 @@ logs/
 .tmp/
 tmp/
 temp/
+
+# Generated Reports
+lighthouse-reports/
+coverage/
+htmlcov/
+*.report.html
+*.report.json
+
+# Taskmaster AI
+.taskmaster/
+*.taskmaster.json
