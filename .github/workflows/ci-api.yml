@@ -325,7 +325,7 @@ jobs:
           schemathesis run http://localhost:8000/openapi.json \
             --url http://localhost:8000 \
             --checks all \
-            --hypothesis-max-examples=50 \
+            --max-examples=50 \
             --hypothesis-deadline=5000 \
             --exclude-deprecated \
             --report
