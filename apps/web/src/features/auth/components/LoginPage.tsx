@@ -28,51 +28,55 @@ export function LoginPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-secondary-50">
-      <div className="card w-full max-w-md p-8">
-        <h1 className="mb-6 text-center text-3xl font-bold text-secondary-900">
-          {t("auth.welcomeBack")}
-        </h1>
-        <p className="mb-8 text-center text-secondary-600">
-          {t("auth.loginToContinue")}
-        </p>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label
-              htmlFor="email"
-              className="mb-2 block text-sm font-medium text-secondary-700"
-            >
-              {t("auth.email")}
-            </label>
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="input"
-              required
-            />
-          </div>
-          <div>
-            <label
-              htmlFor="password"
-              className="mb-2 block text-sm font-medium text-secondary-700"
-            >
-              {t("auth.password")}
-            </label>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="input"
-              required
-            />
-          </div>
-          <button type="submit" className="btn-primary w-full py-3">
-            {t("auth.login")}
-          </button>
-        </form>
-      </div>
+      <main className="card w-full max-w-md p-8">
+        <header className="mb-8">
+          <h1 className="mb-6 text-center text-3xl font-bold text-secondary-900">
+            {t("auth.welcomeBack")}
+          </h1>
+          <p className="text-center text-secondary-600">
+            {t("auth.loginToContinue")}
+          </p>
+        </header>
+        <section>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label
+                htmlFor="email"
+                className="mb-2 block text-sm font-medium text-secondary-700"
+              >
+                {t("auth.email")}
+              </label>
+              <input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="input"
+                required
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="password"
+                className="mb-2 block text-sm font-medium text-secondary-700"
+              >
+                {t("auth.password")}
+              </label>
+              <input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="input"
+                required
+              />
+            </div>
+            <button type="submit" className="btn-primary w-full py-3">
+              {t("auth.login")}
+            </button>
+          </form>
+        </section>
+      </main>
     </div>
   );
 }
