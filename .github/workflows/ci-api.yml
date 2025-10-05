@@ -326,8 +326,7 @@ jobs:
             --url http://localhost:8000 \
             --checks all \
             --max-examples=50 \
-            --exclude-deprecated \
-            --report
+            --exclude-deprecated
 
       - name: Stop API
         if: always()

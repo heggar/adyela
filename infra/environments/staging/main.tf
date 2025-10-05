@@ -7,11 +7,6 @@ terraform {
       version = "~> 6.0"
     }
   }
-
-  backend "gcs" {
-    bucket = "adyela-terraform-state-staging"
-    prefix = "terraform/state"
-  }
 }
 
 provider "google" {
