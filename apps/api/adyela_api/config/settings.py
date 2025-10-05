@@ -3,7 +3,7 @@
 from functools import lru_cache
 from typing import Literal
 
-from pydantic import Field, SecretStr, field_validator
+from pydantic import Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -26,8 +26,18 @@ class Settings(BaseSettings):
 
     # API
     api_v1_prefix: str = "/api/v1"
-    allowed_hosts: list[str] = Field(default_factory=lambda: ["*"])
-    cors_origins: list[str] = Field(default_factory=lambda: ["http://localhost:3000"])
+    allowed_hosts_str: str = Field(default="*", alias="ALLOWED_HOSTS")
+    cors_origins_str: str = Field(default="http://localhost:3000", alias="CORS_ORIGINS")
+
+    @property
+    def allowed_hosts(self) -> list[str]:
+        """Parse allowed hosts from comma-separated string."""
+        return [host.strip() for host in self.allowed_hosts_str.split(",") if host.strip()]
+
+    @property
+    def cors_origins(self) -> list[str]:
+        """Parse CORS origins from comma-separated string."""
+        return [origin.strip() for origin in self.cors_origins_str.split(",") if origin.strip()]
 
     # Server
     host: str = (
@@ -89,22 +99,6 @@ class Settings(BaseSettings):
     database_pool_size: int = 20
     database_max_overflow: int = 10
     database_pool_timeout: int = 30
-
-    @field_validator("cors_origins", mode="before")
-    @classmethod
-    def parse_cors_origins(cls, v: str | list[str]) -> list[str]:
-        """Parse CORS origins from comma-separated string or list."""
-        if isinstance(v, str):
-            return [origin.strip() for origin in v.split(",")]
-        return v
-
-    @field_validator("allowed_hosts", mode="before")
-    @classmethod
-    def parse_allowed_hosts(cls, v: str | list[str]) -> list[str]:
-        """Parse allowed hosts from comma-separated string or list."""
-        if isinstance(v, str):
-            return [host.strip() for host in v.split(",")]
-        return v
 
     @property
     def is_development(self) -> bool:

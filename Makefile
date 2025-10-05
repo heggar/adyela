@@ -1,4 +1,4 @@
-.PHONY: help setup start stop restart logs build test clean
+.PHONY: help setup start stop restart logs build test clean quality e2e lighthouse
 
 # Default target
 .DEFAULT_GOAL := help
@@ -195,3 +195,101 @@ update-deps: ## Update dependencies for API and Web
 	@docker-compose -f docker-compose.dev.yml exec web pnpm update
 	@echo "$(GREEN)✓ Dependencies updated!$(NC)"
 	@echo "$(YELLOW)Consider rebuilding: make build$(NC)"
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Quality & Testing Commands
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+quality: ## Run all quality checks (lint, type-check, tests, security)
+	@./scripts/quality-checks.sh
+
+quality-fix: ## Run quality checks and auto-fix issues
+	@echo "$(BLUE)Running auto-fixes...$(NC)"
+	@make format
+	@./scripts/quality-checks.sh
+
+# E2E Testing
+e2e: ## Run Playwright E2E tests
+	@echo "$(BLUE)Running E2E tests...$(NC)"
+	@pnpm playwright test
+	@echo "$(GREEN)✓ E2E tests complete!$(NC)"
+
+e2e-ui: ## Run E2E tests with Playwright UI
+	@echo "$(BLUE)Opening Playwright UI...$(NC)"
+	@pnpm playwright test --ui
+
+e2e-debug: ## Run E2E tests in debug mode
+	@echo "$(BLUE)Running E2E tests in debug mode...$(NC)"
+	@pnpm playwright test --debug
+
+e2e-headed: ## Run E2E tests in headed mode (see browser)
+	@echo "$(BLUE)Running E2E tests in headed mode...$(NC)"
+	@pnpm playwright test --headed
+
+e2e-report: ## Open E2E test report
+	@pnpm playwright show-report
+
+# Performance & Accessibility Audits
+lighthouse: ## Run Lighthouse performance audit
+	@./scripts/lighthouse-audit.sh
+
+lighthouse-ci: ## Run Lighthouse with CI thresholds
+	@./scripts/lighthouse-audit.sh http://localhost:3000
+
+# API Testing
+api-contract: ## Run API contract tests with Schemathesis
+	@./scripts/api-contract-tests.sh
+
+api-load: ## Run API load tests (requires k6)
+	@echo "$(YELLOW)Load testing not yet implemented$(NC)"
+	@echo "Install k6: https://k6.io/docs/getting-started/installation/"
+
+# Code Analysis
+type-check: ## Run TypeScript type checking
+	@echo "$(BLUE)Type checking...$(NC)"
+	@docker-compose -f docker-compose.dev.yml exec web pnpm type-check
+	@docker-compose -f docker-compose.dev.yml exec api poetry run mypy adyela_api
+	@echo "$(GREEN)✓ Type checking complete!$(NC)"
+
+security-audit: ## Run security audit
+	@echo "$(BLUE)Running security audit...$(NC)"
+	@pnpm audit --audit-level=moderate
+	@docker-compose -f docker-compose.dev.yml exec api poetry run pip-audit
+	@echo "$(GREEN)✓ Security audit complete!$(NC)"
+
+# MCP Servers
+mcp-setup: ## Setup MCP servers for Claude Code
+	@./scripts/setup-mcp-servers.sh
+
+mcp-test: ## Test MCP server integration
+	@echo "$(BLUE)Testing MCP servers...$(NC)"
+	@echo "$(YELLOW)Available MCP servers:$(NC)"
+	@echo "  • Playwright - Browser automation"
+	@echo "  • Filesystem - File operations"
+	@echo "  • GitHub - Repository management"
+	@echo "  • Sequential Thinking - Problem solving"
+	@echo ""
+	@echo "$(GREEN)✓ Check Claude Code for available MCP tools$(NC)"
+
+# CI/CD Simulation
+ci-local: ## Simulate CI pipeline locally
+	@echo "$(BLUE)Running local CI simulation...$(NC)"
+	@make quality
+	@make e2e
+	@make lighthouse
+	@make api-contract
+	@echo "$(GREEN)✓ CI simulation complete!$(NC)"
+
+# Reports
+reports: ## Generate all reports (coverage, lighthouse, etc.)
+	@echo "$(BLUE)Generating reports...$(NC)"
+	@make test-api-cov
+	@make test-web-cov
+	@make lighthouse
+	@echo "$(GREEN)✓ Reports generated!$(NC)"
+	@echo ""
+	@echo "$(YELLOW)Available reports:$(NC)"
+	@echo "  • API Coverage: apps/api/htmlcov/index.html"
+	@echo "  • Web Coverage: apps/web/coverage/index.html"
+	@echo "  • Lighthouse: lighthouse-reports/"
+	@echo "  • E2E: playwright-report/"

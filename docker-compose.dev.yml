@@ -98,7 +98,6 @@ services:
       - "8080:8080" # Firestore
       - "9099:9099" # Auth
       - "9199:9199" # Storage
-      - "5001:5001" # Functions (optional)
     environment:
       - FIREBASE_TOKEN=${FIREBASE_TOKEN:-}
     volumes:
@@ -107,7 +106,7 @@ services:
       - ./storage.rules:/home/node/storage.rules:ro
       - ./firestore.indexes.json:/home/node/firestore.indexes.json:ro
       - ./firebase-data:/home/node/.firebase
-    command: firebase emulators:start --project adyela-dev --import=/home/node/.firebase --export-on-exit
+    command: firebase emulators:start --project demo-adyela-dev --only auth,firestore,storage --import=/home/node/.firebase --export-on-exit
     networks:
       - adyela-network
 
