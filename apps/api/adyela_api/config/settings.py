@@ -30,7 +30,9 @@ class Settings(BaseSettings):
     cors_origins: list[str] = Field(default_factory=lambda: ["http://localhost:3000"])
 
     # Server
-    host: str = "0.0.0.0"  # nosec B104 - Required for Docker containers, GCP controls external access
+    host: str = (
+        "0.0.0.0"  # nosec B104 - Required for Docker containers, GCP controls external access
+    )
     port: int = 8000
     workers: int = 4
 
