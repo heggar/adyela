@@ -31,8 +31,8 @@ structlog.configure(
     cache_logger_on_first_use=True,
 )
 
-from adyela_api.presentation.api.v1 import api_router
-from adyela_api.presentation.middleware import LoggingMiddleware, TenantMiddleware
+from adyela_api.presentation.api.v1 import api_router  # noqa: E402
+from adyela_api.presentation.middleware import LoggingMiddleware, TenantMiddleware  # noqa: E402
 
 logger = structlog.get_logger()
 
@@ -51,7 +51,7 @@ app = FastAPI(
 
 # Add rate limiting
 app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)  # type: ignore[arg-type]
 
 # Add CORS middleware
 app.add_middleware(
