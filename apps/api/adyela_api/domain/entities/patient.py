@@ -34,8 +34,10 @@ class Patient:
     def age(self) -> int:
         """Calculate patient's age."""
         today = date.today()
-        return today.year - self.date_of_birth.year - (
-            (today.month, today.day) < (self.date_of_birth.month, self.date_of_birth.day)
+        return (
+            today.year
+            - self.date_of_birth.year
+            - ((today.month, today.day) < (self.date_of_birth.month, self.date_of_birth.day))
         )
 
     def deactivate(self) -> None:
@@ -43,7 +45,9 @@ class Patient:
         self.is_active = False
         self.updated_at = datetime.utcnow()
 
-    def update_contact_info(self, email: Email | None = None, phone: PhoneNumber | None = None) -> None:
+    def update_contact_info(
+        self, email: Email | None = None, phone: PhoneNumber | None = None
+    ) -> None:
         """Update patient contact information."""
         if email:
             self.email = email
