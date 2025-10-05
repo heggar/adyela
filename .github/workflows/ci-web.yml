@@ -285,8 +285,10 @@ jobs:
           name: web-build
           path: ${{ env.WORKING_DIR }}/dist
 
-      - name: Install axe-core
-        run: npm install -g @axe-core/cli
+      - name: Install axe-core and setup ChromeDriver
+        run: |
+          npm install -g @axe-core/cli
+          npx browser-driver-manager install chrome
 
       - name: Serve application
         working-directory: ${{ env.WORKING_DIR }}
