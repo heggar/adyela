@@ -1,5 +1,12 @@
 name: CD - Staging
 
+# Staging deployment with MINIMAL GCP resources to reduce costs
+# - Scale to zero when not used (min-instances=0)
+# - Maximum 1 instance (max-instances=1)
+# - Minimal CPU (0.5) and memory (256Mi)
+# - No VPC connector, no CDN, no backups
+# - Estimated cost: $5-10/month
+
 on:
   workflow_dispatch:
     inputs:
@@ -118,7 +125,7 @@ jobs:
       - name: Setup GCP SDK
         uses: google-github-actions/setup-gcloud@v2
 
-      - name: Deploy to Cloud Run
+      - name: Deploy to Cloud Run (Minimal Resources)
         id: deploy
         run: |
           gcloud run deploy ${{ env.API_SERVICE_NAME }} \
@@ -128,15 +135,14 @@ jobs:
             --allow-unauthenticated \
             --set-env-vars="ENVIRONMENT=${{ env.ENVIRONMENT }},VERSION=${{ inputs.version }}" \
             --set-secrets="SECRET_KEY=api-secret-key:latest,FIREBASE_PROJECT_ID=firebase-project-id:latest" \
-            --min-instances=1 \
-            --max-instances=20 \
-            --memory=1Gi \
-            --cpu=2 \
-            --timeout=300s \
+            --min-instances=0 \
+            --max-instances=1 \
+            --memory=256Mi \
+            --cpu=0.5 \
+            --timeout=60s \
             --concurrency=80 \
             --port=8000 \
             --service-account=${{ secrets.GCP_SERVICE_ACCOUNT_STAGING }} \
-            --vpc-connector=adyela-vpc-connector \
             --labels="environment=staging,version=${{ inputs.version }},deployed-by=github-actions"
 
           URL=$(gcloud run services describe ${{ env.API_SERVICE_NAME }} --region ${{ env.GCP_REGION }} --format='value(status.url)')
