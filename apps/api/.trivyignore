@@ -1,0 +1,8 @@
+# CVE-2024-23342 - Minerva timing attack on ecdsa
+# Justification:
+# - ecdsa is a transitive dependency of python-jose (not directly used)
+# - We use python-jose[cryptography] which prioritizes pyca/cryptography backend
+# - The cryptography backend does NOT use the vulnerable ecdsa library
+# - python-ecdsa maintainers confirmed no fix will be released (out of project scope)
+# - Mitigation: cryptography library handles all ECDSA operations securely
+CVE-2024-23342

@@ -3,12 +3,14 @@
 import logging
 
 import structlog
-from fastapi import FastAPI, status
+from fastapi import FastAPI, Request, status
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from adyela_api.config import get_settings
 
@@ -31,8 +33,8 @@ structlog.configure(
     cache_logger_on_first_use=True,
 )
 
-from adyela_api.presentation.api.v1 import api_router
-from adyela_api.presentation.middleware import LoggingMiddleware, TenantMiddleware
+from adyela_api.presentation.api.v1 import api_router  # noqa: E402
+from adyela_api.presentation.middleware import LoggingMiddleware, TenantMiddleware  # noqa: E402
 
 logger = structlog.get_logger()
 
@@ -51,7 +53,7 @@ app = FastAPI(
 
 # Add rate limiting
 app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)  # type: ignore[arg-type]
 
 # Add CORS middleware
 app.add_middleware(
@@ -68,8 +70,28 @@ app.add_middleware(TenantMiddleware)
 
 
 # Exception handlers
+@app.exception_handler(StarletteHTTPException)
+async def http_exception_handler(request: Request, exc: StarletteHTTPException) -> JSONResponse:
+    """Handle HTTP exceptions with consistent JSON format."""
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"detail": exc.detail},
+    )
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(
+    request: Request, exc: RequestValidationError
+) -> JSONResponse:
+    """Handle validation errors with detailed information."""
+    return JSONResponse(
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        content={"detail": exc.errors()},
+    )
+
+
 @app.exception_handler(Exception)
-async def global_exception_handler(request, exc):  # type: ignore
+async def global_exception_handler(request: Request, exc: Exception) -> JSONResponse:
     """Global exception handler."""
     logger.error("unhandled_exception", exc_info=True, error=str(exc))
     return JSONResponse(

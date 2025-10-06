@@ -1,0 +1,58 @@
+{
+  "mcpServers": {
+    "playwright": {
+      "description": "Browser automation for E2E testing",
+      "enabled": true,
+      "testTargets": {
+        "web": "http://localhost:3000",
+        "api": "http://localhost:8000"
+      }
+    },
+    "lighthouse": {
+      "description": "Performance and accessibility audits",
+      "enabled": true,
+      "targets": ["http://localhost:3000"],
+      "categories": ["performance", "accessibility", "best-practices", "seo"],
+      "thresholds": {
+        "performance": 80,
+        "accessibility": 90,
+        "best-practices": 85,
+        "seo": 90
+      }
+    },
+    "docker": {
+      "description": "Container management and operations",
+      "enabled": true,
+      "registry": "gcr.io/adyela-dev",
+      "images": {
+        "api": "adyela-api",
+        "web": "adyela-web"
+      }
+    },
+    "schemathesis": {
+      "description": "API contract testing",
+      "enabled": true,
+      "specUrl": "http://localhost:8000/openapi.json",
+      "baseUrl": "http://localhost:8000"
+    }
+  },
+  "workflows": {
+    "quality-check": {
+      "description": "Run all quality checks",
+      "steps": ["lint", "type-check", "unit-tests", "api-tests"]
+    },
+    "e2e-tests": {
+      "description": "Run E2E test suite",
+      "steps": ["start-services", "playwright-tests", "stop-services"]
+    },
+    "performance-audit": {
+      "description": "Run performance audits",
+      "steps": ["lighthouse-audit", "bundle-analysis"]
+    }
+  },
+  "automation": {
+    "preCommit": ["lint", "type-check"],
+    "prePush": ["unit-tests", "api-tests"],
+    "preRelease": ["e2e-tests", "performance-audit"]
+  }
+}

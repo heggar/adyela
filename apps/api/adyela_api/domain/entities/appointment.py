@@ -44,9 +44,7 @@ class Appointment:
     def start(self) -> None:
         """Start the appointment."""
         if self.status not in [AppointmentStatus.SCHEDULED, AppointmentStatus.CONFIRMED]:
-            raise BusinessRuleViolationError(
-                f"Cannot start appointment with status {self.status}"
-            )
+            raise BusinessRuleViolationError(f"Cannot start appointment with status {self.status}")
         self.status = AppointmentStatus.IN_PROGRESS
         self.updated_at = datetime.utcnow()
 
@@ -64,9 +62,7 @@ class Appointment:
     def cancel(self) -> None:
         """Cancel the appointment."""
         if self.status in [AppointmentStatus.COMPLETED, AppointmentStatus.CANCELLED]:
-            raise BusinessRuleViolationError(
-                f"Cannot cancel appointment with status {self.status}"
-            )
+            raise BusinessRuleViolationError(f"Cannot cancel appointment with status {self.status}")
         self.status = AppointmentStatus.CANCELLED
         self.updated_at = datetime.utcnow()
 

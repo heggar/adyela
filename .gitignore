@@ -10,6 +10,7 @@ coverage/
 
 # Production
 dist/
+dev-dist/
 build/
 out/
 .next/
@@ -85,6 +86,7 @@ override.tf.json
 # GCP
 gcp-credentials.json
 service-account-key.json
+.gcp-config
 
 # Certificates
 *.pem
@@ -99,3 +101,14 @@ logs/
 .tmp/
 tmp/
 temp/
+
+# Generated Reports
+lighthouse-reports/
+coverage/
+htmlcov/
+*.report.html
+*.report.json
+
+# Taskmaster AI
+.taskmaster/
+*.taskmaster.json
