@@ -2,7 +2,7 @@
 
 from datetime import datetime
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, HTTPException, Request, status
 from pydantic import BaseModel, Field
 
 from adyela_api.config import AppointmentStatus, AppointmentType
@@ -60,7 +60,7 @@ async def create_appointment(
     request: Request,
 ) -> AppointmentResponse:
     """Create a new appointment."""
-    tenant_id = request.state.tenant_id
+    _tenant_id = request.state.tenant_id
 
     # This is a placeholder - actual implementation would use the use case
     raise HTTPException(
@@ -82,7 +82,7 @@ async def list_appointments(
     page_size: int = 20,
 ) -> AppointmentListResponse:
     """List appointments."""
-    tenant_id = request.state.tenant_id
+    _tenant_id = request.state.tenant_id
 
     # Placeholder implementation
     return AppointmentListResponse(
@@ -105,7 +105,7 @@ async def get_appointment(
     request: Request,
 ) -> AppointmentResponse:
     """Get appointment by ID."""
-    tenant_id = request.state.tenant_id
+    _tenant_id = request.state.tenant_id
 
     # Placeholder
     raise HTTPException(
@@ -126,7 +126,7 @@ async def confirm_appointment(
     request: Request,
 ) -> AppointmentResponse:
     """Confirm an appointment."""
-    tenant_id = request.state.tenant_id
+    _tenant_id = request.state.tenant_id
 
     # Placeholder
     raise HTTPException(
@@ -147,7 +147,7 @@ async def cancel_appointment(
     request: Request,
 ) -> AppointmentResponse:
     """Cancel an appointment."""
-    tenant_id = request.state.tenant_id
+    _tenant_id = request.state.tenant_id
 
     # Placeholder
     raise HTTPException(

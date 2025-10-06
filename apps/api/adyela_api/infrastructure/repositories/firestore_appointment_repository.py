@@ -1,6 +1,8 @@
 """Firestore implementation of AppointmentRepository."""
 
-from datetime import datetime
+from __future__ import annotations
+
+import builtins
 
 from google.cloud import firestore  # type: ignore
 
@@ -43,7 +45,7 @@ class FirestoreAppointmentRepository(AppointmentRepository):
 
     async def list(
         self, skip: int = 0, limit: int = 100, filters: dict | None = None
-    ) -> list[Appointment]:
+    ) -> builtins.list[Appointment]:
         """List appointments with pagination."""
         query = self.db.collection(self.collection)
 
@@ -56,7 +58,7 @@ class FirestoreAppointmentRepository(AppointmentRepository):
 
     async def list_by_patient(
         self, tenant_id: str, patient_id: str, skip: int = 0, limit: int = 100
-    ) -> list[Appointment]:
+    ) -> builtins.list[Appointment]:
         """List appointments for a patient."""
         docs = (
             self.db.collection(self.collection)
@@ -70,7 +72,7 @@ class FirestoreAppointmentRepository(AppointmentRepository):
 
     async def list_by_practitioner(
         self, tenant_id: str, practitioner_id: str, skip: int = 0, limit: int = 100
-    ) -> list[Appointment]:
+    ) -> builtins.list[Appointment]:
         """List appointments for a practitioner."""
         docs = (
             self.db.collection(self.collection)
@@ -89,7 +91,7 @@ class FirestoreAppointmentRepository(AppointmentRepository):
         end_date: str,
         skip: int = 0,
         limit: int = 100,
-    ) -> list[Appointment]:
+    ) -> builtins.list[Appointment]:
         """List appointments within a date range."""
         docs = (
             self.db.collection(self.collection)

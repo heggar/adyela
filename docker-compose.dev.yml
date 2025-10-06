@@ -1,0 +1,163 @@
+services:
+  # FastAPI Backend
+  api:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
+      target: development
+    container_name: adyela-api-dev
+    ports:
+      - "8000:8000"
+    environment:
+      # Application
+      - ENVIRONMENT=development
+      - DEBUG=true
+      - LOG_LEVEL=DEBUG
+
+      # Security
+      - SECRET_KEY=dev-secret-key-change-in-production
+
+      # Firebase (Emulator)
+      - FIREBASE_PROJECT_ID=adyela-dev
+      - FIREBASE_AUTH_EMULATOR_HOST=firebase:9099
+      - FIRESTORE_EMULATOR_HOST=firebase:8080
+      - FIREBASE_STORAGE_EMULATOR_HOST=firebase:9199
+
+      # GCP
+      - GCP_PROJECT_ID=adyela-dev
+
+      # Redis
+      - REDIS_URL=redis://redis:6379/0
+
+      # CORS
+      - CORS_ORIGINS=http://localhost:3000,http://localhost:5173
+
+      # Disable cloud features for local dev
+      - USE_SECRET_MANAGER=false
+    volumes:
+      - ./apps/api:/app
+      - /app/.venv # Don't override virtual environment
+    depends_on:
+      - firebase
+      - redis
+    command: poetry run uvicorn adyela_api.main:app --reload --host 0.0.0.0 --port 8000
+    networks:
+      - adyela-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # React Web Frontend
+  web:
+    build:
+      context: .
+      dockerfile: ./apps/web/Dockerfile
+      target: development
+    container_name: adyela-web-dev
+    ports:
+      - "3000:3000"
+      - "5173:5173" # Vite HMR port
+    environment:
+      # API
+      - VITE_API_URL=http://localhost:8000
+
+      # Firebase (Emulator)
+      - VITE_FIREBASE_API_KEY=fake-api-key-for-emulator
+      - VITE_FIREBASE_PROJECT_ID=adyela-dev
+      - VITE_FIREBASE_AUTH_DOMAIN=localhost
+      - VITE_FIREBASE_STORAGE_BUCKET=adyela-dev.appspot.com
+      - VITE_FIREBASE_MESSAGING_SENDER_ID=123456789
+      - VITE_FIREBASE_APP_ID=1:123456789:web:abcdef
+
+      # Emulator endpoints (for frontend to connect)
+      - VITE_FIREBASE_AUTH_EMULATOR_URL=http://localhost:9099
+      - VITE_FIRESTORE_EMULATOR_HOST=localhost:8080
+
+      # Jitsi
+      - VITE_JITSI_DOMAIN=meet.jit.si
+    volumes:
+      - ./apps/web:/app/apps/web
+      - /app/node_modules # Don't override root node_modules
+      - /app/apps/web/node_modules # Don't override web node_modules
+    command: pnpm dev --host 0.0.0.0 --port 3000
+    networks:
+      - adyela-network
+    depends_on:
+      - api
+      - firebase
+
+  # Firebase Emulator Suite (Auth + Firestore + Storage)
+  firebase:
+    image: andreysenov/firebase-tools:latest
+    container_name: adyela-firebase-emulator
+    ports:
+      - "4000:4000" # Emulator UI
+      - "8080:8080" # Firestore
+      - "9099:9099" # Auth
+      - "9199:9199" # Storage
+    environment:
+      - FIREBASE_TOKEN=${FIREBASE_TOKEN:-}
+    volumes:
+      - ./firebase.json:/home/node/firebase.json:ro
+      - ./firestore.rules:/home/node/firestore.rules:ro
+      - ./storage.rules:/home/node/storage.rules:ro
+      - ./firestore.indexes.json:/home/node/firestore.indexes.json:ro
+      - ./firebase-data:/home/node/.firebase
+    command: firebase emulators:start --project demo-adyela-dev --only auth,firestore,storage --import=/home/node/.firebase --export-on-exit
+    networks:
+      - adyela-network
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: adyela-redis-dev
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes --requirepass dev-redis-password
+    volumes:
+      - redis-data:/data
+    networks:
+      - adyela-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # Redis Commander (Optional: Redis GUI)
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: adyela-redis-commander
+    ports:
+      - "8081:8081"
+    environment:
+      - REDIS_HOSTS=local:redis:6379:0:dev-redis-password
+    networks:
+      - adyela-network
+    depends_on:
+      - redis
+    profiles:
+      - tools # Only start with: docker-compose --profile tools up
+
+  # Mailhog (Optional: Email testing)
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: adyela-mailhog
+    ports:
+      - "1025:1025" # SMTP
+      - "8025:8025" # Web UI
+    networks:
+      - adyela-network
+    profiles:
+      - tools
+
+networks:
+  adyela-network:
+    driver: bridge
+
+volumes:
+  redis-data:
+    driver: local

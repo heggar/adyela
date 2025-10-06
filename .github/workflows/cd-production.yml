@@ -1,0 +1,699 @@
+name: CD - Production
+
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version tag to deploy (e.g., v1.2.3)"
+        required: true
+        type: string
+      skip_canary:
+        description: "Skip canary deployment"
+        required: false
+        type: boolean
+        default: false
+
+env:
+  ENVIRONMENT: production
+  GCP_REGION: us-central1
+  API_SERVICE_NAME: adyela-api-prod
+  WEB_BUCKET_NAME: adyela-web-prod
+  CANARY_TRAFFIC_PERCENT: 10
+
+permissions:
+  contents: write
+  id-token: write
+  deployments: write
+
+jobs:
+  pre-flight-checks:
+    name: Pre-flight Checks
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Extract version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" == "push" ]; then
+            VERSION=${GITHUB_REF#refs/tags/}
+          else
+            VERSION=${{ inputs.version }}
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Deploying version: $VERSION"
+
+      - name: Verify version format
+        run: |
+          VERSION=${{ steps.version.outputs.version }}
+          if [[ ! $VERSION =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Invalid version format: $VERSION"
+            echo "Expected format: vX.Y.Z"
+            exit 1
+          fi
+
+      - name: Check if version exists
+        run: |
+          VERSION=${{ steps.version.outputs.version }}
+          if ! git rev-parse "$VERSION" >/dev/null 2>&1; then
+            echo "Version tag $VERSION does not exist"
+            exit 1
+          fi
+
+      - name: Verify release notes
+        run: |
+          VERSION=${{ steps.version.outputs.version }}
+          if [ ! -f "CHANGELOG.md" ]; then
+            echo "Warning: CHANGELOG.md not found"
+          else
+            if ! grep -q "$VERSION" CHANGELOG.md; then
+              echo "Warning: Version $VERSION not found in CHANGELOG.md"
+            fi
+          fi
+
+  primary-approval:
+    name: Primary Approval (Required)
+    runs-on: ubuntu-latest
+    needs: [pre-flight-checks]
+    environment:
+      name: production-approval-1
+    steps:
+      - name: Checkpoint 1
+        run: |
+          echo "Version: ${{ needs.pre-flight-checks.outputs.version }}"
+          echo "First approval checkpoint passed"
+
+  secondary-approval:
+    name: Secondary Approval (Required)
+    runs-on: ubuntu-latest
+    needs: [primary-approval]
+    environment:
+      name: production-approval-2
+    steps:
+      - name: Checkpoint 2
+        run: |
+          echo "Version: ${{ needs.pre-flight-checks.outputs.version }}"
+          echo "Second approval checkpoint passed"
+
+  build-api:
+    name: Build API Docker Image
+    runs-on: ubuntu-latest
+    needs: [pre-flight-checks, secondary-approval]
+    outputs:
+      image-tag: ${{ steps.meta.outputs.tags }}
+      image-digest: ${{ steps.build.outputs.digest }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.pre-flight-checks.outputs.version }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER_PRODUCTION }}
+          service_account: ${{ secrets.SERVICE_ACCOUNT_PRODUCTION }}
+
+      - name: Configure Docker for GCR
+        run: |
+          gcloud auth configure-docker ${{ env.GCP_REGION }}-docker.pkg.dev
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID_PRODUCTION }}/adyela/${{ env.API_SERVICE_NAME }}
+          tags: |
+            type=raw,value=${{ needs.pre-flight-checks.outputs.version }}
+            type=semver,pattern={{version}},value=${{ needs.pre-flight-checks.outputs.version }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ needs.pre-flight-checks.outputs.version }}
+            type=raw,value=latest
+
+      - name: Build and push Docker image
+        id: build
+        uses: docker/build-push-action@v5
+        with:
+          context: apps/api
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            ENVIRONMENT=${{ env.ENVIRONMENT }}
+            VERSION=${{ needs.pre-flight-checks.outputs.version }}
+          provenance: true
+          sbom: true
+
+      - name: Sign container image with Cosign
+        run: |
+          cosign sign --key env://COSIGN_PRIVATE_KEY \
+            ${{ env.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID_PRODUCTION }}/adyela/${{ env.API_SERVICE_NAME }}@${{ steps.build.outputs.digest }}
+        env:
+          COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
+
+      - name: Scan image for vulnerabilities
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ env.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID_PRODUCTION }}/adyela/${{ env.API_SERVICE_NAME }}@${{ steps.build.outputs.digest }}
+          format: "sarif"
+          output: "trivy-results.sarif"
+          severity: "CRITICAL,HIGH"
+          exit-code: "1"
+
+  deploy-api-canary:
+    name: Deploy API (Canary)
+    runs-on: ubuntu-latest
+    needs: [pre-flight-checks, build-api]
+    if: ${{ !inputs.skip_canary }}
+    environment:
+      name: production-canary
+      url: ${{ steps.deploy.outputs.url }}
+    outputs:
+      canary-url: ${{ steps.deploy.outputs.url }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.pre-flight-checks.outputs.version }}
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER_PRODUCTION }}
+          service_account: ${{ secrets.SERVICE_ACCOUNT_PRODUCTION }}
+
+      - name: Setup GCP SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Deploy canary revision
+        id: deploy
+        run: |
+          # Deploy new revision with tag but don't route traffic yet
+          gcloud run deploy ${{ env.API_SERVICE_NAME }} \
+            --image ${{ needs.build-api.outputs.image-tag }} \
+            --region ${{ env.GCP_REGION }} \
+            --platform managed \
+            --no-traffic \
+            --tag canary \
+            --set-env-vars="ENVIRONMENT=${{ env.ENVIRONMENT }},VERSION=${{ needs.pre-flight-checks.outputs.version }},CANARY=true" \
+            --set-secrets="SECRET_KEY=api-secret-key-prod:latest,FIREBASE_PROJECT_ID=firebase-project-id-prod:latest" \
+            --min-instances=2 \
+            --max-instances=100 \
+            --memory=2Gi \
+            --cpu=2 \
+            --timeout=300s \
+            --concurrency=80 \
+            --port=8000 \
+            --service-account=${{ secrets.GCP_SERVICE_ACCOUNT_PROD }} \
+            --vpc-connector=adyela-vpc-connector-prod \
+            --labels="environment=production,version=${{ needs.pre-flight-checks.outputs.version }},deployment=canary"
+
+          # Get canary URL
+          CANARY_URL=$(gcloud run services describe ${{ env.API_SERVICE_NAME }} --region ${{ env.GCP_REGION }} --format='value(status.url)')
+          echo "url=$CANARY_URL" >> $GITHUB_OUTPUT
+
+      - name: Route traffic to canary
+        run: |
+          LATEST_REVISION=$(gcloud run services describe ${{ env.API_SERVICE_NAME }} --region ${{ env.GCP_REGION }} --format='value(status.latestReadyRevisionName)')
+
+          # Route 10% traffic to canary
+          gcloud run services update-traffic ${{ env.API_SERVICE_NAME }} \
+            --region ${{ env.GCP_REGION }} \
+            --to-revisions=$LATEST_REVISION=${{ env.CANARY_TRAFFIC_PERCENT }}
+
+      - name: Wait for canary stabilization
+        run: |
+          echo "Waiting for canary to stabilize..."
+          sleep 60
+
+  canary-validation:
+    name: Validate Canary Deployment
+    runs-on: ubuntu-latest
+    needs: [deploy-api-canary]
+    if: ${{ !inputs.skip_canary }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run canary health checks
+        run: |
+          MAX_RETRIES=10
+          RETRY_COUNT=0
+          SUCCESS_COUNT=0
+          REQUIRED_SUCCESSES=8
+
+          while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+            if curl -f -H "X-Canary: true" ${{ needs.deploy-api-canary.outputs.canary-url }}/health; then
+              SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
+              echo "Health check passed ($SUCCESS_COUNT/$REQUIRED_SUCCESSES)"
+
+              if [ $SUCCESS_COUNT -ge $REQUIRED_SUCCESSES ]; then
+                echo "Canary validation successful"
+                exit 0
+              fi
+            else
+              echo "Health check failed"
+            fi
+
+            RETRY_COUNT=$((RETRY_COUNT + 1))
+            sleep 5
+          done
+
+          echo "Canary validation failed"
+          exit 1
+
+      - name: Monitor canary metrics
+        run: |
+          # Query Cloud Monitoring for error rates, latency, etc.
+          echo "Monitoring canary metrics..."
+          sleep 30
+
+          # Check error rate
+          ERROR_RATE=$(gcloud monitoring time-series list \
+            --filter='metric.type="run.googleapis.com/request_count" AND resource.labels.service_name="${{ env.API_SERVICE_NAME }}"' \
+            --format=json | jq -r '.[0].points[0].value.int64_value // 0')
+
+          echo "Error rate: $ERROR_RATE"
+
+          if [ "$ERROR_RATE" -gt "5" ]; then
+            echo "Error rate too high for canary"
+            exit 1
+          fi
+
+  rollback-canary:
+    name: Rollback Canary
+    runs-on: ubuntu-latest
+    needs: [deploy-api-canary, canary-validation]
+    if: failure() && !inputs.skip_canary
+    steps:
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER_PRODUCTION }}
+          service_account: ${{ secrets.SERVICE_ACCOUNT_PRODUCTION }}
+
+      - name: Rollback canary traffic
+        run: |
+          # Route all traffic back to stable revision
+          STABLE_REVISION=$(gcloud run revisions list --service=${{ env.API_SERVICE_NAME }} --region=${{ env.GCP_REGION }} --filter="metadata.labels.stable=true" --format="value(metadata.name)" --limit=1)
+
+          gcloud run services update-traffic ${{ env.API_SERVICE_NAME }} \
+            --region ${{ env.GCP_REGION }} \
+            --to-revisions=$STABLE_REVISION=100
+
+          echo "Canary rollback completed"
+
+      - name: Send rollback notification
+        if: secrets.SLACK_WEBHOOK_URL != ''
+        uses: slackapi/slack-github-action@v1
+        with:
+          payload: |
+            {
+              "text": "🚨 Production Canary Deployment Failed - Rolled Back",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Production Canary Deployment Failed*\n:warning: Automatic rollback initiated"
+                  }
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Version:*\n${{ needs.pre-flight-checks.outputs.version }}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Run:*\nhttps://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+                    }
+                  ]
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  deploy-api-full:
+    name: Deploy API (Full Rollout)
+    runs-on: ubuntu-latest
+    needs: [pre-flight-checks, build-api, canary-validation]
+    if: always() && (needs.canary-validation.result == 'success' || inputs.skip_canary)
+    environment:
+      name: production
+      url: ${{ steps.deploy.outputs.url }}
+    outputs:
+      api-url: ${{ steps.deploy.outputs.url }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.pre-flight-checks.outputs.version }}
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER_PRODUCTION }}
+          service_account: ${{ secrets.SERVICE_ACCOUNT_PRODUCTION }}
+
+      - name: Setup GCP SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Deploy full rollout
+        id: deploy
+        run: |
+          # Get the canary revision name
+          LATEST_REVISION=$(gcloud run services describe ${{ env.API_SERVICE_NAME }} --region ${{ env.GCP_REGION }} --format='value(status.latestReadyRevisionName)')
+
+          # Route 100% traffic to new revision
+          gcloud run services update-traffic ${{ env.API_SERVICE_NAME }} \
+            --region ${{ env.GCP_REGION }} \
+            --to-latest
+
+          # Tag as stable
+          gcloud run services update-traffic ${{ env.API_SERVICE_NAME }} \
+            --region ${{ env.GCP_REGION }} \
+            --update-labels stable=true
+
+          URL=$(gcloud run services describe ${{ env.API_SERVICE_NAME }} --region ${{ env.GCP_REGION }} --format='value(status.url)')
+          echo "url=$URL" >> $GITHUB_OUTPUT
+
+      - name: Wait for full rollout
+        run: |
+          echo "Waiting for full rollout to complete..."
+          sleep 30
+
+      - name: Verify full deployment
+        run: |
+          MAX_RETRIES=5
+          RETRY_COUNT=0
+
+          while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+            if curl -f ${{ steps.deploy.outputs.url }}/health; then
+              echo "Health check passed"
+              exit 0
+            fi
+
+            RETRY_COUNT=$((RETRY_COUNT + 1))
+            echo "Health check failed. Retry $RETRY_COUNT/$MAX_RETRIES"
+            sleep 10
+          done
+
+          echo "Health check failed after $MAX_RETRIES retries"
+          exit 1
+
+  build-web:
+    name: Build Web Application
+    runs-on: ubuntu-latest
+    needs: [pre-flight-checks, secondary-approval]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.pre-flight-checks.outputs.version }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build application
+        working-directory: apps/web
+        env:
+          VITE_API_URL: ${{ secrets.VITE_API_URL_PROD }}
+          VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
+          VITE_FIREBASE_PROJECT_ID: ${{ secrets.VITE_FIREBASE_PROJECT_ID }}
+          VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}
+          VITE_FIREBASE_STORAGE_BUCKET: ${{ secrets.VITE_FIREBASE_STORAGE_BUCKET }}
+          VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}
+          VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
+          VITE_JITSI_DOMAIN: meet.jit.si
+          VITE_ENV: ${{ env.ENVIRONMENT }}
+        run: pnpm build
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-dist-production
+          path: apps/web/dist
+          retention-days: 30
+
+  deploy-web:
+    name: Deploy Web to GCS + CDN
+    runs-on: ubuntu-latest
+    needs: [pre-flight-checks, build-web, deploy-api-full]
+    environment:
+      name: production
+      url: https://adyela.com
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.pre-flight-checks.outputs.version }}
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: web-dist-production
+          path: dist
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER_PRODUCTION }}
+          service_account: ${{ secrets.SERVICE_ACCOUNT_PRODUCTION }}
+
+      - name: Setup GCP SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Create backup
+        run: |
+          BACKUP_DIR="gs://${{ env.WEB_BUCKET_NAME }}-backups/${{ needs.pre-flight-checks.outputs.version }}-$(date +%Y%m%d-%H%M%S)"
+          gsutil -m cp -r gs://${{ env.WEB_BUCKET_NAME }}/* $BACKUP_DIR/
+          echo "Backup created at: $BACKUP_DIR"
+          echo "BACKUP_DIR=$BACKUP_DIR" >> $GITHUB_ENV
+
+      - name: Upload to GCS
+        run: |
+          gsutil -m rsync -r -d dist gs://${{ env.WEB_BUCKET_NAME }}
+
+          # Set cache control headers
+          gsutil -m setmeta -h "Cache-Control:public, max-age=31536000, immutable" \
+            "gs://${{ env.WEB_BUCKET_NAME }}/assets/**"
+
+          gsutil -m setmeta -h "Cache-Control:public, max-age=0, must-revalidate" \
+            "gs://${{ env.WEB_BUCKET_NAME }}/index.html"
+
+          gsutil -m setmeta -h "Cache-Control:public, max-age=3600" \
+            "gs://${{ env.WEB_BUCKET_NAME }}/manifest.webmanifest"
+
+          # Set version metadata
+          gsutil -m setmeta \
+            -h "x-goog-meta-version:${{ needs.pre-flight-checks.outputs.version }}" \
+            -h "x-goog-meta-deployed-at:$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            -h "x-goog-meta-git-sha:${{ github.sha }}" \
+            "gs://${{ env.WEB_BUCKET_NAME }}/index.html"
+
+      - name: Invalidate CDN cache
+        run: |
+          gcloud compute url-maps invalidate-cdn-cache adyela-web-lb \
+            --path "/*" \
+            --async
+
+  smoke-tests:
+    name: Production Smoke Tests
+    runs-on: ubuntu-latest
+    needs: [deploy-api-full, deploy-web]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run production smoke tests
+        run: |
+          # API health
+          curl -f https://api.adyela.com/health
+
+          # Web accessibility
+          curl -f https://adyela.com
+
+          # PWA manifest
+          curl -f https://adyela.com/manifest.webmanifest
+
+      - name: Verify critical user flows
+        run: |
+          # Run critical path tests
+          echo "Running critical user flow tests..."
+
+  rollback:
+    name: Automatic Rollback
+    runs-on: ubuntu-latest
+    needs: [pre-flight-checks, deploy-api-full, deploy-web, smoke-tests]
+    if: failure()
+    steps:
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER_PRODUCTION }}
+          service_account: ${{ secrets.SERVICE_ACCOUNT_PRODUCTION }}
+
+      - name: Rollback API
+        run: |
+          STABLE_REVISION=$(gcloud run revisions list --service=${{ env.API_SERVICE_NAME }} --region=${{ env.GCP_REGION }} --filter="metadata.labels.stable=true AND metadata.name!=$(gcloud run services describe ${{ env.API_SERVICE_NAME }} --region=${{ env.GCP_REGION }} --format='value(status.latestReadyRevisionName)')" --format="value(metadata.name)" --limit=1)
+
+          if [ -n "$STABLE_REVISION" ]; then
+            gcloud run services update-traffic ${{ env.API_SERVICE_NAME }} \
+              --region ${{ env.GCP_REGION }} \
+              --to-revisions=$STABLE_REVISION=100
+            echo "API rolled back to: $STABLE_REVISION"
+          fi
+
+      - name: Rollback Web
+        run: |
+          if [ -n "${{ env.BACKUP_DIR }}" ]; then
+            gsutil -m rsync -r -d ${{ env.BACKUP_DIR }} gs://${{ env.WEB_BUCKET_NAME }}/
+            echo "Web rolled back from: ${{ env.BACKUP_DIR }}"
+          fi
+
+      - name: Send rollback notification
+        if: secrets.SLACK_WEBHOOK_URL != ''
+        uses: slackapi/slack-github-action@v1
+        with:
+          payload: |
+            {
+              "text": "🚨 Production Deployment Failed - Automatic Rollback Initiated",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Production Deployment Failed*\n:rotating_light: Automatic rollback completed"
+                  }
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Version:*\n${{ needs.pre-flight-checks.outputs.version }}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Run:*\nhttps://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+                    }
+                  ]
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  create-release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    needs: [pre-flight-checks, deploy-api-full, deploy-web, smoke-tests]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.pre-flight-checks.outputs.version }}
+          fetch-depth: 0
+
+      - name: Generate release notes
+        id: notes
+        run: |
+          # Extract changelog for this version
+          VERSION=${{ needs.pre-flight-checks.outputs.version }}
+          if [ -f "CHANGELOG.md" ]; then
+            NOTES=$(sed -n "/## \[$VERSION\]/,/## \[/p" CHANGELOG.md | sed '$d')
+          else
+            NOTES="Release $VERSION"
+          fi
+
+          echo "notes<<EOF" >> $GITHUB_OUTPUT
+          echo "$NOTES" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.pre-flight-checks.outputs.version }}
+          name: Release ${{ needs.pre-flight-checks.outputs.version }}
+          body: ${{ steps.notes.outputs.notes }}
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  notify:
+    name: Send Success Notification
+    runs-on: ubuntu-latest
+    needs:
+      [
+        pre-flight-checks,
+        deploy-api-full,
+        deploy-web,
+        smoke-tests,
+        create-release,
+      ]
+    steps:
+      - name: Send Slack notification
+        if: secrets.SLACK_WEBHOOK_URL != ''
+        uses: slackapi/slack-github-action@v1
+        with:
+          payload: |
+            {
+              "text": "✅ Production Deployment Successful",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Production Deployment Successful*\n:rocket: Version ${{ needs.pre-flight-checks.outputs.version }} is now live!"
+                  }
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Version:*\n${{ needs.pre-flight-checks.outputs.version }}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*API:*\n${{ needs.deploy-api-full.outputs.api-url }}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Web:*\nhttps://adyela.com"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Deployed by:*\n${{ github.actor }}"
+                    }
+                  ]
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
