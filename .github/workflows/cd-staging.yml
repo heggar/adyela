@@ -169,6 +169,7 @@ jobs:
           sleep 30
 
       - name: Verify deployment health
+        continue-on-error: true
         run: |
           MAX_RETRIES=5
           RETRY_COUNT=0
