@@ -211,6 +211,9 @@ jobs:
       - name: Deploy canary revision
         id: deploy
         run: |
+          # Convert version to GCP-compliant label (replace dots with dashes)
+          VERSION_LABEL=$(echo "${{ needs.pre-flight-checks.outputs.version }}" | tr '.' '-')
+
           # Deploy new revision with tag but don't route traffic yet
           gcloud run deploy ${{ env.API_SERVICE_NAME }} \
             --image ${{ steps.image.outputs.image }} \
@@ -229,7 +232,7 @@ jobs:
             --port=8000 \
             --service-account=${{ secrets.GCP_SERVICE_ACCOUNT_PROD }} \
             --vpc-connector=adyela-vpc-connector-prod \
-            --labels="environment=production,version=${{ needs.pre-flight-checks.outputs.version }},deployment=canary"
+            --labels="environment=production,version=${VERSION_LABEL},deployment=canary"
 
           # Get canary URL
           CANARY_URL=$(gcloud run services describe ${{ env.API_SERVICE_NAME }} --region ${{ env.GCP_REGION }} --format='value(status.url)')
