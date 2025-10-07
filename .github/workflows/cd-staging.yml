@@ -155,7 +155,7 @@ jobs:
             --max-instances=1 \
             --memory=512Mi \
             --cpu=1 \
-            --timeout=60s \
+            --timeout=300s \
             --concurrency=80 \
             --port=8000 \
             --service-account=${{ secrets.SERVICE_ACCOUNT_STAGING }} \
