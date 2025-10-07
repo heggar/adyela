@@ -153,8 +153,8 @@ jobs:
             --set-secrets="SECRET_KEY=api-secret-key:latest,FIREBASE_PROJECT_ID=firebase-project-id:latest" \
             --min-instances=0 \
             --max-instances=1 \
-            --memory=256Mi \
-            --cpu=0.5 \
+            --memory=512Mi \
+            --cpu=1 \
             --timeout=60s \
             --concurrency=80 \
             --port=8000 \
