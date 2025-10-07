@@ -137,6 +137,16 @@ jobs:
       - name: Setup GCP SDK
         uses: google-github-actions/setup-gcloud@v2
 
+      - name: Debug outputs from build job
+        run: |
+          echo "=== Debug Build Job Outputs ==="
+          echo "Image tag: '${{ needs.build-api.outputs.image-tag }}'"
+          echo "Image digest: '${{ needs.build-api.outputs.image-digest }}'"
+          echo "Image tag length: ${#IMAGE_TAG}"
+          echo "=== End Debug ==="
+        env:
+          IMAGE_TAG: ${{ needs.build-api.outputs.image-tag }}
+
       - name: Deploy to Cloud Run (Minimal Resources)
         id: deploy
         run: |
