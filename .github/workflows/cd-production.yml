@@ -481,7 +481,7 @@ jobs:
     needs: [pre-flight-checks, build-web, deploy-api-full]
     environment:
       name: production
-      url: https://adyela.com
+      url: https://adyela.care
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -548,13 +548,13 @@ jobs:
       - name: Run production smoke tests
         run: |
           # API health
-          curl -f https://api.adyela.com/health
+          curl -f https://api.adyela.care/health
 
           # Web accessibility
-          curl -f https://adyela.com
+          curl -f https://adyela.care
 
           # PWA manifest
-          curl -f https://adyela.com/manifest.webmanifest
+          curl -f https://adyela.care/manifest.webmanifest
 
       - name: Verify critical user flows
         run: |
@@ -702,7 +702,7 @@ jobs:
                     },
                     {
                       "type": "mrkdwn",
-                      "text": "*Web:*\nhttps://adyela.com"
+                      "text": "*Web:*\nhttps://adyela.care"
                     },
                     {
                       "type": "mrkdwn",

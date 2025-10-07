@@ -386,7 +386,7 @@ jobs:
             echo "No E2E tests found, skipping..."
           fi
         env:
-          BASE_URL: https://staging.adyela.com
+          BASE_URL: https://staging.adyela.care
           API_URL: ${{ needs.deploy-api.outputs.api-url }}
 
       - name: Upload E2E test results
@@ -461,7 +461,7 @@ jobs:
         continue-on-error: true
         uses: zaproxy/action-full-scan@v0.10.0
         with:
-          target: https://staging.adyela.com
+          target: https://staging.adyela.care
           rules_file_name: ".zap/rules.tsv"
           cmd_options: "-a"
           fail_action: false
@@ -471,7 +471,7 @@ jobs:
         continue-on-error: true
         uses: zaproxy/action-full-scan@v0.10.0
         with:
-          target: https://staging.adyela.com
+          target: https://staging.adyela.care
           cmd_options: "-a"
           fail_action: false
 
@@ -517,7 +517,7 @@ jobs:
                     },
                     {
                       "type": "mrkdwn",
-                      "text": "*Web:*\nhttps://staging.adyela.com"
+                      "text": "*Web:*\n${{ needs.deploy-web.outputs.web-url }}"
                     },
                     {
                       "type": "mrkdwn",
