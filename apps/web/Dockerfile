@@ -77,17 +77,11 @@ FROM nginx:1.27-alpine AS production
 # Set environment variable for port (Cloud Run compatibility)
 ENV PORT=8080
 
-# Copy nginx configuration
-COPY apps/web/nginx.conf /etc/nginx/nginx.conf
+# Copy nginx configuration as template
+COPY apps/web/nginx.conf /etc/nginx/templates/default.conf.template
 
 # Copy built files from builder
 COPY --from=builder /app/apps/web/dist /usr/share/nginx/html
-
-# Create startup script to use PORT environment variable
-RUN echo '#!/bin/sh' > /docker-entrypoint.sh && \
-    echo 'envsubst '\''$PORT'\'' < /etc/nginx/nginx.conf > /tmp/nginx.conf && mv /tmp/nginx.conf /etc/nginx/nginx.conf' >> /docker-entrypoint.sh && \
-    echo 'exec nginx -g "daemon off;"' >> /docker-entrypoint.sh && \
-    chmod +x /docker-entrypoint.sh
 
 # Expose port
 EXPOSE $PORT
@@ -101,9 +95,10 @@ RUN chown -R nginx:nginx /usr/share/nginx/html && \
     chown -R nginx:nginx /var/cache/nginx && \
     chown -R nginx:nginx /var/log/nginx && \
     touch /var/run/nginx.pid && \
-    chown -R nginx:nginx /var/run/nginx.pid
+    chown -R nginx:nginx /var/run/nginx.pid && \
+    chown -R nginx:nginx /etc/nginx/templates
 
 USER nginx
 
-# Start nginx with dynamic port
-CMD ["/docker-entrypoint.sh"]
+# nginx official entrypoint will automatically envsubst templates
+CMD ["nginx", "-g", "daemon off;"]
