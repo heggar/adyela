@@ -148,7 +148,6 @@ jobs:
             --image ${{ steps.image.outputs.image }} \
             --region ${{ env.GCP_REGION }} \
             --platform managed \
-            --allow-unauthenticated \
             --set-env-vars="ENVIRONMENT=${{ env.ENVIRONMENT }},VERSION=${{ inputs.version }},GCP_PROJECT_ID=${{ secrets.GCP_PROJECT_ID_STAGING }}" \
             --set-secrets="SECRET_KEY=api-secret-key:latest,FIREBASE_PROJECT_ID=firebase-project-id:latest" \
             --min-instances=0 \
@@ -174,8 +173,11 @@ jobs:
           MAX_RETRIES=5
           RETRY_COUNT=0
 
+          # Get identity token for authenticated requests
+          TOKEN=$(gcloud auth print-identity-token)
+
           while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
-            if curl -f ${{ steps.deploy.outputs.url }}/health; then
+            if curl -f -H "Authorization: Bearer $TOKEN" ${{ steps.deploy.outputs.url }}/health; then
               echo "Health check passed"
               exit 0
             fi
