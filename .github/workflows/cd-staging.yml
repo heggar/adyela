@@ -194,68 +194,81 @@ jobs:
           exit 1
 
   build-web:
-    name: Build Web Application
+    name: Build Web Docker Image
     runs-on: ubuntu-latest
     needs: [approval]
+    outputs:
+      image-version: ${{ steps.output.outputs.image-version }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           ref: ${{ inputs.version }}
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
         with:
-          version: 9.15.0
+          workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER_STAGING }}
+          service_account: ${{ secrets.SERVICE_ACCOUNT_STAGING }}
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Configure Docker for GCR
+        run: |
+          gcloud auth configure-docker ${{ env.GCP_REGION }}-docker.pkg.dev
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
         with:
-          node-version: 20
-          cache: "pnpm"
+          images: ${{ env.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID_STAGING }}/adyela/adyela-web-staging
+          tags: |
+            type=raw,value=${{ inputs.version }}
+            type=raw,value=latest
 
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Build application
-        working-directory: apps/web
-        env:
-          VITE_API_URL: ${{ secrets.VITE_API_URL_STAGING }}
-          VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
-          VITE_FIREBASE_PROJECT_ID: ${{ secrets.VITE_FIREBASE_PROJECT_ID }}
-          VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}
-          VITE_FIREBASE_STORAGE_BUCKET: ${{ secrets.VITE_FIREBASE_STORAGE_BUCKET }}
-          VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}
-          VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
-          VITE_JITSI_DOMAIN: meet.jit.si
-          VITE_ENV: ${{ env.ENVIRONMENT }}
-        run: pnpm build
-
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
+      - name: Build and push Docker image
+        id: build
+        uses: docker/build-push-action@v6
         with:
-          name: web-dist-staging
-          path: apps/web/dist
-          retention-days: 7
+          context: .
+          file: ./apps/web/Dockerfile
+          push: true
+          target: production
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            VITE_API_URL=${{ secrets.VITE_API_URL_STAGING }}
+            VITE_FIREBASE_API_KEY=${{ secrets.VITE_FIREBASE_API_KEY }}
+            VITE_FIREBASE_PROJECT_ID=${{ secrets.VITE_FIREBASE_PROJECT_ID }}
+            VITE_FIREBASE_AUTH_DOMAIN=${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}
+            VITE_FIREBASE_STORAGE_BUCKET=${{ secrets.VITE_FIREBASE_STORAGE_BUCKET }}
+            VITE_FIREBASE_MESSAGING_SENDER_ID=${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}
+            VITE_FIREBASE_APP_ID=${{ secrets.VITE_FIREBASE_APP_ID }}
+            VITE_JITSI_DOMAIN=meet.jit.si
+            VITE_ENV=${{ env.ENVIRONMENT }}
+
+      - name: Output image version
+        id: output
+        run: |
+          echo "image-version=${{ inputs.version }}" >> "$GITHUB_OUTPUT"
 
   deploy-web:
-    name: Deploy Web to GCS + CDN
+    name: Deploy Web to Cloud Run
     runs-on: ubuntu-latest
-    needs: [build-web, deploy-api]
+    needs: [build-web]
     environment:
       name: staging
-      url: https://staging.adyela.com
+      url: ${{ steps.deploy.outputs.url }}
+    outputs:
+      web-url: ${{ steps.deploy.outputs.url }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           ref: ${{ inputs.version }}
-
-      - name: Download build artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: web-dist-staging
-          path: dist
 
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
@@ -266,39 +279,68 @@ jobs:
       - name: Setup GCP SDK
         uses: google-github-actions/setup-gcloud@v2
 
-      - name: Backup current version
+      - name: Build image reference
+        id: image
         run: |
-          BACKUP_DIR="gs://${{ env.WEB_BUCKET_NAME }}-backups/$(date +%Y%m%d-%H%M%S)"
-          gsutil -m cp -r gs://${{ env.WEB_BUCKET_NAME }}/* $BACKUP_DIR/ || true
-          echo "Backup created at: $BACKUP_DIR"
+          # Construct full image reference from version + project secret
+          REGISTRY="${{ env.GCP_REGION }}-docker.pkg.dev"
+          PROJECT="${{ secrets.GCP_PROJECT_ID_STAGING }}"
+          REPOSITORY="adyela"
+          SERVICE="adyela-web-staging"
+          VERSION="${{ needs.build-web.outputs.image-version }}"
+          IMAGE="${REGISTRY}/${PROJECT}/${REPOSITORY}/${SERVICE}:${VERSION}"
+          echo "image=${IMAGE}" >> "$GITHUB_OUTPUT"
+          echo "Full image reference: ${IMAGE}"
 
-      - name: Upload to GCS
+      - name: Deploy to Cloud Run
+        id: deploy
         run: |
-          gsutil -m rsync -r -d dist gs://${{ env.WEB_BUCKET_NAME }}
+          # Convert version to GCP-compliant label (replace dots with dashes)
+          VERSION_LABEL=$(echo "${{ inputs.version }}" | tr '.' '-')
 
-          # Set cache control headers
-          gsutil -m setmeta -h "Cache-Control:public, max-age=31536000, immutable" \
-            "gs://${{ env.WEB_BUCKET_NAME }}/assets/**"
+          gcloud run deploy adyela-web-staging \
+            --image ${{ steps.image.outputs.image }} \
+            --region ${{ env.GCP_REGION }} \
+            --platform managed \
+            --set-env-vars="VITE_ENV=${{ env.ENVIRONMENT }},VERSION=${{ inputs.version }}" \
+            --min-instances=0 \
+            --max-instances=2 \
+            --memory=256Mi \
+            --cpu=1 \
+            --timeout=60s \
+            --concurrency=80 \
+            --port=8080 \
+            --service-account=${{ secrets.SERVICE_ACCOUNT_STAGING }} \
+            --labels="environment=staging,version=${VERSION_LABEL},deployed-by=github-actions" \
+            --format=json | jq -r '.status.url' | tee /tmp/url.txt
 
-          gsutil -m setmeta -h "Cache-Control:public, max-age=0, must-revalidate" \
-            "gs://${{ env.WEB_BUCKET_NAME }}/index.html"
+          # Store URL as output
+          URL=$(cat /tmp/url.txt)
+          echo "url=${URL}" >> "$GITHUB_OUTPUT"
+          echo "Web deployed to: ${URL}"
 
-          gsutil -m setmeta -h "Cache-Control:public, max-age=3600" \
-            "gs://${{ env.WEB_BUCKET_NAME }}/manifest.webmanifest"
-
-          # Set metadata
-          gsutil -m setmeta -h "x-goog-meta-version:${{ inputs.version }}" \
-            -h "x-goog-meta-deployed-at:$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
-            "gs://${{ env.WEB_BUCKET_NAME }}/index.html"
-
-      - name: Invalidate CDN cache
+      - name: Verify deployment health
         continue-on-error: true
         run: |
-          # CDN not configured for minimal staging environment
-          # This step will be skipped if CDN doesn't exist
-          gcloud compute url-maps invalidate-cdn-cache adyela-web-lb-staging \
-            --path "/*" \
-            --async || echo "CDN not configured, skipping cache invalidation"
+          MAX_RETRIES=5
+          RETRY_COUNT=0
+
+          # Get identity token for authenticated requests
+          TOKEN=$(gcloud auth print-identity-token)
+
+          while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+            if curl -f -H "Authorization: Bearer $TOKEN" ${{ steps.deploy.outputs.url }}/health; then
+              echo "Health check passed"
+              exit 0
+            fi
+
+            RETRY_COUNT=$((RETRY_COUNT + 1))
+            echo "Health check failed. Retry $RETRY_COUNT/$MAX_RETRIES"
+            sleep 10
+          done
+
+          echo "Health check failed after $MAX_RETRIES retries"
+          exit 1
 
   e2e-tests:
     name: Run E2E Tests
