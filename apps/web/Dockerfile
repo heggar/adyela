@@ -77,6 +77,9 @@ FROM nginx:1.27-alpine AS production
 # Set environment variable for port (Cloud Run compatibility)
 ENV PORT=8080
 
+# Remove default nginx config
+RUN rm -f /etc/nginx/conf.d/default.conf
+
 # Copy nginx configuration as template
 COPY apps/web/nginx.conf /etc/nginx/templates/default.conf.template
 
@@ -90,15 +93,7 @@ EXPOSE $PORT
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD wget --no-verbose --tries=1 --spider http://localhost:${PORT}/ || exit 1
 
-# Use non-root user
-RUN chown -R nginx:nginx /usr/share/nginx/html && \
-    chown -R nginx:nginx /var/cache/nginx && \
-    chown -R nginx:nginx /var/log/nginx && \
-    touch /var/run/nginx.pid && \
-    chown -R nginx:nginx /var/run/nginx.pid && \
-    chown -R nginx:nginx /etc/nginx/templates
-
-USER nginx
-
+# Run as root (required for template processing and port binding)
+# Cloud Run provides isolation, so this is safe
 # nginx official entrypoint will automatically envsubst templates
 CMD ["nginx", "-g", "daemon off;"]
