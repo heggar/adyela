@@ -156,8 +156,14 @@ jobs:
       - name: Set image output
         id: image
         run: |
-          IMAGE="${{ env.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID_PRODUCTION }}/adyela/${{ env.API_SERVICE_NAME }}:${{ needs.pre-flight-checks.outputs.version }}"
-          echo "image=$IMAGE" >> $GITHUB_OUTPUT
+          REGISTRY="${{ env.GCP_REGION }}-docker.pkg.dev"
+          PROJECT="${{ secrets.GCP_PROJECT_ID_PRODUCTION }}"
+          REPOSITORY="adyela"
+          SERVICE="${{ env.API_SERVICE_NAME }}"
+          VERSION="${{ needs.pre-flight-checks.outputs.version }}"
+          IMAGE="${REGISTRY}/${PROJECT}/${REPOSITORY}/${SERVICE}:${VERSION}"
+          echo "Setting image output: ${IMAGE}"
+          echo "image=${IMAGE}" >> "$GITHUB_OUTPUT"
 
       - name: Sign container image with Cosign
         continue-on-error: true

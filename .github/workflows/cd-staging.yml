@@ -96,8 +96,14 @@ jobs:
       - name: Set image output
         id: image
         run: |
-          IMAGE="${{ env.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID_STAGING }}/adyela/${{ env.API_SERVICE_NAME }}:${{ inputs.version }}"
-          echo "image=$IMAGE" >> $GITHUB_OUTPUT
+          REGISTRY="${{ env.GCP_REGION }}-docker.pkg.dev"
+          PROJECT="${{ secrets.GCP_PROJECT_ID_STAGING }}"
+          REPOSITORY="adyela"
+          SERVICE="${{ env.API_SERVICE_NAME }}"
+          VERSION="${{ inputs.version }}"
+          IMAGE="${REGISTRY}/${PROJECT}/${REPOSITORY}/${SERVICE}:${VERSION}"
+          echo "Setting image output: ${IMAGE}"
+          echo "image=${IMAGE}" >> "$GITHUB_OUTPUT"
 
       - name: Sign container image
         continue-on-error: true
