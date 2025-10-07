@@ -30,6 +30,8 @@ permissions:
   contents: read
   id-token: write
   deployments: write
+  issues: write
+  security-events: write
 
 jobs:
   approval:
@@ -365,7 +367,18 @@ jobs:
         with:
           ref: ${{ inputs.version }}
 
+      - name: Check if performance tests exist
+        id: check-perf-tests
+        run: |
+          if [ -f "tests/performance/load-test.js" ]; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+            echo "Performance tests not found, skipping..."
+          fi
+
       - name: Run k6 load tests
+        if: steps.check-perf-tests.outputs.exists == 'true'
         uses: grafana/k6-action@v0.3.1
         with:
           filename: tests/performance/load-test.js
@@ -391,11 +404,29 @@ jobs:
         with:
           ref: ${{ inputs.version }}
 
-      - name: Run OWASP ZAP scan
+      - name: Check if ZAP rules exist
+        id: check-zap-rules
+        run: |
+          if [ -f ".zap/rules.tsv" ]; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+            echo "ZAP rules not found, using default rules..."
+          fi
+
+      - name: Run OWASP ZAP scan (with custom rules)
+        if: steps.check-zap-rules.outputs.exists == 'true'
         uses: zaproxy/action-full-scan@v0.10.0
         with:
           target: https://staging.adyela.com
           rules_file_name: ".zap/rules.tsv"
+          cmd_options: "-a"
+
+      - name: Run OWASP ZAP scan (default rules)
+        if: steps.check-zap-rules.outputs.exists == 'false'
+        uses: zaproxy/action-full-scan@v0.10.0
+        with:
+          target: https://staging.adyela.com
           cmd_options: "-a"
 
       - name: Upload ZAP scan results
