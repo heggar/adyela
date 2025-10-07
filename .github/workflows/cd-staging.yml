@@ -141,6 +141,9 @@ jobs:
       - name: Deploy to Cloud Run (Minimal Resources)
         id: deploy
         run: |
+          # Convert version to GCP-compliant label (replace dots with dashes)
+          VERSION_LABEL=$(echo "${{ inputs.version }}" | tr '.' '-')
+
           gcloud run deploy ${{ env.API_SERVICE_NAME }} \
             --image ${{ steps.image.outputs.image }} \
             --region ${{ env.GCP_REGION }} \
@@ -156,7 +159,7 @@ jobs:
             --concurrency=80 \
             --port=8000 \
             --service-account=${{ secrets.SERVICE_ACCOUNT_STAGING }} \
-            --labels="environment=staging,version=${{ inputs.version }},deployed-by=github-actions"
+            --labels="environment=staging,version=${VERSION_LABEL},deployed-by=github-actions"
 
           URL=$(gcloud run services describe ${{ env.API_SERVICE_NAME }} --region ${{ env.GCP_REGION }} --format='value(status.url)')
           echo "url=$URL" >> $GITHUB_OUTPUT
