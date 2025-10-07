@@ -421,6 +421,7 @@ jobs:
           target: https://staging.adyela.com
           rules_file_name: ".zap/rules.tsv"
           cmd_options: "-a"
+          artifact_name: zap-scan-results
 
       - name: Run OWASP ZAP scan (default rules)
         if: steps.check-zap-rules.outputs.exists == 'false'
@@ -428,6 +429,7 @@ jobs:
         with:
           target: https://staging.adyela.com
           cmd_options: "-a"
+          artifact_name: zap-scan-results
 
       - name: Upload ZAP scan results
         if: always()
