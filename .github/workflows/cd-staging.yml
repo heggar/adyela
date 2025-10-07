@@ -290,10 +290,13 @@ jobs:
             "gs://${{ env.WEB_BUCKET_NAME }}/index.html"
 
       - name: Invalidate CDN cache
+        continue-on-error: true
         run: |
+          # CDN not configured for minimal staging environment
+          # This step will be skipped if CDN doesn't exist
           gcloud compute url-maps invalidate-cdn-cache adyela-web-lb-staging \
             --path "/*" \
-            --async
+            --async || echo "CDN not configured, skipping cache invalidation"
 
   e2e-tests:
     name: Run E2E Tests
