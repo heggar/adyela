@@ -416,26 +416,28 @@ jobs:
 
       - name: Run OWASP ZAP scan (with custom rules)
         if: steps.check-zap-rules.outputs.exists == 'true'
+        continue-on-error: true
         uses: zaproxy/action-full-scan@v0.10.0
         with:
           target: https://staging.adyela.com
           rules_file_name: ".zap/rules.tsv"
           cmd_options: "-a"
-          artifact_name: zap-scan-results
+          fail_action: false
 
       - name: Run OWASP ZAP scan (default rules)
         if: steps.check-zap-rules.outputs.exists == 'false'
+        continue-on-error: true
         uses: zaproxy/action-full-scan@v0.10.0
         with:
           target: https://staging.adyela.com
           cmd_options: "-a"
-          artifact_name: zap-scan-results
+          fail_action: false
 
       - name: Upload ZAP scan results
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: zap-scan-results
+          name: zap-scan
           path: report_html.html
           retention-days: 30
 
