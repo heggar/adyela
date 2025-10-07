@@ -74,17 +74,31 @@ RUN pnpm --filter @adyela/web build
 # Production stage - serve the built app
 FROM nginx:1.27-alpine AS production
 
+# Install gettext for envsubst
+RUN apk add --no-cache gettext
+
 # Set environment variable for port (Cloud Run compatibility)
 ENV PORT=8080
 
-# Remove default nginx config
-RUN rm -f /etc/nginx/conf.d/default.conf
+# Remove default nginx configs
+RUN rm -f /etc/nginx/conf.d/*
 
-# Copy nginx configuration as template
-COPY apps/web/nginx.conf /etc/nginx/templates/default.conf.template
+# Copy nginx configuration template
+COPY apps/web/nginx.conf /etc/nginx/conf.d/default.conf.template
 
 # Copy built files from builder
 COPY --from=builder /app/apps/web/dist /usr/share/nginx/html
+
+# Create startup script
+RUN echo '#!/bin/sh' > /docker-entrypoint.sh && \
+    echo 'set -e' >> /docker-entrypoint.sh && \
+    echo 'echo "Processing nginx template with PORT=${PORT}"' >> /docker-entrypoint.sh && \
+    echo 'envsubst '\''$PORT'\'' < /etc/nginx/conf.d/default.conf.template > /etc/nginx/conf.d/default.conf' >> /docker-entrypoint.sh && \
+    echo 'echo "Nginx configuration:"' >> /docker-entrypoint.sh && \
+    echo 'cat /etc/nginx/conf.d/default.conf' >> /docker-entrypoint.sh && \
+    echo 'echo "Starting nginx..."' >> /docker-entrypoint.sh && \
+    echo 'exec nginx -g "daemon off;"' >> /docker-entrypoint.sh && \
+    chmod +x /docker-entrypoint.sh
 
 # Expose port
 EXPOSE $PORT
@@ -93,7 +107,5 @@ EXPOSE $PORT
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD wget --no-verbose --tries=1 --spider http://localhost:${PORT}/ || exit 1
 
-# Run as root (required for template processing and port binding)
-# Cloud Run provides isolation, so this is safe
-# nginx official entrypoint will automatically envsubst templates
-CMD ["nginx", "-g", "daemon off;"]
+# Run our custom entrypoint
+CMD ["/docker-entrypoint.sh"]
