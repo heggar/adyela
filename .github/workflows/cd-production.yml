@@ -156,8 +156,10 @@ jobs:
       - name: Set image output
         id: image
         run: |
+          # NOTE: Cannot use secrets in job outputs, so we hardcode the project ID
+          # The project ID is not sensitive information
           REGISTRY="${{ env.GCP_REGION }}-docker.pkg.dev"
-          PROJECT="${{ secrets.GCP_PROJECT_ID_PRODUCTION }}"
+          PROJECT="adyela-production"
           REPOSITORY="adyela"
           SERVICE="${{ env.API_SERVICE_NAME }}"
           VERSION="${{ needs.pre-flight-checks.outputs.version }}"
