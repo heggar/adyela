@@ -40,9 +40,10 @@ FROM nginx:1.27-alpine AS production
 # su-exec -> para cambiar de usuario de forma segura.
 RUN apk add --no-cache gettext curl su-exec
 
-# Crear directorios clave y dar permisos al usuario 'nginx'.
-# Este es el paso crucial que soluciona los errores de "Permission denied".
-RUN mkdir -p /var/log/nginx /var/cache/nginx && \
+# CORRECCIÓN DEFINITIVA: Crear el directorio para el PID y dar permisos.
+# Nginx ahora podrá escribir en /run/nginx/nginx.pid sin problemas.
+RUN mkdir -p /run/nginx && \
+    chown -R nginx:nginx /run/nginx && \
     chown -R nginx:nginx /var/log/nginx /var/cache/nginx /etc/nginx/conf.d
 
 # Copiar los archivos estáticos compilados desde la etapa 'builder'.
@@ -64,4 +65,3 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
 
 # Definir el script de inicio como el punto de entrada del contenedor.
 ENTRYPOINT ["/docker-entrypoint.sh"]
-
