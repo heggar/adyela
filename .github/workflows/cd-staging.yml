@@ -249,6 +249,7 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          no-cache: true
           build-args: |
             VITE_API_URL=${{ secrets.VITE_API_URL_STAGING }}
             VITE_FIREBASE_API_KEY=${{ secrets.VITE_FIREBASE_API_KEY }}
