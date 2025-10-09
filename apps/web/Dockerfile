@@ -63,17 +63,16 @@ COPY apps/web/nginx.conf /etc/nginx/conf.d/default.conf.template
 # Copy and set permissions for the startup script
 COPY --chmod=755 .github/docker/web-entrypoint.sh /docker-entrypoint.sh
 
-# Switch to the non-root user
+# Cambia al usuario no-root
 USER nginx
 
-# Expose the port defined by the PORT environment variable.
-# Cloud Run will use this. Default to 8080 for local runs.
+# Expone el puerto (Cloud Run usará esto)
 ENV PORT=8080
 EXPOSE 8080
 
-# Health check to ensure Nginx is responsive
+# Verificación de salud
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD wget --quiet --tries=1 --spider http://localhost:${PORT}/ || exit 1
 
-# The entrypoint script will configure and start Nginx
+# El script de entrada configurará e iniciará Nginx
 CMD ["/docker-entrypoint.sh"]
