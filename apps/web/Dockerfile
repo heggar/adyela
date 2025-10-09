@@ -47,6 +47,9 @@ FROM nginx:1.27-alpine AS production
 # Install gettext for `envsubst` utility and remove cache
 RUN apk add --no-cache gettext
 
+# Install gettext and curl, then remove cache
+RUN apk add --no-cache gettext curl
+
 # Use a non-root user for security
 # Nginx automatically creates an 'nginx' user. We will use it.
 # Create directories for Nginx and give ownership to the nginx user.
@@ -72,7 +75,8 @@ EXPOSE 8080
 
 # Verificación de salud
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD wget --quiet --tries=1 --spider http://localhost:${PORT}/ || exit 1
+    CMD curl --fail http://localhost:${PORT}/ || exit 1
+
 
 # El script de entrada configurará e iniciará Nginx
 CMD ["/docker-entrypoint.sh"]
