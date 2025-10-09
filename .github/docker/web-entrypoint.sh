@@ -1,15 +1,14 @@
 #!/bin/sh
 set -e
 
-# Replace $PORT in the Nginx config template with the value of the PORT env var
-# and output it to the final config file.
-echo "INFO: Processing Nginx template with PORT=${PORT}"
+# Reemplaza $PORT en la plantilla de Nginx y crea el archivo de configuración final
+echo "INFO: Procesando plantilla de Nginx con el puerto PORT=${PORT}"
 envsubst '$PORT' < /etc/nginx/conf.d/default.conf.template > /etc/nginx/conf.d/default.conf
 
-echo "INFO: Nginx configuration:"
+echo "INFO: Configuración final de Nginx:"
 cat /etc/nginx/conf.d/default.conf
 echo "---------------------------"
 
-# Start Nginx in the foreground
-echo "INFO: Starting Nginx..."
+# Inicia Nginx en primer plano
+echo "INFO: Iniciando Nginx..."
 exec nginx -g "daemon off;"
