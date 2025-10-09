@@ -1,52 +1,30 @@
-# Multi-stage Dockerfile for Adyela Web
-# Build context should be the monorepo root
+# Multi-stage Dockerfile for Adyela Web (Frontend)
+# Build context should be the monorepo root.
 
-# Development stage - for local development with HMR
-FROM node:20-slim AS development
-
-# Install pnpm
-RUN npm install -g pnpm@9
-
-WORKDIR /app
-
-# Copy monorepo workspace files
-COPY pnpm-workspace.yaml package.json pnpm-lock.yaml ./
-
-# Copy web app package.json
-COPY apps/web/package.json ./apps/web/
-
-# Install ALL dependencies (including dev)
-# Use --no-frozen-lockfile for development to allow lock file creation
-RUN pnpm install --no-frozen-lockfile --filter @adyela/web...
-
-# Set working directory to web app
-WORKDIR /app/apps/web
-
-# Code will be mounted as volume in docker-compose
-# This allows Hot Module Replacement (HMR) during development
-
-EXPOSE 3000 5173
-
-# Default command (can be overridden in docker-compose)
-CMD ["pnpm", "dev", "--host", "0.0.0.0", "--port", "3000"]
-
-# Builder stage - build the production app
+# ==============================================================================
+# Stage 1: Builder
+# - Compiles production-ready static assets.
+# - Optimized for caching.
+# ==============================================================================
 FROM node:20-slim AS builder
 
+# Install pnpm globally
 RUN npm install -g pnpm@9
 
 WORKDIR /app
 
-# Copy monorepo workspace files
-COPY pnpm-workspace.yaml package.json pnpm-lock.yaml ./
+# Copy dependency manifests first to leverage Docker layer caching
+COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
+COPY apps/web/package.json ./apps/web/
 
-# Copy web app files
-COPY apps/web ./apps/web
-
-# Install dependencies (production only)
+# Install production dependencies for the web workspace
+# Using --prod=false is correct as build tools are often in devDependencies
 RUN pnpm install --frozen-lockfile --filter @adyela/web... --prod=false
 
-# Build args for Vite environment variables
+# Copy the rest of the web app source code
+COPY apps/web ./apps/web
+
+# Build arguments for Vite environment variables (can be passed during `docker build`)
 ARG VITE_API_URL
 ARG VITE_FIREBASE_API_KEY
 ARG VITE_FIREBASE_PROJECT_ID
@@ -57,55 +35,45 @@ ARG VITE_FIREBASE_APP_ID
 ARG VITE_JITSI_DOMAIN=meet.jit.si
 ARG VITE_ENV=staging
 
-# Set as environment variables for build
-ENV VITE_API_URL=$VITE_API_URL \
-    VITE_FIREBASE_API_KEY=$VITE_FIREBASE_API_KEY \
-    VITE_FIREBASE_PROJECT_ID=$VITE_FIREBASE_PROJECT_ID \
-    VITE_FIREBASE_AUTH_DOMAIN=$VITE_FIREBASE_AUTH_DOMAIN \
-    VITE_FIREBASE_STORAGE_BUCKET=$VITE_FIREBASE_STORAGE_BUCKET \
-    VITE_FIREBASE_MESSAGING_SENDER_ID=$VITE_FIREBASE_MESSAGING_SENDER_ID \
-    VITE_FIREBASE_APP_ID=$VITE_FIREBASE_APP_ID \
-    VITE_JITSI_DOMAIN=$VITE_JITSI_DOMAIN \
-    VITE_ENV=$VITE_ENV
-
 # Build the application
 RUN pnpm --filter @adyela/web build
 
-# Production stage - serve the built app
+# ==============================================================================
+# Stage 2: Production
+# - Final, lightweight, and secure image using Nginx to serve static files.
+# ==============================================================================
 FROM nginx:1.27-alpine AS production
 
-# Install gettext for envsubst
+# Install gettext for `envsubst` utility and remove cache
 RUN apk add --no-cache gettext
 
-# Set environment variable for port (Cloud Run compatibility)
-ENV PORT=8080
+# Use a non-root user for security
+# Nginx automatically creates an 'nginx' user. We will use it.
+# Create directories for Nginx and give ownership to the nginx user.
+RUN mkdir -p /var/cache/nginx /var/run && \
+    chown -R nginx:nginx /var/cache/nginx /var/run /var/log/nginx
 
-# Remove default nginx configs
-RUN rm -f /etc/nginx/conf.d/*
-
-# Copy nginx configuration template
-COPY apps/web/nginx.conf /etc/nginx/conf.d/default.conf.template
-
-# Copy built files from builder
+# Copy built static assets from the builder stage
 COPY --from=builder /app/apps/web/dist /usr/share/nginx/html
 
-# Create startup script
-RUN echo '#!/bin/sh' > /docker-entrypoint.sh && \
-    echo 'set -e' >> /docker-entrypoint.sh && \
-    echo 'echo "Processing nginx template with PORT=${PORT}"' >> /docker-entrypoint.sh && \
-    echo 'envsubst '\''$PORT'\'' < /etc/nginx/conf.d/default.conf.template > /etc/nginx/conf.d/default.conf' >> /docker-entrypoint.sh && \
-    echo 'echo "Nginx configuration:"' >> /docker-entrypoint.sh && \
-    echo 'cat /etc/nginx/conf.d/default.conf' >> /docker-entrypoint.sh && \
-    echo 'echo "Starting nginx..."' >> /docker-entrypoint.sh && \
-    echo 'exec nginx -g "daemon off;"' >> /docker-entrypoint.sh && \
-    chmod +x /docker-entrypoint.sh
+# Copy the Nginx configuration template
+# This template will be processed at container startup.
+COPY apps/web/nginx.conf /etc/nginx/conf.d/default.conf.template
 
-# Expose port
-EXPOSE $PORT
+# Copy and set permissions for the startup script
+COPY --chmod=755 .github/docker/web-entrypoint.sh /docker-entrypoint.sh
 
-# Health check
+# Switch to the non-root user
+USER nginx
+
+# Expose the port defined by the PORT environment variable.
+# Cloud Run will use this. Default to 8080 for local runs.
+ENV PORT=8080
+EXPOSE 8080
+
+# Health check to ensure Nginx is responsive
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:${PORT}/ || exit 1
+    CMD wget --quiet --tries=1 --spider http://localhost:${PORT}/ || exit 1
 
-# Run our custom entrypoint
+# The entrypoint script will configure and start Nginx
 CMD ["/docker-entrypoint.sh"]
