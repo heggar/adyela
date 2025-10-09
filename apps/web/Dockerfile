@@ -48,14 +48,13 @@ FROM nginx:1.27-alpine AS production
 RUN apk add --no-cache gettext curl su-exec
 
 # THE KEY FIX FOR PID PERMISSION ERROR:
-# The default nginx.conf tries to write a PID file to /var/run/nginx.pid.
-# The non-root 'nginx' user doesn't have permission to write there.
-# We'll modify the main Nginx config to use the world-writable /tmp directory instead.
+# Modify the main Nginx config to use the world-writable /tmp directory for its PID file.
 RUN sed -i 's|/var/run/nginx.pid|/tmp/nginx.pid|' /etc/nginx/nginx.conf
 
-# Create required directories and set permissions for the non-root 'nginx' user
+# Create required directories and take ownership as the non-root 'nginx' user.
+# This ensures Nginx can write its logs, cache, and that the entrypoint can write the config.
 RUN mkdir -p /var/log/nginx /var/cache/nginx && \
-    chown -R nginx:nginx /var/log/nginx /var/cache/nginx
+    chown -R nginx:nginx /var/log/nginx /var/cache/nginx /etc/nginx/conf.d
 
 # Copy built static assets from the builder stage
 COPY --from=builder /app/apps/web/dist /usr/share/nginx/html
@@ -77,3 +76,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
 # The entrypoint script runs as root to create the config file.
 # The script itself then switches to the 'nginx' user to run the server.
 ENTRYPOINT ["/docker-entrypoint.sh"]
+
