@@ -56,7 +56,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.version }}
+          ref: "main"
+
+      - name: Reset to specific commit
+        run: git reset --hard ${{ inputs.version }}
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -116,7 +119,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.version }}
+          ref: "main"
+
+      - name: Reset to specific commit
+        run: git reset --hard ${{ inputs.version }}
 
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
@@ -203,7 +209,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.version }}
+          ref: "main"
+
+      - name: Reset to specific commit
+        run: git reset --hard ${{ inputs.version }}
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -268,7 +277,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.version }}
+          ref: "main"
+
+      - name: Reset to specific commit
+        run: git reset --hard ${{ inputs.version }}
 
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
@@ -351,7 +363,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.version }}
+          ref: "main"
+
+      - name: Reset to specific commit
+        run: git reset --hard ${{ inputs.version }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -407,7 +422,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.version }}
+          ref: "main"
+
+      - name: Reset to specific commit
+        run: git reset --hard ${{ inputs.version }}
 
       - name: Check if performance tests exist
         id: check-perf-tests
@@ -444,7 +462,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.version }}
+          ref: "main"
+
+      - name: Reset to specific commit
+        run: git reset --hard ${{ inputs.version }}
 
       - name: Check if ZAP rules exist
         id: check-zap-rules
