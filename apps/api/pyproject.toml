@@ -2,7 +2,7 @@
 name = "adyela-api"
 version = "0.1.0"
 description = "Adyela Medical Appointments API with FastAPI and Hexagonal Architecture"
-authors = ["Adyela Team <dev@adyela.com>"]
+authors = ["Adyela Team <dev@adyela.care>"]
 readme = "README.md"
 packages = [{include = "adyela_api"}]
 
