@@ -44,8 +44,8 @@ RUN pnpm --filter @adyela/web build
 # ==============================================================================
 FROM nginx:1.27-alpine AS production
 
-# Install gettext for envsubst and curl for healthcheck
-RUN apk add --no-cache gettext curl
+# Install necessary packages: gettext for envsubst, curl for healthcheck, and su-exec to change user
+RUN apk add --no-cache gettext curl su-exec
 
 # Create required directories and set permissions for the non-root 'nginx' user
 RUN mkdir -p /var/log/nginx /var/cache/nginx /var/run && \
@@ -68,7 +68,6 @@ EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl --fail http://localhost:${PORT}/ || exit 1
 
-# THE KEY FIX IS HERE:
 # The entrypoint script runs as root to create the config file.
 # The script itself then switches to the 'nginx' user to run the server.
 ENTRYPOINT ["/docker-entrypoint.sh"]
