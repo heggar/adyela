@@ -244,6 +244,7 @@ jobs:
           context: .
           file: ./apps/web/Dockerfile
           push: true
+          load: true
           target: production
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
@@ -260,6 +261,17 @@ jobs:
             VITE_FIREBASE_APP_ID=${{ secrets.VITE_FIREBASE_APP_ID }}
             VITE_JITSI_DOMAIN=meet.jit.si
             VITE_ENV=${{ env.ENVIRONMENT }}
+
+      - name: Inspect Image Internals
+        run: |
+          IMAGE_NAME=${{ env.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID_STAGING }}/adyela/adyela-web-staging:${{ inputs.version }}
+          echo "--- Inspeccionando imagen: ${IMAGE_NAME} ---"
+
+          echo "\n>> Verificando contenido de /etc/nginx/nginx.conf (buscando la directiva 'pid')"
+          docker run --rm --entrypoint cat ${IMAGE_NAME} /etc/nginx/nginx.conf | grep pid || echo "Directiva 'pid' no encontrada o usa el valor por defecto."
+
+          echo "\n>> Listando permisos de /run"
+          docker run --rm --entrypoint ls ${IMAGE_NAME} -la /run
 
       - name: Output image version
         id: output
