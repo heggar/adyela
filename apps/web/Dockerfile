@@ -1,5 +1,5 @@
 # Multi-stage Dockerfile for Adyela Web (Frontend)
-# Build context should be the monorepo root.
+# Build context should be the monrepo root.
 
 # ==============================================================================
 # Stage 1: Builder
@@ -44,39 +44,34 @@ RUN pnpm --filter @adyela/web build
 # ==============================================================================
 FROM nginx:1.27-alpine AS production
 
-# Install gettext for `envsubst` utility and remove cache
-RUN apk add --no-cache gettext
-
-# Install gettext and curl, then remove cache
+# Install gettext for envsubst and curl for healthcheck
 RUN apk add --no-cache gettext curl
 
-# Use a non-root user for security
-# Nginx automatically creates an 'nginx' user. We will use it.
-# Create directories for Nginx and give ownership to the nginx user.
-RUN mkdir -p /var/cache/nginx /var/run && \
-    chown -R nginx:nginx /var/cache/nginx /var/run /var/log/nginx
+# Create required directories and set permissions for the non-root 'nginx' user
+# THIS IS THE KEY FIX: Ensure nginx can write to its logs and temp directories.
+RUN mkdir -p /var/log/nginx /var/cache/nginx /var/run && \
+    chown -R nginx:nginx /var/log/nginx /var/cache/nginx /var/run
 
 # Copy built static assets from the builder stage
 COPY --from=builder /app/apps/web/dist /usr/share/nginx/html
 
 # Copy the Nginx configuration template
-# This template will be processed at container startup.
 COPY apps/web/nginx.conf /etc/nginx/conf.d/default.conf.template
 
 # Copy and set permissions for the startup script
 COPY --chmod=755 .github/docker/web-entrypoint.sh /docker-entrypoint.sh
 
-# Cambia al usuario no-root
+# Switch to the non-root user
 USER nginx
 
-# Expone el puerto (Cloud Run usará esto)
+# Expose the port defined by the PORT environment variable
 ENV PORT=8080
 EXPOSE 8080
 
-# Verificación de salud
+# Health check to ensure Nginx is responsive on the root URL
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl --fail http://localhost:${PORT}/ || exit 1
 
-
-# El script de entrada configurará e iniciará Nginx
+# The entrypoint script will configure and start Nginx
 CMD ["/docker-entrypoint.sh"]
+
