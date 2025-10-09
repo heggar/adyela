@@ -34,19 +34,20 @@ RUN pnpm --filter @adyela/web build
 # ==============================================================================
 FROM nginx:1.27-alpine AS production
 
-# Instalar herramientas necesarias:
-# gettext -> para 'envsubst' que usa el script de inicio.
-# curl    -> para la verificación de salud (HEALTHCHECK).
-# su-exec -> para cambiar de usuario de forma segura.
+# Instalar herramientas necesarias
 RUN apk add --no-cache gettext curl su-exec
 
-# CORRECCIÓN DEFINITIVA: Crear el directorio para el PID y dar permisos.
-# Nginx ahora podrá escribir en /run/nginx/nginx.pid sin problemas.
+# CORRECCIÓN DEFINITIVA: Modificar directamente la configuración principal de Nginx
+# para que use un directorio escribible para su PID y active el modo de depuración.
+RUN sed -i 's|/var/run/nginx.pid|/tmp/nginx.pid|' /etc/nginx/nginx.conf && \
+    sed -i 's|error_log /var/log/nginx/error.log warn;|error_log /dev/stderr debug;|' /etc/nginx/nginx.conf
+
+# Crear el directorio para el PID y dar permisos.
 RUN mkdir -p /run/nginx && \
     chown -R nginx:nginx /run/nginx && \
     chown -R nginx:nginx /var/log/nginx /var/cache/nginx /etc/nginx/conf.d
 
-# Copiar los archivos estáticos compilados desde la etapa 'builder'.
+# Copiar los archivos estáticos compilados
 COPY --from=builder /app/apps/web/dist /usr/share/nginx/html
 
 # Copiar la configuración de Nginx como una plantilla.
@@ -59,9 +60,10 @@ COPY --chmod=755 .github/docker/web-entrypoint.sh /docker-entrypoint.sh
 ENV PORT=8080
 EXPOSE 8080
 
-# Verificación de salud para que Cloud Run sepa que el contenedor está listo.
+# Verificación de salud.
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl --fail http://localhost:${PORT}/ || exit 1
 
 # Definir el script de inicio como el punto de entrada del contenedor.
 ENTRYPOINT ["/docker-entrypoint.sh"]
+
