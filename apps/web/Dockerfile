@@ -22,23 +22,19 @@ RUN pnpm --filter @adyela/web build
 # =====================
 # FROM nginx:1.27-alpine AS production
 FROM nginxinc/nginx-unprivileged:stable-alpine AS production
-# gettext para envsubst (si lo usas)
-RUN apk add --no-cache gettext
 
-# Usuario no-root y permisos
-RUN adduser -D -H -u 1001 app \
-  && mkdir -p /var/cache/nginx /var/run/nginx /etc/nginx/conf.d \
-  && chown -R app:app /var/cache/nginx /var/run/nginx /var/log/nginx /etc/nginx /usr/share/nginx/html
+# 1) Subir a root para poder instalar paquetes
+USER root
+RUN apk add --no-cache gettext   # (para envsubst)
 
-COPY --from=builder /app/apps/web/dist/ /usr/share/nginx/html/
-COPY apps/web/nginx.conf /etc/nginx/conf.d/default.conf.template
-# Copy and set permissions for the startup script
-COPY --chmod=755 .github/docker/web-entrypoint.sh /web-entrypoint.sh
-
+# 2) Copiar artefactos con ownership correcto para el usuario 101
+COPY --from=builder --chown=101:101 /app/apps/web/dist/ /usr/share/nginx/html/
+COPY --chown=101:101 apps/web/nginx.conf /etc/nginx/templates/default.conf.template
+COPY --chown=101:101 web-entrypoint.sh /web-entrypoint.sh
 RUN chmod +x /web-entrypoint.sh
 
-USER 1001
+# 3) Volver a usuario no-root (que es como corre esta imagen)
+USER 101
 ENV PORT=8080
 EXPOSE 8080
-
 ENTRYPOINT ["/web-entrypoint.sh"]
