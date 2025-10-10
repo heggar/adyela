@@ -20,35 +20,23 @@ RUN pnpm --filter @adyela/web build
 # =====================
 # Stage 2: Runtime
 # =====================
-FROM nginx:1.27-alpine AS runtime
+FROM nginx:1.27-alpine AS production
 
-
-# gettext para envsubst
+# gettext para envsubst (si lo usas)
 RUN apk add --no-cache gettext
 
-
-# Usuario no-root y permisos coherentes
+# Usuario no-root y permisos
 RUN adduser -D -H -u 1001 app \
-&& mkdir -p /var/cache/nginx /var/run/nginx /etc/nginx/conf.d \
-&& chown -R app:app /var/cache/nginx /var/run/nginx /var/log/nginx /etc/nginx /usr/share/nginx/html
+  && mkdir -p /var/cache/nginx /var/run/nginx /etc/nginx/conf.d \
+  && chown -R app:app /var/cache/nginx /var/run/nginx /var/log/nginx /etc/nginx /usr/share/nginx/html
 
-
-# Estáticos
 COPY --from=builder /app/apps/web/dist/ /usr/share/nginx/html/
-
-
-# Tu plantilla (ruta que espera el entrypoint)
 COPY apps/web/nginx.conf /etc/nginx/conf.d/default.conf.template
-
-
-# Entrypoint ajustado
 COPY web-entrypoint.sh /web-entrypoint.sh
 RUN chmod +x /web-entrypoint.sh
-
 
 USER 1001
 ENV PORT=8080
 EXPOSE 8080
-
 
 ENTRYPOINT ["/web-entrypoint.sh"]
