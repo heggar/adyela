@@ -30,7 +30,7 @@ RUN apk add --no-cache gettext   # (para envsubst)
 # 2) Copiar artefactos con ownership correcto para el usuario 101
 COPY --from=builder --chown=101:101 /app/apps/web/dist/ /usr/share/nginx/html/
 COPY --chown=101:101 apps/web/nginx.conf /etc/nginx/templates/default.conf.template
-COPY --chown=101:101 web-entrypoint.sh /web-entrypoint.sh
+COPY --chown=101:101 .github/docker/web-entrypoint.sh /web-entrypoint.sh
 RUN chmod +x /web-entrypoint.sh
 
 # 3) Volver a usuario no-root (que es como corre esta imagen)
