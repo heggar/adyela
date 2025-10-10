@@ -32,7 +32,9 @@ RUN adduser -D -H -u 1001 app \
 
 COPY --from=builder /app/apps/web/dist/ /usr/share/nginx/html/
 COPY apps/web/nginx.conf /etc/nginx/conf.d/default.conf.template
-COPY web-entrypoint.sh /web-entrypoint.sh
+# Copy and set permissions for the startup script
+COPY --chmod=755 .github/docker/web-entrypoint.sh /web-entrypoint.sh
+
 RUN chmod +x /web-entrypoint.sh
 
 USER 1001
