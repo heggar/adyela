@@ -343,7 +343,7 @@ jobs:
             --platform managed \
             --set-env-vars="VITE_ENV=${{ env.ENVIRONMENT }},VERSION=${{ inputs.version }}" \
             --min-instances=0 \
-            --allow-unauthenticated \ 
+            --allow-unauthenticated \
             --max-instances=2 \
             --memory=256Mi \
             --cpu=1 \
