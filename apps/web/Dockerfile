@@ -20,8 +20,8 @@ RUN pnpm --filter @adyela/web build
 # =====================
 # Stage 2: Runtime
 # =====================
-FROM nginx:1.27-alpine AS production
-
+# FROM nginx:1.27-alpine AS production
+FROM nginxinc/nginx-unprivileged:stable-alpine AS production
 # gettext para envsubst (si lo usas)
 RUN apk add --no-cache gettext
 
