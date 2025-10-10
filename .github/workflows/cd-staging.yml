@@ -359,30 +359,25 @@ jobs:
           echo "url=${URL}" >> "$GITHUB_OUTPUT"
           echo "Web deployed to: ${URL}"
 
-      - name: Ensure service is public (Invoker for allUsers)
-        run: |
-          gcloud run services add-iam-policy-binding "adyela-web-staging" \
-            --region "${{ env.GCP_REGION }}" \
-            --member="allUsers" \
-            --role="roles/run.invoker" \
-            --project "${{ secrets.GCP_PROJECT_ID_STAGING }}" || true
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER_STAGING }}
+          service_account: ${{ secrets.SERVICE_ACCOUNT_STAGING }}
+          token_format: id_token
+          id_token_audience: ${{ steps.deploy.outputs.url }}
+          id_token_include_email: true
 
       - name: Verify deployment health
-        continue-on-error: true
         run: |
-          MAX_RETRIES=12
-          RETRY_COUNT=0
           URL=${{ steps.deploy.outputs.url }}
-
-          while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
-            if curl -fsS "$URL" > /dev/null; then
-              echo "Health check passed"; exit 0
+          for i in {1..12}; do
+            if curl -fsSL -H "Authorization: Bearer ${{ steps.auth.outputs.id_token }}" "$URL"; then
+              echo "OK"; exit 0
             fi
-            RETRY_COUNT=$((RETRY_COUNT + 1))
-            echo "Health check failed. Retry $RETRY_COUNT/$MAX_RETRIES"
             sleep 5
           done
-          echo "Health check failed after $MAX_RETRIES retries"; exit 1
+          exit 1
 
   e2e-tests:
     name: Run E2E Tests
