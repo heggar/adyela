@@ -355,7 +355,7 @@ jobs:
           TOKEN=$(gcloud auth print-identity-token)
 
           while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
-            if curl -f -H "Authorization: Bearer $TOKEN" ${{ steps.deploy.outputs.url }}/health; then
+            if curl -f -H "Authorization: Bearer $TOKEN" ${{ steps.deploy.outputs.url }}/; then
               echo "Health check passed"
               exit 0
             fi
