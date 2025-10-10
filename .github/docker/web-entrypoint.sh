@@ -21,4 +21,5 @@ echo "----------------------------------------------------"
 
 echo "\nINFO: Iniciando Nginx en modo de depuración..."
 # Inicia Nginx en primer plano, cambiando al usuario 'nginx'
-exec su-exec nginx nginx -g "daemon off;"
+
+exec nginx -g 'daemon off; pid /tmp/nginx.pid;'
