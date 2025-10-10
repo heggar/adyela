@@ -95,8 +95,9 @@ jobs:
           cache-to: type=gha,mode=max
           build-args: |
             ENVIRONMENT=${{ env.ENVIRONMENT }}
-          provenance: true
-          sbom: true
+          platforms: linux/amd64
+          provenance: false
+          sbom: false
 
       - name: Sign container image
         continue-on-error: true
@@ -162,6 +163,7 @@ jobs:
             --max-instances=1 \
             --memory=512Mi \
             --cpu=1 \
+            --allow-unauthenticated \
             --timeout=300s \
             --concurrency=80 \
             --port=8000 \
@@ -175,6 +177,14 @@ jobs:
         run: |
           echo "Waiting for Cloud Run service to stabilize..."
           sleep 30
+
+      - name: Ensure service is public (Invoker for allUsers)
+        run: |
+          gcloud run services add-iam-policy-binding "${SERVICE}" \
+            --region "${REGION}" \
+            --member="allUsers" \
+            --role="roles/run.invoker" \
+            --project "${PROJECT_ID}" || true
 
       - name: Verify deployment health
         continue-on-error: true
@@ -251,6 +261,9 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           no-cache: true
+          platforms: linux/amd64 # una sola plataforma
+          provenance: false # desactiva atestaciones
+          sbom: false # desactiva SBOM
           build-args: |
             VITE_API_URL=${{ secrets.VITE_API_URL_STAGING }}
             VITE_FIREBASE_API_KEY=${{ secrets.VITE_FIREBASE_API_KEY }}
@@ -330,6 +343,7 @@ jobs:
             --platform managed \
             --set-env-vars="VITE_ENV=${{ env.ENVIRONMENT }},VERSION=${{ inputs.version }}" \
             --min-instances=0 \
+            --allow-unauthenticated \ 
             --max-instances=2 \
             --memory=256Mi \
             --cpu=1 \
@@ -345,28 +359,30 @@ jobs:
           echo "url=${URL}" >> "$GITHUB_OUTPUT"
           echo "Web deployed to: ${URL}"
 
+      - name: Ensure service is public (Invoker for allUsers)
+        run: |
+          gcloud run services add-iam-policy-binding "adyela-web-staging" \
+            --region "${{ env.GCP_REGION }}" \
+            --member="allUsers" \
+            --role="roles/run.invoker" \
+            --project "${{ secrets.GCP_PROJECT_ID_STAGING }}" || true
+
       - name: Verify deployment health
         continue-on-error: true
         run: |
-          MAX_RETRIES=5
+          MAX_RETRIES=12
           RETRY_COUNT=0
-
-          # Get identity token for authenticated requests
-          TOKEN=$(gcloud auth print-identity-token)
+          URL=${{ steps.deploy.outputs.url }}
 
           while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
-            if curl -f -H "Authorization: Bearer $TOKEN" ${{ steps.deploy.outputs.url }}/; then
-              echo "Health check passed"
-              exit 0
+            if curl -fsS "$URL" > /dev/null; then
+              echo "Health check passed"; exit 0
             fi
-
             RETRY_COUNT=$((RETRY_COUNT + 1))
             echo "Health check failed. Retry $RETRY_COUNT/$MAX_RETRIES"
-            sleep 10
+            sleep 5
           done
-
-          echo "Health check failed after $MAX_RETRIES retries"
-          exit 1
+          echo "Health check failed after $MAX_RETRIES retries"; exit 1
 
   e2e-tests:
     name: Run E2E Tests
