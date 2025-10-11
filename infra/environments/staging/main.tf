@@ -109,7 +109,6 @@ module "cloud_run" {
   project_name = var.project_name
   environment  = local.environment
   region       = var.region
-  version      = "latest" # This will be updated by CI/CD
 
   service_account_email = module.service_account.service_account_email
   vpc_connector_name    = module.vpc.vpc_connector_name
