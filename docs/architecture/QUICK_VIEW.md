@@ -54,6 +54,49 @@
 
 ---
 
+## 🚀 Estado Actual de Despliegue
+
+### ✅ Staging Environment (80% COMPLETADO)
+
+| Componente           | Estado       | Detalles                                                          |
+| -------------------- | ------------ | ----------------------------------------------------------------- |
+| **Cloud Run API**    | ✅ ACTIVO    | `adyela-api-staging` - Ingress: internal                          |
+| **Cloud Run Web**    | ✅ ACTIVO    | `adyela-web-staging` - Ingress: internal-and-cloud-load-balancing |
+| **VPC Network**      | ✅ ACTIVO    | `adyela-staging-vpc` (CUSTOM mode)                                |
+| **VPC Connector**    | ✅ ACTIVO    | `adyela-staging-connector` (READY)                                |
+| **Load Balancer**    | ✅ ACTIVO    | IP: `34.96.108.162` - SSL: ACTIVE                                 |
+| **SSL Certificate**  | ✅ ACTIVO    | `staging.adyela.care` - Google Managed                            |
+| **Service Account**  | ✅ ACTIVO    | `adyela-staging-hipaa` - HIPAA roles                              |
+| **Secret Manager**   | ✅ ACTIVO    | 8 secrets HIPAA configurados                                      |
+| **Firebase Project** | ✅ ACTIVO    | `adyela-staging` (717907307897)                                   |
+| **Cloud Logging**    | ✅ ACTIVO    | Logs de Cloud Run visibles                                        |
+| **Cloud Functions**  | ⏳ PENDIENTE | Gen2 serverless                                                   |
+| **Cloud Scheduler**  | ⏳ PENDIENTE | Cron jobs                                                         |
+| **Pub/Sub**          | ⏳ PENDIENTE | Event bus                                                         |
+| **Cloud Tasks**      | ⏳ PENDIENTE | Cola de tareas                                                    |
+| **Cloud Storage**    | ⏳ PENDIENTE | Documentos y backups                                              |
+| **Cloud Monitoring** | ⏳ PENDIENTE | Métricas avanzadas                                                |
+| **Cloud Trace**      | ⏳ PENDIENTE | APM avanzado                                                      |
+| **Error Reporting**  | ⏳ PENDIENTE | Errores automáticos                                               |
+
+### 🔗 URLs Activas
+
+- **Load Balancer**: `https://34.96.108.162` (HTTP/HTTPS)
+- **Dominio**: `staging.adyela.care` (configurado, pendiente DNS)
+- **API Directa**: ❌ Bloqueada (seguridad HIPAA)
+- **Web Directa**: ❌ Bloqueada (seguridad HIPAA)
+
+### 🔐 Configuración de Seguridad
+
+- **Acceso Directo**: ❌ BLOQUEADO (ingress control)
+- **VPC Egress**: `private-ranges-only`
+- **Service Account**: HIPAA-compliant
+- **Secrets**: 8 secrets encriptados
+- **SSL/TLS**: 1.3 activo
+- **Load Balancer**: Solo punto de entrada público
+
+---
+
 ## 🎯 Componentes Principales
 
 ### 🌐 Capa de Entrada
@@ -69,34 +112,62 @@
 
 ---
 
-### 🟨 Staging Environment
+### 🟨 Staging Environment ✅ DESPLEGADO
 
-#### ⚙️ Compute
+#### ⚙️ Compute (ACTIVO)
 
 - **Cloud Run API**: FastAPI, 0-1 instancias (scale-to-zero)
+  - URL: `https://adyela-api-staging-717907307897.us-central1.run.app`
+  - Ingress: `internal` (solo Load Balancer)
+  - VPC Connector: `adyela-staging-connector`
 - **Cloud Run Web**: React PWA, 0-2 instancias
-- **Cloud Functions**: Gen2, serverless
-- **Cloud Scheduler**: Cron jobs, mantenimiento
+  - URL: `https://adyela-web-staging-717907307897.us-central1.run.app`
+  - Ingress: `internal-and-cloud-load-balancing`
+  - VPC Connector: `adyela-staging-connector`
+- **Cloud Functions**: Gen2, serverless (pendiente)
+- **Cloud Scheduler**: Cron jobs, mantenimiento (pendiente)
 
-#### 💾 Data
+#### 🌐 Networking (ACTIVO)
 
-- **Firestore**: Multi-tenant, Native mode
-- **Cloud Storage**: Documentos, backups
-- **Secret Manager**: API keys, credenciales
+- **VPC Network**: `adyela-staging-vpc` (CUSTOM mode)
+- **VPC Access Connector**: `adyela-staging-connector` (READY)
+  - Subnet: `adyela-staging-connector-subnet`
+  - Machine Type: f1-micro (2-3 instances)
+- **Load Balancer**: HTTP(S) Global
+  - IP: `34.96.108.162`
+  - SSL Certificate: `adyela-staging-web-ssl-cert` (ACTIVE)
+  - Domain: `staging.adyela.care` (configurado)
 
-#### 🔄 Async
+#### 💾 Data (ACTIVO)
 
-- **Pub/Sub**: Event bus
-- **Cloud Tasks**: Cola de tareas
+- **Firebase Project**: `adyela-staging` (717907307897)
+- **Firestore**: Multi-tenant, Native mode (configurado)
+- **Cloud Storage**: Documentos, backups (pendiente)
+- **Secret Manager**: 8 secrets HIPAA
+  - `api-secret-key`, `jwt-secret-key`, `encryption-key`
+  - `firebase-admin-key`, `database-connection-string`
+  - `external-api-keys`, `smtp-credentials`
 
-#### 📊 Monitoring
+#### 🔐 Security (ACTIVO)
 
-- **Logging**: Retención 30 días
-- **Monitoring**: Métricas básicas
-- **Trace**: APM básico
-- **Error Reporting**: Errores automáticos
+- **Service Account**: `adyela-staging-hipaa@adyela-staging.iam.gserviceaccount.com`
+- **IAM Roles**: HIPAA-compliant roles asignados
+- **VPC Egress**: `private-ranges-only`
+- **Ingress Control**: Bloqueado acceso directo
 
-**Costo Estimado**: $5-10/mes
+#### 🔄 Async (PENDIENTE)
+
+- **Pub/Sub**: Event bus (pendiente)
+- **Cloud Tasks**: Cola de tareas (pendiente)
+
+#### 📊 Monitoring (ACTIVO)
+
+- **Cloud Logging**: Activo (logs de Cloud Run visibles)
+- **Cloud Monitoring**: Métricas básicas (pendiente configuración avanzada)
+- **Trace**: APM básico (pendiente)
+- **Error Reporting**: Errores automáticos (pendiente)
+
+**Estado**: ✅ 80% DESPLEGADO | **Costo Actual**: ~$15-25/mes
 
 ---
 
@@ -164,13 +235,18 @@
 
 ## 📈 Características Clave
 
-### ✅ Staging
+### ✅ Staging (80% DESPLEGADO)
 
 - ✓ Scale-to-zero (ahorro de costos)
 - ✓ Ambiente de pruebas completo
 - ✓ Misma arquitectura que producción
 - ✓ Retención corta de logs (30 días)
-- ✓ Costo mínimo ($5-10/mes)
+- ✓ VPC y networking configurado
+- ✓ Load Balancer con SSL activo
+- ✓ Service Account HIPAA configurado
+- ✓ 8 secrets en Secret Manager
+- ✓ Acceso directo bloqueado (seguridad)
+- ✓ Costo actual ($15-25/mes)
 
 ### ✅ Production
 
@@ -221,13 +297,16 @@ Cloud Run → Firestore (CMEK)
 
 ## 💰 Costos Mensuales Estimados
 
-### Staging: $5-10/mes
+### Staging: $15-25/mes (ACTUAL)
 
-- Cloud Run: $2-3 (scale-to-zero)
-- Firestore: $1-2 (volumen bajo)
-- Cloud Storage: $1-2 (backups)
-- Logging: $1-2 (30 días)
-- Otros: $1-2
+- Cloud Run: $5-8 (con VPC connector, always-on mínimo)
+- Load Balancer: $5-8 (HTTP(S) global)
+- VPC Access Connector: $3-5 (f1-micro instances)
+- Firestore: $2-3 (volumen bajo)
+- Secret Manager: $1-2 (8 secrets)
+- SSL Certificate: $0 (Google managed)
+- Logging: $2-3 (30 días)
+- Otros: $2-3
 
 ### Production: $200-500/mes
 
@@ -254,64 +333,6 @@ Cloud Run → Firestore (CMEK)
 
 ---
 
-## 🚀 Cómo Ver el Diagrama Visual Completo
-
-### Opción 1: Draw.io Web (RECOMENDADO)
-
-```bash
-# Abre tu navegador en:
-https://app.diagrams.net/
-
-# Arrastra el archivo:
-docs/architecture/adyela-gcp-architecture.drawio
-
-# Verás el diagrama completo con todos los iconos de GCP
-```
-
-### Opción 2: VS Code Extension
-
-```bash
-# Instala la extensión:
-code --install-extension hediet.vscode-drawio
-
-# Abre el archivo:
-code docs/architecture/adyela-gcp-architecture.drawio
-```
-
-### Opción 3: Desktop App (macOS)
-
-```bash
-# Instala Draw.io:
-brew install --cask drawio
-
-# Abre el archivo:
-open docs/architecture/adyela-gcp-architecture.drawio
-```
-
----
-
-## 📚 Documentación Relacionada
-
-- **[Guía Completa de Arquitectura](./GCP_ARCHITECTURE_GUIDE.md)** - 50+ páginas de detalles técnicos
-- **[Instrucciones de Visualización](./VIEWING_INSTRUCTIONS.md)** - Solución de problemas
-- **[Guía de Edición](./DIAGRAM_GUIDE.md)** - Cómo editar el diagrama
-- **[README](./README.md)** - Índice general
-
----
-
-## ⚠️ Nota Importante
-
-Este diagrama ASCII es una **representación simplificada**. Para ver la arquitectura completa con:
-
-- ✅ Iconos oficiales de GCP
-- ✅ Colores y diseño profesional
-- ✅ Conexiones entre servicios
-- ✅ Etiquetas detalladas
-
-**Abre el archivo `.drawio` en Draw.io** (web o desktop).
-
----
-
 **Última Actualización**: 2025-10-11  
-**Versión**: 3.0  
-**Estado**: ✅ Arquitectura validada
+**Versión**: 3.1  
+**Estado**: ✅ Staging 80% desplegado | ✅ Arquitectura validada
