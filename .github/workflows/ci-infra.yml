@@ -28,7 +28,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        environment: [dev, staging, production]
+        environment: [staging, production]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -110,81 +110,6 @@ jobs:
           non_recursive: false
           verbose: true
 
-  plan-dev:
-    name: Terraform Plan (Dev)
-    runs-on: ubuntu-latest
-    needs: [validate, security-scan]
-    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && vars.GCP_CONFIGURED == 'true'
-    environment: development
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: ${{ env.TERRAFORM_VERSION }}
-
-      - name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v2
-        with:
-          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
-
-      - name: Setup GCP SDK
-        uses: google-github-actions/setup-gcloud@v2
-
-      - name: Cache Terraform plugins
-        uses: actions/cache@v4
-        with:
-          path: |
-            ${{ env.WORKING_DIR }}/environments/dev/.terraform
-            ~/.terraform.d/plugin-cache
-          key: ${{ runner.os }}-terraform-dev-${{ hashFiles('**/.terraform.lock.hcl') }}
-          restore-keys: |
-            ${{ runner.os }}-terraform-dev-
-
-      - name: Terraform Init
-        working-directory: ${{ env.WORKING_DIR }}/environments/dev
-        run: terraform init
-
-      - name: Terraform Plan
-        working-directory: ${{ env.WORKING_DIR }}/environments/dev
-        run: |
-          terraform plan -out=tfplan -no-color -input=false
-        env:
-          TF_VAR_project_id: ${{ secrets.GCP_PROJECT_ID_DEV }}
-
-      - name: Save plan to file
-        working-directory: ${{ env.WORKING_DIR }}/environments/dev
-        run: terraform show -no-color tfplan > plan.txt
-
-      - name: Comment PR with plan
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const fs = require('fs');
-            const plan = fs.readFileSync('${{ env.WORKING_DIR }}/environments/dev/plan.txt', 'utf8');
-            const maxLength = 65000;
-            const truncatedPlan = plan.length > maxLength
-              ? plan.substring(0, maxLength) + '\n\n... (truncated)'
-              : plan;
-
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: `## Terraform Plan (Dev)\n\`\`\`terraform\n${truncatedPlan}\n\`\`\``
-            });
-
-      - name: Upload plan artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: terraform-plan-dev
-          path: ${{ env.WORKING_DIR }}/environments/dev/tfplan
-          retention-days: 7
-
   plan-staging:
     name: Terraform Plan (Staging)
     runs-on: ubuntu-latest
@@ -203,8 +128,8 @@ jobs:
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
         with:
-          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT_STAGING }}
+          workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER_STAGING }}
+          service_account: ${{ secrets.SERVICE_ACCOUNT_STAGING }}
 
       - name: Setup GCP SDK
         uses: google-github-actions/setup-gcloud@v2
@@ -264,7 +189,7 @@ jobs:
     name: Terraform Plan (Production)
     runs-on: ubuntu-latest
     needs: [validate, security-scan]
-    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && vars.GCP_CONFIGURED == 'true'
+    if: false # Disabled - only staging is needed for now
     environment: production
     steps:
       - name: Checkout code
@@ -278,8 +203,8 @@ jobs:
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
         with:
-          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT_PROD }}
+          workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER_PRODUCTION }}
+          service_account: ${{ secrets.SERVICE_ACCOUNT_PRODUCTION }}
 
       - name: Setup GCP SDK
         uses: google-github-actions/setup-gcloud@v2
@@ -338,7 +263,7 @@ jobs:
   cost-estimation:
     name: Cost Estimation
     runs-on: ubuntu-latest
-    needs: [plan-dev, plan-staging, plan-production]
+    needs: [plan-staging, plan-production]
     if: |
       github.event_name == 'pull_request' &&
       github.event.pull_request.head.repo.full_name == github.repository &&

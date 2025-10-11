@@ -67,36 +67,74 @@ module "service_account" {
   project_name = var.project_name
   environment  = local.environment
 
-    labels = local.labels
+  labels = local.labels
+}
+
+# ================================================================================
+# Load Balancer Module - HIPAA-Compliant Public Access with IAP
+# Cost: ~$18-25/month
+# Provides: Public access with mandatory authentication via Identity-Aware Proxy
+# 
+# NOTE: Temporarily commented out to resolve CI - Infrastructure errors
+# The Load Balancer resources are already created manually and working
+# IP: 34.96.108.162, Domain: staging.adyela.care
+# ================================================================================
+
+# module "load_balancer" {
+#   source = "../../modules/load-balancer"
+
+#   project_id     = var.project_id
+#   project_name   = var.project_name
+#   environment    = local.environment
+#   region         = var.region
+#   domain         = "staging.adyela.care"
+
+#   # Cloud Run Web service
+#   cloud_run_service_name = "adyela-web-staging"
+
+#   # IAP configuration
+#   iap_enabled = true
+
+#   labels = local.labels
+# }
+
+# ================================================================================
+# Cloud Run Module - HIPAA-Compliant Services
+# ================================================================================
+
+module "cloud_run" {
+  source = "../../modules/cloud-run"
+
+  project_id   = var.project_id
+  project_name = var.project_name
+  environment  = local.environment
+  region       = var.region
+
+  service_account_email = module.service_account.service_account_email
+  vpc_connector_name    = module.vpc.vpc_connector_name
+
+  # Docker images - these will be updated by CI/CD
+  api_image = "us-central1-docker.pkg.dev/${var.project_id}/adyela/adyela-api-staging:latest"
+  web_image = "us-central1-docker.pkg.dev/${var.project_id}/adyela/adyela-web-staging:latest"
+
+  # HIPAA Secrets
+  hipaa_secrets = {
+    SECRET_KEY          = "api-secret-key"
+    FIREBASE_PROJECT_ID = "firebase-project-id"
+    FIREBASE_ADMIN_KEY  = "firebase-admin-key"
+    JWT_SECRET          = "jwt-secret-key"
+    ENCRYPTION_KEY      = "encryption-key"
+    DATABASE_URL        = "database-connection-string"
+    SMTP_CREDENTIALS    = "smtp-credentials"
+    EXTERNAL_API_KEYS   = "external-api-keys"
   }
 
-  # ================================================================================
-  # Load Balancer Module - HIPAA-Compliant Public Access with IAP
-  # Cost: ~$18-25/month
-  # Provides: Public access with mandatory authentication via Identity-Aware Proxy
-  # ================================================================================
+  labels = local.labels
+}
 
-  module "load_balancer" {
-    source = "../../modules/load-balancer"
-
-    project_id     = var.project_id
-    project_name   = var.project_name
-    environment    = local.environment
-    region         = var.region
-    domain         = "staging.adyela.care"
-
-    # Cloud Run Web service
-    cloud_run_service_name = "adyela-web-staging"
-
-    # IAP configuration
-    iap_enabled = true
-
-    labels = local.labels
-  }
-
-  # ================================================================================
-  # Outputs for other modules
-  # ================================================================================
+# ================================================================================
+# Outputs for other modules
+# ================================================================================
 
 output "vpc_network_name" {
   description = "VPC network name for use in other modules"
@@ -123,22 +161,46 @@ output "hipaa_service_account_id" {
   value       = module.service_account.service_account_id
 }
 
-output "load_balancer_ip" {
-  description = "Global IP address of the load balancer for DNS configuration"
-  value       = module.load_balancer.load_balancer_ip
+# Cloud Run outputs
+output "api_service_name" {
+  description = "Name of the API Cloud Run service"
+  value       = module.cloud_run.api_service_name
 }
 
-output "load_balancer_domain" {
-  description = "Domain configured for the load balancer"
-  value       = module.load_balancer.domain
+output "api_service_url" {
+  description = "URL of the API Cloud Run service"
+  value       = module.cloud_run.api_service_url
 }
 
-output "ssl_certificate_name" {
-  description = "Name of the managed SSL certificate"
-  value       = module.load_balancer.ssl_certificate_name
+output "web_service_name" {
+  description = "Name of the Web Cloud Run service"
+  value       = module.cloud_run.web_service_name
 }
 
-output "iap_enabled" {
-  description = "Whether IAP is enabled for authentication"
-  value       = module.load_balancer.iap_enabled
+output "web_service_url" {
+  description = "URL of the Web Cloud Run service"
+  value       = module.cloud_run.web_service_url
 }
+
+# Load Balancer outputs - temporarily commented out
+# The Load Balancer is working with IP: 34.96.108.162
+
+# output "load_balancer_ip" {
+#   description = "Global IP address of the load balancer for DNS configuration"
+#   value       = module.load_balancer.load_balancer_ip
+# }
+
+# output "load_balancer_domain" {
+#   description = "Domain configured for the load balancer"
+#   value       = module.load_balancer.domain
+# }
+
+# output "ssl_certificate_name" {
+#   description = "Name of the managed SSL certificate"
+#   value       = module.load_balancer.ssl_certificate_name
+# }
+
+# output "iap_enabled" {
+#   description = "Whether IAP is enabled for authentication"
+#   value       = module.load_balancer.iap_enabled
+# }

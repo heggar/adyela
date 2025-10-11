@@ -49,7 +49,7 @@ resource "google_compute_backend_service" "web_backend" {
   }
 
   # Session affinity for better user experience
-  session_affinity = "GENERATED_COOKIE"
+  session_affinity        = "GENERATED_COOKIE"
   affinity_cookie_ttl_sec = 3600
 
   # Security settings
@@ -64,11 +64,11 @@ resource "google_compute_backend_service" "web_backend" {
 
 # Health Check for Cloud Run
 resource "google_compute_health_check" "web_health_check" {
-  name               = "${var.project_name}-${var.environment}-web-health-check"
-  description        = "Health check for ${var.environment} web service"
-  timeout_sec        = 5
-  check_interval_sec = 10
-  healthy_threshold  = 2
+  name                = "${var.project_name}-${var.environment}-web-health-check"
+  description         = "Health check for ${var.environment} web service"
+  timeout_sec         = 5
+  check_interval_sec  = 10
+  healthy_threshold   = 2
   unhealthy_threshold = 3
 
   http_health_check {
