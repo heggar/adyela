@@ -1,81 +1,61 @@
-## 📝 Descripción
+## Task Reference
 
-<!-- Describe los cambios realizados en este PR -->
+Closes Task #<!-- Task ID from Task Master -->
 
-## 🎯 Tipo de cambio
+## Description
 
-<!-- Marca con una X el tipo de cambio -->
+<!-- Clear description of changes -->
 
-- [ ] 🐛 Bug fix (cambio que corrige un issue)
-- [ ] ✨ Nueva funcionalidad (cambio que añade funcionalidad)
-- [ ] 💥 Breaking change (fix o feature que causa cambios incompatibles)
-- [ ] 📚 Documentación
-- [ ] 🎨 Refactorización
-- [ ] ⚡ Mejora de rendimiento
-- [ ] ✅ Tests
+## Type of Change
 
-## 🔗 Issues relacionados
+- [ ] feat: New feature
+- [ ] fix: Bug fix
+- [ ] refactor: Code refactoring
+- [ ] perf: Performance improvement
+- [ ] test: Test changes
+- [ ] docs: Documentation
+- [ ] chore: Maintenance
 
-<!-- Vincula los issues relacionados -->
+## Testing
 
-Closes #(issue)
+- [ ] Unit tests added/updated
+- [ ] Integration tests added/updated
+- [ ] Manual testing performed
+- [ ] E2E tests pass (if applicable)
 
-## 🧪 Testing
+## Security
 
-<!-- Describe las pruebas realizadas -->
+- [ ] No new security vulnerabilities introduced
+- [ ] Security scan passed (Bandit/Snyk/Trivy)
+- [ ] No secrets/credentials in code
+- [ ] HIPAA compliance maintained (if PHI involved)
 
-- [ ] Tests unitarios añadidos/actualizados
-- [ ] Tests E2E añadidos/actualizados
-- [ ] Probado manualmente en desarrollo
-- [ ] Probado manualmente en staging
+## Code Quality
 
-### Pasos para probar
+- [ ] Code follows project conventions
+- [ ] All linters passing
+- [ ] Type checking passing
+- [ ] Code coverage maintained (≥65%)
+- [ ] No console.log/print statements
 
-1.
-2.
-3.
+## Documentation
 
-## 📸 Screenshots (si aplica)
+- [ ] README updated (if needed)
+- [ ] API documentation updated (if needed)
+- [ ] Task Master task updated with findings
 
-<!-- Añade screenshots si hay cambios visuales -->
+## Pre-Merge Checklist
 
-## ✅ Checklist
+- [ ] All CI checks passing
+- [ ] Branch up to date with staging
+- [ ] Conventional commits used
+- [ ] Reviewed own code changes
+- [ ] 2 approvals received
 
-- [ ] Mi código sigue las convenciones de estilo del proyecto
-- [ ] He realizado una auto-revisión de mi código
-- [ ] He comentado mi código en áreas complejas
-- [ ] He actualizado la documentación correspondiente
-- [ ] Mis cambios no generan nuevos warnings
-- [ ] He añadido tests que prueban mi funcionalidad
-- [ ] Los tests unitarios pasan localmente
-- [ ] Los cambios dependientes han sido mergeados
+## Deployment Notes
 
-## 🔐 Consideraciones de seguridad
+<!-- Any special deployment considerations -->
 
-<!-- Describe cualquier consideración de seguridad -->
+## Screenshots/Videos
 
-- [ ] No hay credenciales expuestas
-- [ ] Los datos sensibles están encriptados
-- [ ] Se validan todas las entradas de usuario
-- [ ] Se han revisado las implicaciones de seguridad
-
-## 📊 Impacto en rendimiento
-
-<!-- Describe el impacto en rendimiento si aplica -->
-
-- [ ] No hay impacto significativo
-- [ ] Mejora el rendimiento
-- [ ] Podría afectar el rendimiento (explicar abajo)
-
-## 🚀 Despliegue
-
-<!-- Notas especiales para el despliegue -->
-
-- [ ] Requiere migración de base de datos
-- [ ] Requiere cambios en variables de entorno
-- [ ] Requiere cambios en infraestructura
-- [ ] Puede desplegarse de forma independiente
-
-## 📝 Notas adicionales
-
-<!-- Cualquier información adicional relevante -->
+<!-- If UI changes, add screenshots/videos -->
