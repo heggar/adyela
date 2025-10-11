@@ -1,5 +1,5 @@
 terraform {
-  required_version = ">= 1.9.0"
+  required_version = ">= 1.5.0"
 
   required_providers {
     google = {
@@ -33,6 +33,7 @@ locals {
 module "vpc" {
   source = "../../modules/vpc"
 
+  project_id   = var.project_id
   network_name = "${var.project_name}-${local.environment}-vpc"
   environment  = local.environment
   region       = var.region
@@ -54,6 +55,22 @@ module "vpc" {
 }
 
 # ================================================================================
+# Service Account Module - HIPAA-Compliant
+# Cost: $0.00/month (FREE)
+# Required for: Secure Cloud Run deployments, Secret Manager access
+# ================================================================================
+
+module "service_account" {
+  source = "../../modules/service-account"
+
+  project_id   = var.project_id
+  project_name = var.project_name
+  environment  = local.environment
+
+  labels = local.labels
+}
+
+# ================================================================================
 # Outputs for other modules
 # ================================================================================
 
@@ -70,4 +87,14 @@ output "vpc_connector_name" {
 output "subnet_name" {
   description = "Private subnet name"
   value       = module.vpc.subnet_name
+}
+
+output "hipaa_service_account_email" {
+  description = "Email of the HIPAA service account for Cloud Run deployments"
+  value       = module.service_account.service_account_email
+}
+
+output "hipaa_service_account_id" {
+  description = "ID of the HIPAA service account"
+  value       = module.service_account.service_account_id
 }

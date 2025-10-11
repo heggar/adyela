@@ -45,10 +45,14 @@ resource "google_compute_subnetwork" "private_subnet" {
 # Serverless VPC Access Connector for Cloud Run
 # Allows Cloud Run to access resources in the VPC
 resource "google_vpc_access_connector" "connector" {
-  name          = "${var.network_name}-connector-${var.region}"
-  region        = var.region
-  network       = google_compute_network.vpc.name
-  ip_cidr_range = var.connector_cidr
+  name   = "adyela-staging-connector"
+  region = var.region
+
+  # Use existing subnet instead of creating new CIDR
+  subnet {
+    name       = "adyela-staging-connector-subnet"
+    project_id = var.project_id
+  }
 
   # Minimum instances for cost optimization
   min_instances = var.connector_min_instances
