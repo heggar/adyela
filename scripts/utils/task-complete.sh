@@ -20,7 +20,7 @@ echo "🎯 Completing Task #$TASK_ID..."
 
 # Run final quality checks
 echo "Running final quality validation..."
-./scripts/quality-checks.sh || {
+./scripts/testing/quality-checks.sh || {
   echo "❌ Quality checks failed. Fix issues before marking complete."
   exit 1
 }
@@ -47,8 +47,18 @@ Status: Ready for PR"
 echo "✓ Task #$TASK_ID marked as done"
 echo "✓ Completion notes added"
 echo ""
-echo "Next steps:"
-echo "  1. Push branch: git push origin $BRANCH_NAME"
-echo "  2. Create PR to staging"
+
+# Push changes to remote
+echo "📤 Pushing changes to remote..."
+git push origin $BRANCH_NAME || git push -u origin $BRANCH_NAME
+
+echo ""
+echo "✅ Task #$TASK_ID completed successfully!"
+echo ""
+echo "📋 Next steps:"
+echo "  1. Create PR: gh pr create --base staging --title 'Task #$TASK_ID' --fill"
+echo "  2. Or create PR manually on GitHub"
 echo "  3. Request 2 reviews"
+echo ""
+echo "💡 Tip: Run 'gh pr create --fill' to auto-create PR with task details"
 
