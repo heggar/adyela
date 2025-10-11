@@ -23,7 +23,7 @@ variable "region" {
   default     = "us-central1"
 }
 
-variable "version" {
+variable "app_version" {
   description = "Application version"
   type        = string
   default     = "latest"

@@ -37,7 +37,7 @@ resource "google_cloud_run_v2_service" "api" {
 
       env {
         name  = "VERSION"
-        value = var.version
+        value = var.app_version
       }
 
       env {
@@ -128,7 +128,7 @@ resource "google_cloud_run_v2_service" "web" {
 
       env {
         name  = "VERSION"
-        value = var.version
+        value = var.app_version
       }
 
       env {
