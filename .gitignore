@@ -65,6 +65,7 @@ htmlcov/
 # IDEs
 .vscode/
 .idea/
+.cursor/
 *.sublime-workspace
 *.sublime-project
 
@@ -112,3 +113,17 @@ htmlcov/
 # Taskmaster AI
 .taskmaster/
 *.taskmaster.json
+.task-context/
+
+# Claude Code
+.claude/mcp-config.json
+# Keep .claude/agents/ tracked for SDLC agents
+
+# Additional logs
+dev-debug.log
+
+# Additional editor files
+*.suo
+*.ntvs*
+*.njsproj
+*.sln

@@ -201,12 +201,12 @@ update-deps: ## Update dependencies for API and Web
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 quality: ## Run all quality checks (lint, type-check, tests, security)
-	@./scripts/quality-checks.sh
+	@./scripts/testing/quality-checks.sh
 
 quality-fix: ## Run quality checks and auto-fix issues
 	@echo "$(BLUE)Running auto-fixes...$(NC)"
 	@make format
-	@./scripts/quality-checks.sh
+	@./scripts/testing/quality-checks.sh
 
 # E2E Testing
 e2e: ## Run Playwright E2E tests
@@ -231,14 +231,14 @@ e2e-report: ## Open E2E test report
 
 # Performance & Accessibility Audits
 lighthouse: ## Run Lighthouse performance audit
-	@./scripts/lighthouse-audit.sh
+	@./scripts/testing/lighthouse-audit.sh
 
 lighthouse-ci: ## Run Lighthouse with CI thresholds
-	@./scripts/lighthouse-audit.sh http://localhost:3000
+	@./scripts/testing/lighthouse-audit.sh http://localhost:3000
 
 # API Testing
 api-contract: ## Run API contract tests with Schemathesis
-	@./scripts/api-contract-tests.sh
+	@./scripts/testing/api-contract-tests.sh
 
 api-load: ## Run API load tests (requires k6)
 	@echo "$(YELLOW)Load testing not yet implemented$(NC)"
@@ -259,7 +259,7 @@ security-audit: ## Run security audit
 
 # MCP Servers
 mcp-setup: ## Setup MCP servers for Claude Code
-	@./scripts/setup-mcp-servers.sh
+	@./scripts/setup/setup-mcp-servers.sh
 
 mcp-test: ## Test MCP server integration
 	@echo "$(BLUE)Testing MCP servers...$(NC)"
@@ -293,3 +293,28 @@ reports: ## Generate all reports (coverage, lighthouse, etc.)
 	@echo "  • Web Coverage: apps/web/coverage/index.html"
 	@echo "  • Lighthouse: lighthouse-reports/"
 	@echo "  • E2E: playwright-report/"
+<<<<<<< HEAD
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Task Master Integration
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+task-start: ## Start a new feature from Task Master (Usage: make task-start ID=5)
+	@./scripts/utils/task-start.sh $(ID)
+
+task-complete: ## Mark task as complete (Usage: make task-complete ID=5)
+	@./scripts/utils/task-complete.sh $(ID)
+
+task-next: ## Show next task to work on
+	@npx task-master-ai next
+
+task-list: ## List all tasks
+	@npx task-master-ai list
+
+quality-local: ## Run complete quality checks locally (matches CI)
+	@./scripts/testing/quality-checks.sh
+
+dev-setup: ## One-time developer environment setup
+	@./scripts/setup/dev-setup.sh
+=======
+>>>>>>> origin/main

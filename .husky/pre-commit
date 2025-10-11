@@ -1,1 +1,33 @@
+# Run lint-staged (formatting)
 pnpm lint-staged
+
+# Quick validation (fast checks only)
+echo "🔍 Running pre-commit validations..."
+
+# Type check only changed files
+CHANGED_TS_FILES=$(git diff --cached --name-only --diff-filter=ACMR | grep -E '\.(ts|tsx)$' || true)
+if [ -n "$CHANGED_TS_FILES" ]; then
+  echo "  → Type checking..."
+  pnpm type-check || exit 1
+fi
+
+# Lint only changed files
+echo "  → Linting changed files..."
+pnpm lint || exit 1
+
+# Check for secrets/sensitive data
+echo "  → Scanning for secrets..."
+if command -v gitleaks &> /dev/null; then
+  gitleaks protect --staged --verbose || exit 1
+else
+  echo "  ⚠️  gitleaks not installed, skipping secret scan"
+fi
+
+# Verify no build artifacts
+if git diff --cached --name-only | grep -qE '\.(pyc|pyo|pyd|log|tmp)$|htmlcov|dist|dev-dist'; then
+  echo "❌ Build artifacts detected in commit!"
+  echo "Please remove build outputs from staging area"
+  exit 1
+fi
+
+echo "✓ Pre-commit checks passed"

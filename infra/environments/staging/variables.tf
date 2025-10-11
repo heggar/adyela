@@ -3,6 +3,12 @@ variable "project_id" {
   type        = string
 }
 
+variable "project_name" {
+  description = "Project name for resource naming"
+  type        = string
+  default     = "adyela"
+}
+
 variable "region" {
   description = "GCP region for resources"
   type        = string

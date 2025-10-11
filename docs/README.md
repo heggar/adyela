@@ -1,93 +1,97 @@
 # 📚 Adyela Documentation
 
-Complete documentation for the Adyela medical appointment system.
+Comprehensive documentation for the Adyela medical appointments platform.
+
+## 📂 Documentation Structure
+
+```
+docs/
+├── quality/          # Quality reports and test results
+├── planning/         # Project planning and roadmaps
+├── deployment/       # Deployment guides and strategies
+├── workflows/        # CI/CD and workflow documentation
+├── guides/           # Setup and usage guides
+├── architecture/     # Architecture diagrams and decisions
+├── adrs/            # Architecture Decision Records
+└── rfcs/            # Request for Comments
+```
 
 ---
 
-## 🚀 Getting Started
+## 🎯 Quick Navigation
 
-- [Local Setup Guide](../LOCAL_SETUP.md) - Set up local development environment with Docker
-- [Contributing Guide](../CONTRIBUTING.md) - How to contribute to the project
+### 📊 Quality & Testing
 
----
+**Location**: `docs/quality/`
 
-## 🏗️ Architecture
+- [Final Quality Report](quality/FINAL_QUALITY_REPORT.md) - Overall quality assessment (**A: 93/100**)
+- [Quality Execution Report](quality/QUALITY_EXECUTION_REPORT.md) - Quality automation implementation
+- [Cross-Browser Testing](quality/CROSS_BROWSER_TESTING_REPORT.md) - E2E testing (**16/16 passing**)
+- [Fixes Summary](quality/FIXES_SUMMARY.md) - Bug fixes and improvements
 
-- [System Architecture](architecture/system-overview.md) - High-level system design _(coming soon)_
-- [API Documentation](architecture/api-design.md) - REST API specifications _(coming soon)_
-- [Database Schema](architecture/database-schema.md) - Firestore collections and structure _(coming soon)_
-- [Frontend Architecture](architecture/frontend-design.md) - React app structure _(coming soon)_
+### 📋 Planning & Roadmap
 
----
+**Location**: `docs/planning/`
 
-## 🔧 Deployment
+- [Improvement Plan](planning/IMPROVEMENT_PLAN.md) - Future enhancements
+- [Next Steps](planning/NEXT_STEPS.md) - Immediate action items
+- [Workflow Setup Complete](planning/WORKFLOW_SETUP_COMPLETE.md) - CI/CD implementation status
+
+### 🚀 Deployment & Infrastructure
+
+**Location**: `docs/deployment/`
 
 - **[GCP Setup Guide](deployment/gcp-setup.md)** - Complete Google Cloud Platform configuration
-- [Deployment Strategy](../DEPLOYMENT_STRATEGY.md) - Dev/Staging/Production environments
-- [CI/CD Workflows](deployment/cicd-workflows.md) - GitHub Actions pipelines _(coming soon)_
-- [Infrastructure as Code](deployment/terraform-guide.md) - Terraform configuration _(coming soon)_
+- [Deployment Strategy](deployment/DEPLOYMENT_STRATEGY.md) - Multi-environment approach
+- [Deployment Progress](deployment/DEPLOYMENT_PROGRESS.md) - Current deployment status
+- [Deployment Success](deployment/DEPLOYMENT_SUCCESS.md) - Successful deployments log
+- [GCP Setup Quickstart](deployment/GCP_SETUP_QUICKSTART.md) - Fast GCP setup
+
+### ⚙️ Workflows & CI/CD
+
+**Location**: `docs/workflows/`
+
+- [Workflows Validation](workflows/WORKFLOWS_VALIDATION.md) - CI/CD workflow testing
+
+### 📖 Guides & Tutorials
+
+**Location**: `docs/guides/`
+
+- [Local Setup](guides/LOCAL_SETUP.md) - Local development environment setup
+- [MCP GitHub Setup](guides/MCP_GITHUB_SETUP.md) - MCP integration with GitHub
+
+### 🏗️ Architecture
+
+**Location**: `docs/architecture/`
+
+Architecture diagrams, system design, and technical specifications.
+
+### 📝 ADRs & RFCs
+
+- **ADRs**: `docs/adrs/` - Architecture Decision Records
+- **RFCs**: `docs/rfcs/` - Request for Comments
 
 ---
 
-## 🛡️ Security
+## 📚 Root Documentation
 
-- [Security Best Practices](security/best-practices.md) - Security guidelines _(coming soon)_
-- [Authentication Flow](security/authentication.md) - Firebase Auth integration _(coming soon)_
-- [Authorization Rules](security/firestore-rules.md) - Firestore security rules _(coming soon)_
+Essential documents in project root:
 
----
-
-## 🧪 Testing
-
-- [Testing Strategy](testing/strategy.md) - Testing approach _(coming soon)_
-- [Unit Tests](testing/unit-tests.md) - Writing unit tests _(coming soon)_
-- [Integration Tests](testing/integration-tests.md) - API integration tests _(coming soon)_
-- [E2E Tests](testing/e2e-tests.md) - End-to-end testing _(coming soon)_
+- [README.md](../README.md) - Project overview and quick start
+- [CLAUDE.md](../CLAUDE.md) - AI-assisted development guide
+- [CONTRIBUTING.md](../CONTRIBUTING.md) - Contribution guidelines
+- [SECURITY.md](../SECURITY.md) - Security policies
 
 ---
 
-## 📱 Features
+## 🔍 Finding Documentation
 
-- [Video Calls](features/video-calls.md) - Jitsi integration _(coming soon)_
-- [Appointment Booking](features/appointments.md) - Booking system _(coming soon)_
-- [Notifications](features/notifications.md) - Push notifications _(coming soon)_
-- [Internationalization](features/i18n.md) - Multi-language support _(coming soon)_
+**Setting Up**: [Local Setup](guides/LOCAL_SETUP.md) → [GCP Setup](deployment/GCP_SETUP_QUICKSTART.md)
 
----
+**Deploying**: [Deployment Strategy](deployment/DEPLOYMENT_STRATEGY.md) → [Workflows](workflows/WORKFLOWS_VALIDATION.md)
 
-## 🔍 Troubleshooting
-
-- [Common Issues](troubleshooting/common-issues.md) - FAQ and solutions _(coming soon)_
-- [Docker Issues](troubleshooting/docker.md) - Docker troubleshooting _(coming soon)_
-- [Firebase Issues](troubleshooting/firebase.md) - Firebase emulator issues _(coming soon)_
+**Quality**: [Final Report](quality/FINAL_QUALITY_REPORT.md) → [Cross-Browser Testing](quality/CROSS_BROWSER_TESTING_REPORT.md)
 
 ---
 
-## 📖 Guides
-
-- [Code Style Guide](guides/code-style.md) - Coding standards _(coming soon)_
-- [Git Workflow](guides/git-workflow.md) - Branching strategy _(coming soon)_
-- [Release Process](guides/release-process.md) - How to release _(coming soon)_
-
----
-
-## 🆘 Support
-
-- **GitHub Issues:** [github.com/heggar/adyela/issues](https://github.com/heggar/adyela/issues)
-- **Discussions:** [github.com/heggar/adyela/discussions](https://github.com/heggar/adyela/discussions)
-
----
-
-## 📝 Documentation Status
-
-| Document            | Status      | Last Updated |
-| ------------------- | ----------- | ------------ |
-| GCP Setup Guide     | ✅ Complete | 2025-10-05   |
-| Local Setup         | ✅ Complete | 2025-10-04   |
-| Deployment Strategy | ✅ Complete | 2025-10-04   |
-| Improvement Plan    | ✅ Complete | 2025-10-04   |
-| Other docs          | 🚧 Planned  | -            |
-
----
-
-**Contributing to docs?** Please follow the [documentation template](templates/doc-template.md) _(coming soon)_.
+**Documentation Version**: 2.0 | **Last Updated**: 2025-01-10
