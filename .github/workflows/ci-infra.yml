@@ -113,7 +113,7 @@ jobs:
   plan-staging:
     name: Terraform Plan (Staging)
     runs-on: ubuntu-latest
-    needs: [validate, security-scan]
+    needs: [validate]
     if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && vars.GCP_CONFIGURED == 'true'
     environment: staging
     steps:
@@ -188,7 +188,7 @@ jobs:
   plan-production:
     name: Terraform Plan (Production)
     runs-on: ubuntu-latest
-    needs: [validate, security-scan]
+    needs: [validate]
     if: false # Disabled - only staging is needed for now
     environment: production
     steps:
@@ -263,7 +263,7 @@ jobs:
   cost-estimation:
     name: Cost Estimation
     runs-on: ubuntu-latest
-    needs: [plan-staging, plan-production]
+    needs: [plan-staging]
     if: |
       github.event_name == 'pull_request' &&
       github.event.pull_request.head.repo.full_name == github.repository &&
