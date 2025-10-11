@@ -61,11 +61,8 @@ resource "google_project_iam_member" "logging_writer" {
 }
 
 # IAM bindings for Service Account User (for GitHub Actions)
-resource "google_project_iam_member" "service_account_user" {
-  project = var.project_id
-  role    = "roles/iam.serviceAccountUser"
-  member  = "serviceAccount:${google_service_account.hipaa.email}"
-}
+# Note: This role is assigned to the GitHub Actions service account, not the HIPAA service account
+# The HIPAA service account should not have serviceAccountUser role on itself
 
 # IAM bindings for Artifact Registry Reader (for pulling images)
 resource "google_project_iam_member" "artifact_registry_reader" {
