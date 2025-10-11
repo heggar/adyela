@@ -1,1 +1,30 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Run commitlint
 pnpm commitlint --edit $1
+
+# Extract task ID from task context or branch name
+BRANCH_NAME=$(git symbolic-ref --short HEAD 2>/dev/null || echo "")
+
+# Try to find task ID from .task-context directories
+TASK_ID=""
+for dir in .task-context/task-*; do
+  if [ -d "$dir" ]; then
+    TASK_ID=$(basename "$dir" | sed 's/task-//')
+    break
+  fi
+done
+
+# Fallback: extract from old-style branch names
+if [ -z "$TASK_ID" ] && [[ $BRANCH_NAME =~ task-([0-9]+) ]]; then
+  TASK_ID="${BASH_REMATCH[1]}"
+fi
+
+# Add task reference if found and not already present
+if [ -n "$TASK_ID" ]; then
+  if ! grep -q "Task #$TASK_ID" $1; then
+    echo "" >> $1
+    echo "Task #$TASK_ID" >> $1
+  fi
+fi

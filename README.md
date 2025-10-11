@@ -10,6 +10,8 @@ Sistema de gestión de citas médicas con videollamadas, diseñado para clínica
 
 ## 🏗️ Arquitectura
 
+### Estructura del Monorepo
+
 Adyela es un monorepo que contiene:
 
 - **apps/api**: Backend FastAPI con arquitectura hexagonal
@@ -20,6 +22,36 @@ Adyela es un monorepo que contiene:
 - **packages/config**: Configuraciones compartidas (ESLint, Prettier, TSConfig)
 - **infra**: Infraestructura como código con Terraform
 - **docs**: Documentación técnica, ADRs y RFCs
+
+### Infraestructura GCP
+
+🚀 **[Vista Rápida ASCII](docs/architecture/QUICK_VIEW.md)** - ⭐ **LEE ESTO PRIMERO** - Puedes verlo ahora mismo  
+📊 **[Diagrama Visual Completo](docs/architecture/adyela-gcp-architecture.drawio)** - Abrir en [app.diagrams.net](https://app.diagrams.net/)  
+📖 **[Guía Completa de Arquitectura](docs/architecture/GCP_ARCHITECTURE_GUIDE.md)** - 50+ páginas de detalles técnicos  
+🔧 **[Instrucciones de Visualización](docs/architecture/VIEWING_INSTRUCTIONS.md)** - Si tienes problemas
+
+**Ambientes:**
+
+- 🟨 **Staging** (`adyela-staging`): Ambiente de pruebas con scale-to-zero ($5-10/mes)
+- 🟩 **Production** (`adyela-production`): Alta disponibilidad con HIPAA compliance ($200-500/mes)
+
+**Componentes Principales:**
+
+- **Edge**: Cloud Armor (WAF) + API Gateway + Load Balancer
+- **Compute**: Cloud Run (API + Web) + Cloud Functions + Cloud Scheduler
+- **Data**: Firestore (multi-tenant) + Cloud Storage (documentos) + Secret Manager
+- **Async**: Pub/Sub (event bus) + Cloud Tasks (queue)
+- **Observability**: Cloud Logging (7 años) + Monitoring + Trace + Error Reporting
+- **Security**: Identity Platform (JWT+MFA) + VPC-SC + CMEK (producción)
+
+**Características:**
+
+- ✅ HIPAA Compliant (BAA firmado con GCP)
+- ✅ Logs de auditoría por 7 años
+- ✅ Encriptación CMEK en producción
+- ✅ VPC Service Controls
+- ✅ Auto-scaling con Cloud Run
+- ✅ Backups diarios automatizados
 
 ## 🚀 Stack Tecnológico
 
@@ -47,6 +79,7 @@ Adyela es un monorepo que contiene:
 - Terraform (IaC)
 - Turbo (monorepo build system)
 - pnpm (package manager)
+- **Task Master AI** (automated task management) - 📖 **[Ver Integración con Claude Code](./docs/TASKMASTER_CLAUDE_INTEGRATION.md)**
 
 ## 📋 Requisitos Previos
 
@@ -100,20 +133,51 @@ adyela/
 └── infra/             # Terraform infrastructure
 ```
 
-### Conventional Commits
+### Feature Development Workflow
 
-Este proyecto utiliza [Conventional Commits](https://www.conventionalcommits.org/). Usa `pnpm commit` para crear commits siguiendo el estándar:
+Adyela uses an automated workflow that integrates Task Master AI with Git:
 
 ```bash
-pnpm commit
+# 1. Setup (one-time)
+make dev-setup
+
+# 2. Daily workflow
+make task-next              # Find next task
+make task-start ID=5        # Start task #5
+# → Creates: feature/implement-user-authentication
+# ... develop, commit (hooks validate automatically) ...
+make quality-local          # Validate before pushing
+make task-complete ID=5     # Mark done, create PR
+```
+
+**Key Features**:
+
+- ✅ Automated task-to-branch workflow
+- ✅ Pre-commit validation (< 30s)
+- ✅ Full local CI/CD checks (2-3 min)
+- ✅ Conventional commits enforced
+- ✅ Automatic task linking in commits
+- ✅ HIPAA audit logging
+- ✅ Security scanning (secrets, deps, containers)
+
+**Documentation**: [`docs/guides/feature-workflow.md`](docs/guides/feature-workflow.md)
+
+### Conventional Commits
+
+Este proyecto utiliza [Conventional Commits](https://www.conventionalcommits.org/). El workflow aplica esto automáticamente:
+
+```bash
+# Commits are automatically validated and task-linked
+git commit -m "feat(api): implement user authentication"
+# → Auto-appends "Task #5" from branch name
 ```
 
 ### Git Hooks
 
-Husky se configura automáticamente al instalar dependencias:
+Husky configura hooks automáticamente:
 
-- **pre-commit**: Ejecuta lint-staged (format + lint)
-- **commit-msg**: Valida formato de commits con commitlint
+- **pre-commit**: Format, lint, type-check, secret scan, build artifact check
+- **commit-msg**: Validates format + auto-links task ID from branch name
 
 ## 🎯 Multi-tenant & RBAC
 

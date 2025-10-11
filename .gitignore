@@ -65,6 +65,7 @@ htmlcov/
 # IDEs
 .vscode/
 .idea/
+.cursor/
 *.sublime-workspace
 *.sublime-project
 
@@ -112,3 +113,22 @@ htmlcov/
 # Taskmaster AI
 .taskmaster/
 *.taskmaster.json
+.task-context/
+
+logs
+dev-debug.log
+# Dependency directories
+# Environment variables
+# Editor directories and files
+.idea
+.vscode
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+# OS specific
+
+# Task files
+# tasks.json
+# tasks/ 

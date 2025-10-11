@@ -351,10 +351,57 @@ jobs:
           path: schemathesis-report.json
           retention-days: 7
 
+  audit-log:
+    name: HIPAA Audit Log
+    runs-on: ubuntu-latest
+    if: always()
+    needs: [lint, type-check, test, security, docker-build]
+    steps:
+      - name: Log CI execution for compliance
+        run: |
+          cat << EOF > ci-audit-log.json
+          {
+            "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+            "event": "ci_pipeline_execution",
+            "pipeline": "ci-api",
+            "trigger": "${{ github.event_name }}",
+            "actor": "${{ github.actor }}",
+            "ref": "${{ github.ref }}",
+            "sha": "${{ github.sha }}",
+            "pr_number": "${{ github.event.pull_request.number }}",
+            "repository": "${{ github.repository }}",
+            "results": {
+              "lint": "${{ needs.lint.result }}",
+              "type_check": "${{ needs.type-check.result }}",
+              "tests": "${{ needs.test.result }}",
+              "security": "${{ needs.security.result }}",
+              "docker_build": "${{ needs.docker-build.result }}"
+            }
+          }
+          EOF
+
+          cat ci-audit-log.json
+
+      - name: Upload audit log
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-audit-log-${{ github.sha }}
+          path: ci-audit-log.json
+          retention-days: 2555 # 7 years for HIPAA
+
   summary:
     name: CI Summary
     runs-on: ubuntu-latest
-    needs: [lint, type-check, test, security, docker-build, contract-tests]
+    needs:
+      [
+        lint,
+        type-check,
+        test,
+        security,
+        docker-build,
+        contract-tests,
+        audit-log,
+      ]
     if: always()
     steps:
       - name: Check job results
@@ -365,6 +412,7 @@ jobs:
           echo "Security: ${{ needs.security.result }}"
           echo "Docker Build: ${{ needs.docker-build.result }}"
           echo "Contract Tests: ${{ needs.contract-tests.result }}"
+          echo "Audit Log: ${{ needs.audit-log.result }}"
 
       - name: Fail if critical jobs failed
         if: |
