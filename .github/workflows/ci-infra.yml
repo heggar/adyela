@@ -114,7 +114,7 @@ jobs:
     name: Terraform Plan (Dev)
     runs-on: ubuntu-latest
     needs: [validate, security-scan]
-    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && vars.GCP_CONFIGURED == 'true'
+    if: false # Disabled - only staging is needed for now
     environment: development
     steps:
       - name: Checkout code
@@ -264,7 +264,7 @@ jobs:
     name: Terraform Plan (Production)
     runs-on: ubuntu-latest
     needs: [validate, security-scan]
-    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && vars.GCP_CONFIGURED == 'true'
+    if: false # Disabled - only staging is needed for now
     environment: production
     steps:
       - name: Checkout code
