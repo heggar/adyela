@@ -345,7 +345,7 @@ jobs:
             --set-env-vars="VITE_ENV=${{ env.ENVIRONMENT }},VERSION=${{ inputs.version }},HIPAA_COMPLIANCE=true,AUDIT_LOGGING=true" \
             --min-instances=0 \
             --no-allow-unauthenticated \
-            --ingress=internal \
+            --ingress=internal-and-cloud-load-balancing \
             --vpc-connector=adyela-staging-connector \
             --vpc-egress=private-ranges-only \
             --max-instances=2 \
