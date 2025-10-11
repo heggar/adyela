@@ -17,7 +17,13 @@
     "password": "Password",
     "forgotPassword": "Forgot password?",
     "welcomeBack": "Welcome back!",
-    "loginToContinue": "Login to continue"
+    "loginToContinue": "Login to continue",
+    "continueWithGoogle": "Continue with Google",
+    "continueWithFacebook": "Continue with Facebook",
+    "continueWithApple": "Continue with Apple",
+    "continueWithMicrosoft": "Continue with Microsoft",
+    "signingIn": "Signing in...",
+    "oauthError": "Authentication failed. Please try again."
   },
   "dashboard": {
     "title": "Dashboard",

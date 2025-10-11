@@ -17,7 +17,13 @@
     "password": "Contraseña",
     "forgotPassword": "¿Olvidaste tu contraseña?",
     "welcomeBack": "¡Bienvenido de nuevo!",
-    "loginToContinue": "Inicia sesión para continuar"
+    "loginToContinue": "Inicia sesión para continuar",
+    "continueWithGoogle": "Continuar con Google",
+    "continueWithFacebook": "Continuar con Facebook",
+    "continueWithApple": "Continuar con Apple",
+    "continueWithMicrosoft": "Continuar con Microsoft",
+    "signingIn": "Iniciando sesión...",
+    "oauthError": "Error de autenticación. Por favor, inténtalo de nuevo."
   },
   "dashboard": {
     "title": "Panel de control",

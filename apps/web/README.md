@@ -63,19 +63,57 @@ pnpm type-check
 pnpm lint
 ```
 
-## 🌍 Environment Variables
+### OAuth Testing Local
 
-Copy `.env.example` to `.env` and configure:
+For testing OAuth authentication locally:
 
 ```bash
-cp .env.example .env
+# Start Firebase Emulator
+firebase emulators:start --only auth,firestore
+
+# Run complete OAuth testing environment
+./scripts/test-oauth-local.sh
+```
+
+This will start:
+
+- Firebase Emulator (Auth + Firestore)
+- Backend API (port 8000)
+- Frontend (port 5173)
+- Firebase Emulator UI (port 4000)
+
+## 🌍 Environment Variables
+
+Copy `.env.example` to `.env.local` and configure:
+
+```bash
+cp .env.example .env.local
 ```
 
 Required variables:
 
-- `VITE_API_URL` - Backend API URL
+- `VITE_API_BASE_URL` - Backend API URL
 - `VITE_FIREBASE_*` - Firebase configuration
 - `VITE_JITSI_DOMAIN` - Jitsi domain for video calls
+
+### OAuth Configuration
+
+For local development with Firebase Emulator:
+
+```env
+# Firebase Configuration for Local Development
+VITE_FIREBASE_API_KEY=demo-key
+VITE_FIREBASE_AUTH_DOMAIN=localhost
+VITE_FIREBASE_PROJECT_ID=demo-adyela
+VITE_FIREBASE_STORAGE_BUCKET=demo-adyela.appspot.com
+VITE_FIREBASE_MESSAGING_SENDER_ID=123456789
+VITE_FIREBASE_APP_ID=1:123456789:web:abcdef123456
+
+# API Configuration
+VITE_API_BASE_URL=http://localhost:8000
+```
+
+See [OAuth Setup Guide](../../docs/guides/OAUTH_SETUP.md) for production configuration.
 
 ## 📱 PWA Features
 
