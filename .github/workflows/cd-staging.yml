@@ -166,6 +166,7 @@ jobs:
             --memory=512Mi \
             --cpu=1 \
             --no-allow-unauthenticated \
+            --ingress=internal \
             --vpc-connector=adyela-staging-connector \
             --vpc-egress=private-ranges-only \
             --timeout=300s \
@@ -187,6 +188,7 @@ jobs:
           echo "🔒 HIPAA-compliant service deployed with private access"
           echo "✅ Service account: adyela-staging-hipaa"
           echo "✅ VPC connector: adyela-staging-connector"
+          echo "✅ Private ingress: --ingress=internal"
           echo "✅ Private access: --no-allow-unauthenticated"
           echo "⚠️  Note: Service is not publicly accessible (HIPAA compliance)"
 
@@ -198,6 +200,7 @@ jobs:
           echo ""
           echo "✅ Service deployed with HIPAA compliance:"
           echo "  🔒 VPC connector: adyela-staging-connector"
+          echo "  🔒 Private ingress: --ingress=internal"
           echo "  🔒 Private access: --no-allow-unauthenticated"
           echo "  🔒 Service account: adyela-staging-hipaa"
           echo "  🔒 8 HIPAA secrets configured"
@@ -342,6 +345,7 @@ jobs:
             --set-env-vars="VITE_ENV=${{ env.ENVIRONMENT }},VERSION=${{ inputs.version }},HIPAA_COMPLIANCE=true,AUDIT_LOGGING=true" \
             --min-instances=0 \
             --no-allow-unauthenticated \
+            --ingress=internal \
             --vpc-connector=adyela-staging-connector \
             --vpc-egress=private-ranges-only \
             --max-instances=2 \
@@ -366,6 +370,7 @@ jobs:
           echo ""
           echo "✅ Web service deployed with HIPAA compliance:"
           echo "  🔒 VPC connector: adyela-staging-connector"
+          echo "  🔒 Private ingress: --ingress=internal"
           echo "  🔒 Private access: --no-allow-unauthenticated"
           echo "  🔒 Service account: adyela-staging-hipaa"
           echo "  🔒 HIPAA environment variables configured"
