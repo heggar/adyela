@@ -115,6 +115,10 @@ htmlcov/
 *.taskmaster.json
 .task-context/
 
+# Claude Code
+.claude/mcp-config.json
+# Keep .claude/agents/ tracked for SDLC agents
+
 logs
 dev-debug.log
 # Dependency directories
