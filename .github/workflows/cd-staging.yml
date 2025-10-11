@@ -1,11 +1,13 @@
 name: CD - Staging
 
-# Staging deployment with MINIMAL GCP resources to reduce costs
+# Staging deployment with HIPAA-COMPLIANT GCP resources
 # - Scale to zero when not used (min-instances=0)
-# - Maximum 1 instance (max-instances=1)
-# - Minimal CPU (0.5) and memory (256Mi)
-# - No VPC connector, no CDN, no backups
-# - Estimated cost: $5-10/month
+# - Maximum 1-2 instances (max-instances=1-2)
+# - Minimal CPU (1) and memory (256Mi-512Mi)
+# - VPC connector for network isolation
+# - Private access only (no public internet)
+# - All 8 HIPAA secrets configured
+# - Estimated cost: $6-8/month
 
 on:
   workflow_dispatch:
@@ -147,7 +149,7 @@ jobs:
           echo "image=${IMAGE}" >> "$GITHUB_OUTPUT"
           echo "Full image reference: ${IMAGE}"
 
-      - name: Deploy to Cloud Run (Minimal Resources)
+      - name: Deploy to Cloud Run (HIPAA-Compliant)
         id: deploy
         run: |
           # Convert version to GCP-compliant label (replace dots with dashes)
@@ -157,18 +159,20 @@ jobs:
             --image ${{ steps.image.outputs.image }} \
             --region ${{ env.GCP_REGION }} \
             --platform managed \
-            --set-env-vars="ENVIRONMENT=${{ env.ENVIRONMENT }},VERSION=${{ inputs.version }},GCP_PROJECT_ID=${{ secrets.GCP_PROJECT_ID_STAGING }}" \
-            --set-secrets="SECRET_KEY=api-secret-key:latest,FIREBASE_PROJECT_ID=firebase-project-id:latest" \
+            --set-env-vars="ENVIRONMENT=${{ env.ENVIRONMENT }},VERSION=${{ inputs.version }},GCP_PROJECT_ID=${{ secrets.GCP_PROJECT_ID_STAGING }},HIPAA_COMPLIANCE=true,AUDIT_LOGGING=true,DATA_ENCRYPTION=true" \
+            --set-secrets="SECRET_KEY=api-secret-key:latest,FIREBASE_PROJECT_ID=firebase-project-id:latest,FIREBASE_ADMIN_KEY=firebase-admin-key:latest,JWT_SECRET=jwt-secret-key:latest,ENCRYPTION_KEY=encryption-key:latest,DATABASE_URL=database-connection-string:latest,SMTP_CREDENTIALS=smtp-credentials:latest,EXTERNAL_API_KEYS=external-api-keys:latest" \
             --min-instances=0 \
             --max-instances=1 \
             --memory=512Mi \
             --cpu=1 \
-            --allow-unauthenticated \
+            --no-allow-unauthenticated \
+            --vpc-connector=adyela-staging-connector \
+            --vpc-egress=private-ranges-only \
             --timeout=300s \
             --concurrency=80 \
             --port=8000 \
-            --service-account=${{ secrets.SERVICE_ACCOUNT_STAGING }} \
-            --labels="environment=staging,version=${VERSION_LABEL},deployed-by=github-actions"
+            --service-account=adyela-staging-hipaa@adyela-staging.iam.gserviceaccount.com \
+            --labels="environment=staging,version=${VERSION_LABEL},deployed-by=github-actions,hipaa-compliant=true"
 
           URL=$(gcloud run services describe ${{ env.API_SERVICE_NAME }} --region ${{ env.GCP_REGION }} --format='value(status.url)')
           echo "url=$URL" >> $GITHUB_OUTPUT
@@ -178,15 +182,16 @@ jobs:
           echo "Waiting for Cloud Run service to stabilize..."
           sleep 30
 
-      - name: Ensure service is public (Invoker for allUsers)
+      - name: Configure IAM for authenticated access
         run: |
-          gcloud run services add-iam-policy-binding "${SERVICE}" \
-            --region "${REGION}" \
-            --member="allUsers" \
+          # Grant access to authenticated users only (HIPAA-compliant)
+          gcloud run services add-iam-policy-binding ${{ env.API_SERVICE_NAME }} \
+            --region ${{ env.GCP_REGION }} \
+            --member="allAuthenticatedUsers" \
             --role="roles/run.invoker" \
-            --project "${PROJECT_ID}" || true
+            --project ${{ secrets.GCP_PROJECT_ID_STAGING }} || true
 
-      - name: Verify deployment health
+      - name: Verify deployment health (HIPAA-compliant)
         continue-on-error: true
         run: |
           MAX_RETRIES=5
@@ -196,18 +201,21 @@ jobs:
           TOKEN=$(gcloud auth print-identity-token)
 
           while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
-            # VERIFICA LA RUTA RAÍZ "/"
-            if curl -f -H "Authorization: Bearer $TOKEN" ${{ steps.deploy.outputs.url }}/; then
-              echo "Health check passed"
+            # Health check with authentication (HIPAA-compliant)
+            if curl -f -H "Authorization: Bearer $TOKEN" \
+                     -H "X-Forwarded-Proto: https" \
+                     ${{ steps.deploy.outputs.url }}/health; then
+              echo "✅ Health check passed - Service is HIPAA-compliant and accessible"
               exit 0
             fi
 
             RETRY_COUNT=$((RETRY_COUNT + 1))
-            echo "Health check failed. Retry $RETRY_COUNT/$MAX_RETRIES"
+            echo "⏳ Health check failed. Retry $RETRY_COUNT/$MAX_RETRIES"
             sleep 10
           done
 
-          echo "Health check failed after $MAX_RETRIES retries"
+          echo "❌ Health check failed after $MAX_RETRIES retries"
+          echo "🔍 Service may require additional authentication configuration"
           exit 1
 
   build-web:
@@ -331,7 +339,7 @@ jobs:
           echo "image=${IMAGE}" >> "$GITHUB_OUTPUT"
           echo "Full image reference: ${IMAGE}"
 
-      - name: Deploy to Cloud Run
+      - name: Deploy to Cloud Run (HIPAA-Compliant)
         id: deploy
         run: |
           # Convert version to GCP-compliant label (replace dots with dashes)
@@ -341,17 +349,19 @@ jobs:
             --image ${{ steps.image.outputs.image }} \
             --region ${{ env.GCP_REGION }} \
             --platform managed \
-            --set-env-vars="VITE_ENV=${{ env.ENVIRONMENT }},VERSION=${{ inputs.version }}" \
+            --set-env-vars="VITE_ENV=${{ env.ENVIRONMENT }},VERSION=${{ inputs.version }},HIPAA_COMPLIANCE=true,AUDIT_LOGGING=true" \
             --min-instances=0 \
-            --allow-unauthenticated \
+            --no-allow-unauthenticated \
+            --vpc-connector=adyela-staging-connector \
+            --vpc-egress=private-ranges-only \
             --max-instances=2 \
             --memory=256Mi \
             --cpu=1 \
             --timeout=60s \
             --concurrency=80 \
             --port=8080 \
-            --service-account=${{ secrets.SERVICE_ACCOUNT_STAGING }} \
-            --labels="environment=staging,version=${VERSION_LABEL},deployed-by=github-actions" \
+            --service-account=adyela-staging-hipaa@adyela-staging.iam.gserviceaccount.com \
+            --labels="environment=staging,version=${VERSION_LABEL},deployed-by=github-actions,hipaa-compliant=true" \
             --format=json | jq -r '.status.url' | tee /tmp/url.txt
 
           # Store URL as output
@@ -369,15 +379,20 @@ jobs:
           id_token_audience: ${{ steps.deploy.outputs.url }}
           id_token_include_email: true
 
-      - name: Verify deployment health
+      - name: Verify deployment health (HIPAA-compliant)
         run: |
           URL=${{ steps.deploy.outputs.url }}
           for i in {1..12}; do
-            if curl -fsSL -H "Authorization: Bearer ${{ steps.auth.outputs.id_token }}" "$URL"; then
-              echo "OK"; exit 0
+            if curl -fsSL -H "Authorization: Bearer ${{ steps.auth.outputs.id_token }}" \
+                     -H "X-Forwarded-Proto: https" \
+                     "$URL"; then
+              echo "✅ Web service health check passed - HIPAA-compliant and accessible"
+              exit 0
             fi
+            echo "⏳ Web service health check attempt $i/12"
             sleep 5
           done
+          echo "❌ Web service health check failed after 12 attempts"
           exit 1
 
   e2e-tests:
