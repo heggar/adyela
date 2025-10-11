@@ -99,6 +99,41 @@ module "service_account" {
 # }
 
 # ================================================================================
+# Cloud Run Module - HIPAA-Compliant Services
+# ================================================================================
+
+module "cloud_run" {
+  source = "../../modules/cloud-run"
+
+  project_id   = var.project_id
+  project_name = var.project_name
+  environment  = local.environment
+  region       = var.region
+  version      = "latest" # This will be updated by CI/CD
+
+  service_account_email = module.service_account.service_account_email
+  vpc_connector_name    = module.vpc.vpc_connector_name
+
+  # Docker images - these will be updated by CI/CD
+  api_image = "us-central1-docker.pkg.dev/${var.project_id}/adyela/adyela-api-staging:latest"
+  web_image = "us-central1-docker.pkg.dev/${var.project_id}/adyela/adyela-web-staging:latest"
+
+  # HIPAA Secrets
+  hipaa_secrets = {
+    SECRET_KEY          = "api-secret-key"
+    FIREBASE_PROJECT_ID = "firebase-project-id"
+    FIREBASE_ADMIN_KEY  = "firebase-admin-key"
+    JWT_SECRET          = "jwt-secret-key"
+    ENCRYPTION_KEY      = "encryption-key"
+    DATABASE_URL        = "database-connection-string"
+    SMTP_CREDENTIALS    = "smtp-credentials"
+    EXTERNAL_API_KEYS   = "external-api-keys"
+  }
+
+  labels = local.labels
+}
+
+# ================================================================================
 # Outputs for other modules
 # ================================================================================
 
@@ -125,6 +160,27 @@ output "hipaa_service_account_email" {
 output "hipaa_service_account_id" {
   description = "ID of the HIPAA service account"
   value       = module.service_account.service_account_id
+}
+
+# Cloud Run outputs
+output "api_service_name" {
+  description = "Name of the API Cloud Run service"
+  value       = module.cloud_run.api_service_name
+}
+
+output "api_service_url" {
+  description = "URL of the API Cloud Run service"
+  value       = module.cloud_run.api_service_url
+}
+
+output "web_service_name" {
+  description = "Name of the Web Cloud Run service"
+  value       = module.cloud_run.web_service_name
+}
+
+output "web_service_url" {
+  description = "URL of the Web Cloud Run service"
+  value       = module.cloud_run.web_service_url
 }
 
 # Load Balancer outputs - temporarily commented out

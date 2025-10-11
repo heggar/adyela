@@ -370,7 +370,7 @@ jobs:
           echo ""
           echo "✅ Web service deployed with HIPAA compliance:"
           echo "  🔒 VPC connector: adyela-staging-connector"
-          echo "  🔒 Private ingress: --ingress=internal"
+          echo "  🔒 Private ingress: --ingress=internal-and-cloud-load-balancing"
           echo "  🔒 Private access: --no-allow-unauthenticated"
           echo "  🔒 Service account: adyela-staging-hipaa"
           echo "  🔒 HIPAA environment variables configured"
