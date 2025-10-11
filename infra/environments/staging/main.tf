@@ -67,40 +67,40 @@ module "service_account" {
   project_name = var.project_name
   environment  = local.environment
 
-    labels = local.labels
-  }
+  labels = local.labels
+}
 
-  # ================================================================================
-  # Load Balancer Module - HIPAA-Compliant Public Access with IAP
-  # Cost: ~$18-25/month
-  # Provides: Public access with mandatory authentication via Identity-Aware Proxy
-  # 
-  # NOTE: Temporarily commented out to resolve CI - Infrastructure errors
-  # The Load Balancer resources are already created manually and working
-  # IP: 34.96.108.162, Domain: staging.adyela.care
-  # ================================================================================
+# ================================================================================
+# Load Balancer Module - HIPAA-Compliant Public Access with IAP
+# Cost: ~$18-25/month
+# Provides: Public access with mandatory authentication via Identity-Aware Proxy
+# 
+# NOTE: Temporarily commented out to resolve CI - Infrastructure errors
+# The Load Balancer resources are already created manually and working
+# IP: 34.96.108.162, Domain: staging.adyela.care
+# ================================================================================
 
-  # module "load_balancer" {
-  #   source = "../../modules/load-balancer"
+# module "load_balancer" {
+#   source = "../../modules/load-balancer"
 
-  #   project_id     = var.project_id
-  #   project_name   = var.project_name
-  #   environment    = local.environment
-  #   region         = var.region
-  #   domain         = "staging.adyela.care"
+#   project_id     = var.project_id
+#   project_name   = var.project_name
+#   environment    = local.environment
+#   region         = var.region
+#   domain         = "staging.adyela.care"
 
-  #   # Cloud Run Web service
-  #   cloud_run_service_name = "adyela-web-staging"
+#   # Cloud Run Web service
+#   cloud_run_service_name = "adyela-web-staging"
 
-  #   # IAP configuration
-  #   iap_enabled = true
+#   # IAP configuration
+#   iap_enabled = true
 
-  #   labels = local.labels
-  # }
+#   labels = local.labels
+# }
 
-  # ================================================================================
-  # Outputs for other modules
-  # ================================================================================
+# ================================================================================
+# Outputs for other modules
+# ================================================================================
 
 output "vpc_network_name" {
   description = "VPC network name for use in other modules"
