@@ -67,12 +67,36 @@ module "service_account" {
   project_name = var.project_name
   environment  = local.environment
 
-  labels = local.labels
-}
+    labels = local.labels
+  }
 
-# ================================================================================
-# Outputs for other modules
-# ================================================================================
+  # ================================================================================
+  # Load Balancer Module - HIPAA-Compliant Public Access with IAP
+  # Cost: ~$18-25/month
+  # Provides: Public access with mandatory authentication via Identity-Aware Proxy
+  # ================================================================================
+
+  module "load_balancer" {
+    source = "../../modules/load-balancer"
+
+    project_id     = var.project_id
+    project_name   = var.project_name
+    environment    = local.environment
+    region         = var.region
+    domain         = "staging.adyela.care"
+
+    # Cloud Run Web service
+    cloud_run_service_name = "adyela-web-staging"
+
+    # IAP configuration
+    iap_enabled = true
+
+    labels = local.labels
+  }
+
+  # ================================================================================
+  # Outputs for other modules
+  # ================================================================================
 
 output "vpc_network_name" {
   description = "VPC network name for use in other modules"
@@ -97,4 +121,24 @@ output "hipaa_service_account_email" {
 output "hipaa_service_account_id" {
   description = "ID of the HIPAA service account"
   value       = module.service_account.service_account_id
+}
+
+output "load_balancer_ip" {
+  description = "Global IP address of the load balancer for DNS configuration"
+  value       = module.load_balancer.load_balancer_ip
+}
+
+output "load_balancer_domain" {
+  description = "Domain configured for the load balancer"
+  value       = module.load_balancer.domain
+}
+
+output "ssl_certificate_name" {
+  description = "Name of the managed SSL certificate"
+  value       = module.load_balancer.ssl_certificate_name
+}
+
+output "iap_enabled" {
+  description = "Whether IAP is enabled for authentication"
+  value       = module.load_balancer.iap_enabled
 }
