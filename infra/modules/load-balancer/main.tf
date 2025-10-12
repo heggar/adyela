@@ -51,8 +51,8 @@ resource "google_compute_backend_service" "web_backend" {
   port_name   = "http"
   timeout_sec = 30
 
-  # Health check configuration
-  health_checks = [google_compute_health_check.web_health_check.id]
+  # Health check configuration - not needed for serverless NEGs
+  # health_checks = [google_compute_health_check.web_health_check.id]
 
   # Backend configuration
   backend {
@@ -81,8 +81,8 @@ resource "google_compute_backend_service" "api_backend" {
   port_name   = "http"
   timeout_sec = 30
 
-  # Health check configuration
-  health_checks = [google_compute_health_check.api_health_check.id]
+  # Health check configuration - not needed for serverless NEGs
+  # health_checks = [google_compute_health_check.api_health_check.id]
 
   # Backend configuration
   backend {

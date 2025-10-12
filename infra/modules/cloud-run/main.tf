@@ -76,7 +76,7 @@ resource "google_cloud_run_v2_service" "api" {
     }
 
     vpc_access {
-      connector = var.vpc_connector_name
+      connector = "projects/${var.project_id}/locations/${var.region}/connectors/${var.vpc_connector_name}"
       egress    = "PRIVATE_RANGES_ONLY"
     }
 
@@ -143,7 +143,7 @@ resource "google_cloud_run_v2_service" "web" {
     }
 
     vpc_access {
-      connector = var.vpc_connector_name
+      connector = "projects/${var.project_id}/locations/${var.region}/connectors/${var.vpc_connector_name}"
       egress    = "PRIVATE_RANGES_ONLY"
     }
 
