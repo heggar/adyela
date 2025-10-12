@@ -20,7 +20,7 @@ router = APIRouter(prefix="/data-deletion", tags=["data-deletion"])
 
 # In-memory storage for demo purposes
 # In production, this should be stored in Firestore or a database
-deletion_requests: dict[str, dict[str, str]] = {}
+deletion_requests: dict[str, dict[str, str | DataDeletionStatus]] = {}
 
 
 async def process_data_deletion(request_id: str, email: str, user_id: str | None = None) -> None:
@@ -91,7 +91,7 @@ async def request_data_deletion(
         deletion_requests[request_id] = {
             "request_id": request_id,
             "email": request.email,
-            "reason": request.reason,
+            "reason": request.reason or "",
             "status": DataDeletionStatus.PENDING,
             "created_at": datetime.utcnow().isoformat(),
             "updated_at": datetime.utcnow().isoformat(),
@@ -133,7 +133,7 @@ async def get_deletion_status(request_id: str) -> DataDeletionStatusResponse:
 
     return DataDeletionStatusResponse(
         request_id=request_data["request_id"],
-        status=request_data["status"],
+        status=DataDeletionStatus(request_data["status"]),
         created_at=request_data["created_at"],
         completed_at=request_data.get("completed_at"),
         message=request_data["message"],
@@ -186,7 +186,7 @@ async def confirm_data_deletion(
 
 
 @router.get("/info", status_code=status.HTTP_200_OK)
-async def get_deletion_info() -> dict[str, str]:
+async def get_deletion_info() -> dict[str, str | list[str] | dict[str, str]]:
     """
     Get information about data deletion process.
     This is a public endpoint that provides information about how data deletion works.
