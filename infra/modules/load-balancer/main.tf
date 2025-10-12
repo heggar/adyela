@@ -21,7 +21,7 @@ resource "google_compute_global_address" "lb_ip" {
   labels = var.labels
 }
 
-# Serverless Network Endpoint Group for Cloud Run
+# Serverless Network Endpoint Group for Cloud Run Web
 resource "google_compute_region_network_endpoint_group" "cloud_run_neg" {
   name                  = "${var.project_name}-${var.environment}-cloud-run-neg"
   network_endpoint_type = "SERVERLESS"
@@ -32,7 +32,18 @@ resource "google_compute_region_network_endpoint_group" "cloud_run_neg" {
   }
 }
 
-# Backend Service for Cloud Run
+# Serverless Network Endpoint Group for Cloud Run API
+resource "google_compute_region_network_endpoint_group" "api_neg" {
+  name                  = "${var.project_name}-${var.environment}-api-neg"
+  network_endpoint_type = "SERVERLESS"
+  region                = var.region
+
+  cloud_run {
+    service = var.api_service_name
+  }
+}
+
+# Backend Service for Cloud Run Web
 resource "google_compute_backend_service" "web_backend" {
   name        = "${var.project_name}-${var.environment}-web-backend"
   description = "Backend service for ${var.environment} web application"
@@ -62,7 +73,37 @@ resource "google_compute_backend_service" "web_backend" {
   }
 }
 
-# Health Check for Cloud Run
+# Backend Service for Cloud Run API
+resource "google_compute_backend_service" "api_backend" {
+  name        = "${var.project_name}-${var.environment}-api-backend"
+  description = "Backend service for ${var.environment} API"
+  protocol    = "HTTP"
+  port_name   = "http"
+  timeout_sec = 30
+
+  # Health check configuration
+  health_checks = [google_compute_health_check.api_health_check.id]
+
+  # Backend configuration
+  backend {
+    group = google_compute_region_network_endpoint_group.api_neg.id
+  }
+
+  # Session affinity for better user experience
+  session_affinity        = "GENERATED_COOKIE"
+  affinity_cookie_ttl_sec = 3600
+
+  # Security settings
+  security_policy = null # No Cloud Armor for cost optimization
+
+  # Logging for audit trails
+  log_config {
+    enable      = true
+    sample_rate = 1.0
+  }
+}
+
+# Health Check for Cloud Run Web
 resource "google_compute_health_check" "web_health_check" {
   name                = "${var.project_name}-${var.environment}-web-health-check"
   description         = "Health check for ${var.environment} web service"
@@ -78,6 +119,22 @@ resource "google_compute_health_check" "web_health_check" {
   }
 }
 
+# Health Check for Cloud Run API
+resource "google_compute_health_check" "api_health_check" {
+  name                = "${var.project_name}-${var.environment}-api-health-check"
+  description         = "Health check for ${var.environment} API service"
+  timeout_sec         = 5
+  check_interval_sec  = 10
+  healthy_threshold   = 2
+  unhealthy_threshold = 3
+
+  http_health_check {
+    port         = 8080
+    request_path = "/health"
+    proxy_header = "NONE"
+  }
+}
+
 # URL Map for routing
 resource "google_compute_url_map" "web_url_map" {
   name            = "${var.project_name}-${var.environment}-web-url-map"
@@ -86,13 +143,19 @@ resource "google_compute_url_map" "web_url_map" {
 
   # HTTP to HTTPS redirect
   host_rule {
-    hosts        = [var.domain]
+    hosts        = [var.domain, "api.${var.domain}"]
     path_matcher = "allpaths"
   }
 
   path_matcher {
     name            = "allpaths"
     default_service = google_compute_backend_service.web_backend.id
+
+    # Route API requests to API backend
+    path_rule {
+      paths   = ["/api/*"]
+      service = google_compute_backend_service.api_backend.id
+    }
   }
 }
 
@@ -114,7 +177,7 @@ resource "google_compute_managed_ssl_certificate" "web_ssl_cert" {
   name = "${var.project_name}-${var.environment}-web-ssl-cert"
 
   managed {
-    domains = [var.domain]
+    domains = [var.domain, "api.${var.domain}"]
   }
 }
 

@@ -80,23 +80,24 @@ module "service_account" {
 # IP: 34.96.108.162, Domain: staging.adyela.care
 # ================================================================================
 
-# module "load_balancer" {
-#   source = "../../modules/load-balancer"
+module "load_balancer" {
+  source = "../../modules/load-balancer"
 
-#   project_id     = var.project_id
-#   project_name   = var.project_name
-#   environment    = local.environment
-#   region         = var.region
-#   domain         = "staging.adyela.care"
+  project_id     = var.project_id
+  project_name   = var.project_name
+  environment    = local.environment
+  region         = var.region
+  domain         = "staging.adyela.care"
 
-#   # Cloud Run Web service
-#   cloud_run_service_name = "adyela-web-staging"
+  # Cloud Run services
+  cloud_run_service_name = "adyela-web-staging"
+  api_service_name       = "adyela-api-staging"
 
-#   # IAP configuration
-#   iap_enabled = true
+  # IAP configuration
+  iap_enabled = true
 
-#   labels = local.labels
-# }
+  labels = local.labels
+}
 
 # ================================================================================
 # Cloud Run Module - HIPAA-Compliant Services
