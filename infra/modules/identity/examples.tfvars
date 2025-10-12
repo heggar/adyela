@@ -27,13 +27,13 @@ microsoft_client_secret    = "your-microsoft-client-secret"
 # === Password Policy Configuration ===
 
 password_policy = {
-  min_length             = 12
-  require_uppercase      = true
-  require_lowercase      = true
-  require_numeric        = true
-  require_special_char   = true
-  max_failed_attempts    = 5
-  lockout_duration       = "15m"
+  min_length           = 12
+  require_uppercase    = true
+  require_lowercase    = true
+  require_numeric      = true
+  require_special_char = true
+  max_failed_attempts  = 5
+  lockout_duration     = "15m"
 }
 
 # === MFA Configuration ===

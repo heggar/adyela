@@ -91,11 +91,11 @@ module "service_account" {
 module "load_balancer" {
   source = "../../modules/load-balancer"
 
-  project_id     = var.project_id
-  project_name   = var.project_name
-  environment    = local.environment
-  region         = var.region
-  domain         = "staging.adyela.care"
+  project_id   = var.project_id
+  project_name = var.project_name
+  environment  = local.environment
+  region       = var.region
+  domain       = "staging.adyela.care"
 
   # Cloud Run services
   cloud_run_service_name = "adyela-web-staging"

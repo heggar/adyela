@@ -91,22 +91,22 @@ variable "microsoft_client_secret" {
 variable "password_policy" {
   description = "Password policy configuration for email/password authentication"
   type = object({
-    min_length             = number
-    require_uppercase      = bool
-    require_lowercase      = bool
-    require_numeric        = bool
-    require_special_char   = bool
-    max_failed_attempts    = number
-    lockout_duration       = string
+    min_length           = number
+    require_uppercase    = bool
+    require_lowercase    = bool
+    require_numeric      = bool
+    require_special_char = bool
+    max_failed_attempts  = number
+    lockout_duration     = string
   })
   default = {
-    min_length             = 12
-    require_uppercase      = true
-    require_lowercase      = true
-    require_numeric        = true
-    require_special_char   = true
-    max_failed_attempts    = 5
-    lockout_duration       = "15m"
+    min_length           = 12
+    require_uppercase    = true
+    require_lowercase    = true
+    require_numeric      = true
+    require_special_char = true
+    max_failed_attempts  = 5
+    lockout_duration     = "15m"
   }
 }
 

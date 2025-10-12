@@ -73,8 +73,8 @@ resource "google_identity_platform_config" "default" {
   # Client configuration
   client {
     permissions {
-      disabled_user_signup    = false
-      disabled_user_deletion  = false
+      disabled_user_signup   = false
+      disabled_user_deletion = false
     }
   }
 
@@ -100,7 +100,7 @@ resource "google_identity_platform_tenant" "default" {
   project      = var.project_id
   display_name = "Adyela Healthcare Platform - ${title(var.environment)}"
 
-  allow_password_signup = var.enable_email_password
+  allow_password_signup    = var.enable_email_password
   enable_email_link_signin = false
 
   # Note: MFA configuration for tenants is inherited from the project-level

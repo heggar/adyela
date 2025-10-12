@@ -20,17 +20,18 @@ output "api_staging_record_id" {
   value       = cloudflare_record.api_staging.id
 }
 
-output "waf_ruleset_id" {
-  description = "WAF ruleset ID"
-  value       = cloudflare_ruleset.waf_custom.id
-}
+# Outputs comentados para plan Free
+# output "waf_ruleset_id" {
+#   description = "WAF ruleset ID"
+#   value       = cloudflare_ruleset.waf_custom.id
+# }
 
-output "security_headers_ruleset_id" {
-  description = "Security headers ruleset ID"
-  value       = cloudflare_ruleset.security_headers.id
-}
+# output "security_headers_ruleset_id" {
+#   description = "Security headers ruleset ID"
+#   value       = cloudflare_ruleset.security_headers.id
+# }
 
-output "rate_limiting_ruleset_id" {
-  description = "Rate limiting ruleset ID"
-  value       = cloudflare_ruleset.rate_limiting.id
-}
+# output "rate_limiting_ruleset_id" {
+#   description = "Rate limiting ruleset ID"
+#   value       = cloudflare_ruleset.rate_limiting.id
+# }
