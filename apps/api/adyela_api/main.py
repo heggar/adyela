@@ -41,6 +41,31 @@ logger = structlog.get_logger()
 # Initialize rate limiter
 limiter = Limiter(key_func=get_remote_address)
 
+# Lifespan event handler
+from contextlib import asynccontextmanager
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Run on application startup and shutdown."""
+    # Startup
+    logger.info(
+        "application_starting",
+        app_name=settings.app_name,
+        version=settings.app_version,
+        environment=settings.environment,
+    )
+    
+    # Initialize Firebase (placeholder - add actual initialization)
+    # Initialize database connections
+    # Initialize cache connections
+    
+    yield
+    
+    # Shutdown
+    logger.info("application_shutting_down")
+    # Close database connections
+    # Close cache connections
+
 # Create FastAPI application
 app = FastAPI(
     title=settings.app_name,
@@ -49,6 +74,7 @@ app = FastAPI(
     docs_url="/docs" if settings.debug else None,
     redoc_url="/redoc" if settings.debug else None,
     openapi_url="/openapi.json" if settings.debug else None,
+    lifespan=lifespan,
 )
 
 # Add rate limiting
@@ -100,29 +126,6 @@ async def global_exception_handler(request: Request, exc: Exception) -> JSONResp
     )
 
 
-# Startup and shutdown events
-@app.on_event("startup")
-async def startup_event() -> None:
-    """Run on application startup."""
-    logger.info(
-        "application_starting",
-        app_name=settings.app_name,
-        version=settings.app_version,
-        environment=settings.environment,
-    )
-
-    # Initialize Firebase (placeholder - add actual initialization)
-    # Initialize database connections
-    # Initialize cache connections
-
-
-@app.on_event("shutdown")
-async def shutdown_event() -> None:
-    """Run on application shutdown."""
-    logger.info("application_shutting_down")
-    # Close database connections
-    # Close cache connections
-    # Cleanup resources
 
 
 # Include routers
