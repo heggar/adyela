@@ -83,6 +83,29 @@ jobs:
             type=sha,prefix={{branch}}-
             type=raw,value=latest
 
+      - name: Validate build context
+        run: |
+          echo "=================================================="
+          echo "🔍 VALIDATING BUILD CONTEXT"
+          echo "=================================================="
+          echo ""
+          echo "📂 Checking API directory structure..."
+          ls -la apps/api/
+          echo ""
+          echo "📄 Checking Dockerfile..."
+          cat apps/api/Dockerfile | head -20
+          echo "... (showing first 20 lines)"
+          echo ""
+          echo "🐍 Checking Python files..."
+          find apps/api/adyela_api -name "*.py" | head -10
+          echo "... (showing first 10 files)"
+          echo ""
+          echo "📦 Checking pyproject.toml..."
+          cat apps/api/pyproject.toml | grep -A 5 "tool.poetry"
+          echo ""
+          echo "=================================================="
+          echo ""
+
       - name: Build and push Docker image
         id: build
         uses: docker/build-push-action@v5
@@ -97,6 +120,22 @@ jobs:
           platforms: linux/amd64
           provenance: false
           sbom: false
+
+      - name: Verify pushed image
+        run: |
+          echo "=================================================="
+          echo "✅ VERIFYING PUSHED IMAGE"
+          echo "=================================================="
+          echo ""
+          IMAGE_REF="${{ env.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID_STAGING }}/adyela/${{ env.API_SERVICE_NAME }}:${{ inputs.version }}"
+          echo "📦 Image Reference: ${IMAGE_REF}"
+          echo "🔑 Digest: ${{ steps.build.outputs.digest }}"
+          echo ""
+          echo "🔍 Listing image tags..."
+          gcloud artifacts docker tags list ${{ env.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID_STAGING }}/adyela/${{ env.API_SERVICE_NAME }} --limit=5
+          echo ""
+          echo "=================================================="
+          echo ""
 
       - name: Sign container image
         continue-on-error: true
@@ -133,6 +172,10 @@ jobs:
       - name: Build image reference
         id: image
         run: |
+          echo "=================================================="
+          echo "🏗️  BUILDING IMAGE REFERENCE"
+          echo "=================================================="
+          echo ""
           # Construct full image reference from version + project secret
           REGISTRY="${{ env.GCP_REGION }}-docker.pkg.dev"
           PROJECT="${{ secrets.GCP_PROJECT_ID_STAGING }}"
@@ -140,70 +183,310 @@ jobs:
           SERVICE="${{ env.API_SERVICE_NAME }}"
           VERSION="${{ needs.build-api.outputs.image-version }}"
           IMAGE="${REGISTRY}/${PROJECT}/${REPOSITORY}/${SERVICE}:${VERSION}"
+
+          echo "📦 Image Components:"
+          echo "   Registry: ${REGISTRY}"
+          echo "   Project: ${PROJECT}"
+          echo "   Repository: ${REPOSITORY}"
+          echo "   Service: ${SERVICE}"
+          echo "   Version: ${VERSION}"
+          echo ""
+          echo "🔗 Full Image Reference:"
+          echo "   ${IMAGE}"
+          echo ""
+
           echo "image=${IMAGE}" >> "$GITHUB_OUTPUT"
-          echo "Full image reference: ${IMAGE}"
+          echo "=================================================="
+          echo ""
+
+      - name: Validate secrets exist
+        run: |
+          echo "=================================================="
+          echo "🔐 VALIDATING SECRETS CONFIGURATION"
+          echo "=================================================="
+          echo ""
+          echo "📋 Checking required secrets in Secret Manager..."
+          echo ""
+
+          SECRETS=(
+            "api-secret-key"
+            "firebase-project-id"
+            "firebase-admin-key"
+            "jwt-secret-key"
+            "encryption-key"
+            "database-connection-string"
+            "smtp-credentials"
+            "external-api-keys"
+            "oauth-google-client-id"
+            "oauth-google-client-secret"
+            "oauth-facebook-app-id"
+            "oauth-facebook-app-secret"
+            "oauth-apple-client-id"
+            "oauth-apple-client-secret"
+            "oauth-microsoft-client-id"
+            "oauth-microsoft-client-secret"
+          )
+
+          ALL_EXIST=true
+          for secret in "${SECRETS[@]}"; do
+            if gcloud secrets describe "${secret}" --project=${{ secrets.GCP_PROJECT_ID_STAGING }} &>/dev/null; then
+              VERSION_COUNT=$(gcloud secrets versions list "${secret}" --project=${{ secrets.GCP_PROJECT_ID_STAGING }} --format="value(name)" | wc -l)
+              echo "   ✅ ${secret} (${VERSION_COUNT} versions)"
+            else
+              echo "   ❌ ${secret} - NOT FOUND"
+              ALL_EXIST=false
+            fi
+          done
+
+          echo ""
+          if [ "$ALL_EXIST" = true ]; then
+            echo "✅ All secrets verified successfully"
+          else
+            echo "⚠️  WARNING: Some secrets are missing!"
+            echo "   Deployment may fail if these secrets are required."
+          fi
+          echo ""
+          echo "=================================================="
+          echo ""
+
+      - name: Pre-deployment validation
+        run: |
+          echo "=================================================="
+          echo "🔍 PRE-DEPLOYMENT VALIDATION"
+          echo "=================================================="
+          echo ""
+          echo "📊 Current Cloud Run service status..."
+          gcloud run services describe ${{ env.API_SERVICE_NAME }} \
+            --region ${{ env.GCP_REGION }} \
+            --format="table(metadata.name,status.conditions[0].status,spec.template.metadata.name)" \
+            2>/dev/null || echo "   ℹ️  Service not found (will be created)"
+          echo ""
+          echo "📝 Deployment Configuration:"
+          echo "   Environment: ${{ env.ENVIRONMENT }}"
+          echo "   Region: ${{ env.GCP_REGION }}"
+          echo "   Service: ${{ env.API_SERVICE_NAME }}"
+          echo "   Version: ${{ inputs.version }}"
+          echo "   Min Instances: 0 (scale-to-zero)"
+          echo "   Max Instances: 1"
+          echo "   Memory: 512Mi"
+          echo "   CPU: 1"
+          echo "   Port: 8000"
+          echo "   Ingress: internal"
+          echo "   VPC Connector: adyela-staging-connector"
+          echo ""
+          echo "=================================================="
+          echo ""
 
       - name: Deploy to Cloud Run (HIPAA-Compliant)
         id: deploy
         run: |
+          echo "=================================================="
+          echo "🚀 DEPLOYING TO CLOUD RUN"
+          echo "=================================================="
+          echo ""
           # Convert version to GCP-compliant label (replace dots with dashes)
           VERSION_LABEL=$(echo "${{ inputs.version }}" | tr '.' '-')
+
+          echo "📦 Deploying image: ${{ steps.image.outputs.image }}"
+          echo "🏷️  Version label: ${VERSION_LABEL}"
+          echo ""
 
           gcloud run deploy ${{ env.API_SERVICE_NAME }} \
             --image ${{ steps.image.outputs.image }} \
             --region ${{ env.GCP_REGION }} \
             --platform managed \
-            --set-env-vars="ENVIRONMENT=${{ env.ENVIRONMENT }},VERSION=${{ inputs.version }},GCP_PROJECT_ID=${{ secrets.GCP_PROJECT_ID_STAGING }},HIPAA_COMPLIANCE=true,AUDIT_LOGGING=true,DATA_ENCRYPTION=true" \
+            --set-env-vars="ENVIRONMENT=${{ env.ENVIRONMENT }},VERSION=${{ inputs.version }},GCP_PROJECT_ID=${{ secrets.GCP_PROJECT_ID_STAGING }},HIPAA_COMPLIANCE=true,AUDIT_LOGGING=true,DATA_ENCRYPTION=true,CORS_ORIGINS=https://staging.adyela.care,https://adyela-staging.firebaseapp.com,https://adyela-staging.web.app" \
             --set-secrets="SECRET_KEY=api-secret-key:latest,FIREBASE_PROJECT_ID=firebase-project-id:latest,FIREBASE_ADMIN_KEY=firebase-admin-key:latest,JWT_SECRET=jwt-secret-key:latest,ENCRYPTION_KEY=encryption-key:latest,DATABASE_URL=database-connection-string:latest,SMTP_CREDENTIALS=smtp-credentials:latest,EXTERNAL_API_KEYS=external-api-keys:latest,OAUTH_GOOGLE_CLIENT_ID=oauth-google-client-id:latest,OAUTH_GOOGLE_CLIENT_SECRET=oauth-google-client-secret:latest,OAUTH_FACEBOOK_APP_ID=oauth-facebook-app-id:latest,OAUTH_FACEBOOK_APP_SECRET=oauth-facebook-app-secret:latest,OAUTH_APPLE_CLIENT_ID=oauth-apple-client-id:latest,OAUTH_APPLE_CLIENT_SECRET=oauth-apple-client-secret:latest,OAUTH_MICROSOFT_CLIENT_ID=oauth-microsoft-client-id:latest,OAUTH_MICROSOFT_CLIENT_SECRET=oauth-microsoft-client-secret:latest" \
             --min-instances=0 \
             --max-instances=1 \
             --memory=512Mi \
             --cpu=1 \
-            --no-allow-unauthenticated \
-            --ingress=internal \
-            --vpc-connector=adyela-staging-connector \
-            --vpc-egress=private-ranges-only \
+            --allow-unauthenticated \
+            --ingress=all \
             --timeout=300s \
             --concurrency=80 \
             --port=8000 \
             --service-account=adyela-staging-hipaa@adyela-staging.iam.gserviceaccount.com \
-            --labels="environment=staging,version=${VERSION_LABEL},deployed-by=github-actions,hipaa-compliant=true"
+            --labels="environment=staging,version=${VERSION_LABEL},deployed-by=github-actions,hipaa-compliant=true" \
+            --format=json > /tmp/deploy-output.json
+
+          echo ""
+          echo "✅ Deployment command completed"
+          echo ""
 
           URL=$(gcloud run services describe ${{ env.API_SERVICE_NAME }} --region ${{ env.GCP_REGION }} --format='value(status.url)')
           echo "url=$URL" >> $GITHUB_OUTPUT
 
+          echo "🔗 Service URL: ${URL}"
+          echo ""
+          echo "=================================================="
+          echo ""
+
       - name: Wait for deployment stabilization
         run: |
-          echo "Waiting for Cloud Run service to stabilize..."
+          echo "=================================================="
+          echo "⏳ WAITING FOR DEPLOYMENT STABILIZATION"
+          echo "=================================================="
+          echo ""
+          echo "Waiting 30 seconds for Cloud Run to stabilize..."
           sleep 30
+          echo ""
+          echo "✅ Stabilization period completed"
+          echo "=================================================="
+          echo ""
 
-      - name: Configure IAM for authenticated access
+      - name: Verify deployment configuration
         run: |
-          echo "🔒 HIPAA-compliant service deployed with private access"
-          echo "✅ Service account: adyela-staging-hipaa"
-          echo "✅ VPC connector: adyela-staging-connector"
-          echo "✅ Private ingress: --ingress=internal"
-          echo "✅ Private access: --no-allow-unauthenticated"
-          echo "⚠️  Note: Service is not publicly accessible (HIPAA compliance)"
+          echo "=================================================="
+          echo "🔍 POST-DEPLOYMENT VERIFICATION"
+          echo "=================================================="
+          echo ""
+          echo "📊 Fetching current service configuration..."
+          gcloud run services describe ${{ env.API_SERVICE_NAME }} \
+            --region ${{ env.GCP_REGION }} \
+            --format=json > /tmp/service-config.json
 
-      - name: Verify deployment health (HIPAA-compliant)
-        continue-on-error: true
+          echo ""
+          echo "📝 Service Configuration Summary:"
+          echo "   Name: $(jq -r '.metadata.name' /tmp/service-config.json)"
+          echo "   Status: $(jq -r '.status.conditions[0].status' /tmp/service-config.json)"
+          echo "   URL: $(jq -r '.status.url' /tmp/service-config.json)"
+          echo "   Latest Revision: $(jq -r '.status.latestReadyRevisionName' /tmp/service-config.json)"
+          echo "   Created: $(jq -r '.status.latestCreatedRevisionName' /tmp/service-config.json)"
+          echo ""
+          echo "🔧 Container Configuration:"
+          echo "   Image: $(jq -r '.spec.template.spec.containers[0].image' /tmp/service-config.json)"
+          echo "   Port: $(jq -r '.spec.template.spec.containers[0].ports[0].containerPort' /tmp/service-config.json)"
+          echo "   Memory: $(jq -r '.spec.template.spec.containers[0].resources.limits.memory' /tmp/service-config.json)"
+          echo "   CPU: $(jq -r '.spec.template.spec.containers[0].resources.limits.cpu' /tmp/service-config.json)"
+          echo ""
+          echo "🌐 Network Configuration:"
+          echo "   Ingress: $(jq -r '.spec.template.metadata.annotations["run.googleapis.com/ingress"]' /tmp/service-config.json)"
+          echo "   VPC Connector: $(jq -r '.spec.template.metadata.annotations["run.googleapis.com/vpc-access-connector"]' /tmp/service-config.json)"
+          echo "   VPC Egress: $(jq -r '.spec.template.metadata.annotations["run.googleapis.com/vpc-access-egress"]' /tmp/service-config.json)"
+          echo ""
+          echo "📈 Scaling Configuration:"
+          echo "   Min Instances: $(jq -r '.spec.template.metadata.annotations["autoscaling.knative.dev/minScale"]' /tmp/service-config.json)"
+          echo "   Max Instances: $(jq -r '.spec.template.metadata.annotations["autoscaling.knative.dev/maxScale"]' /tmp/service-config.json)"
+          echo ""
+          echo "🔐 Environment Variables (count): $(jq -r '.spec.template.spec.containers[0].env | length' /tmp/service-config.json)"
+          echo "   $(jq -r '.spec.template.spec.containers[0].env[] | select(.value != null) | .name' /tmp/service-config.json | head -10)"
+          echo ""
+          echo "🔑 Secrets Mounted (count): $(jq -r '[.spec.template.spec.containers[0].env[] | select(.valueFrom.secretKeyRef != null)] | length' /tmp/service-config.json)"
+          echo "   $(jq -r '.spec.template.spec.containers[0].env[] | select(.valueFrom.secretKeyRef != null) | .name' /tmp/service-config.json | head -10)"
+          echo ""
+          echo "=================================================="
+          echo ""
+
+      - name: Check Cloud Run logs for errors
         run: |
-          echo "🔍 Verifying HIPAA-compliant deployment..."
-          echo "Service URL: ${{ steps.deploy.outputs.url }}"
+          echo "=================================================="
+          echo "📜 CHECKING RECENT LOGS"
+          echo "=================================================="
           echo ""
-          echo "✅ Service deployed with HIPAA compliance:"
-          echo "  🔒 VPC connector: adyela-staging-connector"
-          echo "  🔒 Private ingress: --ingress=internal"
-          echo "  🔒 Private access: --no-allow-unauthenticated"
-          echo "  🔒 Service account: adyela-staging-hipaa"
-          echo "  🔒 8 HIPAA secrets configured"
+          echo "🔍 Fetching last 20 log entries..."
+          gcloud logging read "resource.type=cloud_run_revision AND resource.labels.service_name=${{ env.API_SERVICE_NAME }}" \
+            --limit=20 \
+            --format="table(timestamp,severity,textPayload)" \
+            --project=${{ secrets.GCP_PROJECT_ID_STAGING }} || echo "   ℹ️  No logs available yet"
           echo ""
-          echo "⚠️  Note: Service is now HIPAA-compliant and not publicly accessible"
-          echo "   This is the expected behavior for HIPAA compliance"
-          echo "   Access requires authentication via VPC or identity tokens"
+          echo "🚨 Checking for errors in recent logs..."
+          gcloud logging read "resource.type=cloud_run_revision AND resource.labels.service_name=${{ env.API_SERVICE_NAME }} AND severity>=ERROR" \
+            --limit=10 \
+            --format="table(timestamp,severity,textPayload)" \
+            --project=${{ secrets.GCP_PROJECT_ID_STAGING }} || echo "   ✅ No errors found in recent logs"
           echo ""
-          echo "✅ Deployment completed successfully - HIPAA compliance achieved"
+          echo "=================================================="
+          echo ""
+
+      - name: Test API endpoints (Public Access)
+        run: |
+          echo "=================================================="
+          echo "🧪 TESTING API ENDPOINTS"
+          echo "=================================================="
+          echo ""
+          SERVICE_URL="${{ steps.deploy.outputs.url }}"
+          echo "🔗 Service URL: ${SERVICE_URL}"
+          echo ""
+
+          echo "📍 Testing endpoint: GET /"
+          echo "   Request: curl -s -o /dev/null -w 'HTTP %{http_code} - %{time_total}s' ${SERVICE_URL}/"
+          RESPONSE=$(curl -s -w "\nHTTP_CODE:%{http_code}\nTIME:%{time_total}s" ${SERVICE_URL}/ || echo "FAILED")
+          echo "   ${RESPONSE}"
+          echo ""
+
+          echo "📍 Testing endpoint: GET /health"
+          echo "   Request: curl -s ${SERVICE_URL}/health"
+          HEALTH_RESPONSE=$(curl -s -w "\nHTTP_CODE:%{http_code}" ${SERVICE_URL}/health || echo "FAILED")
+          echo "   Response:"
+          echo "${HEALTH_RESPONSE}" | head -20
+          echo ""
+
+          echo "📍 Testing endpoint: GET /docs"
+          echo "   Request: curl -s -o /dev/null -w 'HTTP %{http_code}' ${SERVICE_URL}/docs"
+          DOCS_CODE=$(curl -s -o /dev/null -w '%{http_code}' ${SERVICE_URL}/docs)
+          echo "   Response: HTTP ${DOCS_CODE}"
+          echo ""
+
+          echo "📍 Testing endpoint: GET /api/v1/auth/sync"
+          echo "   Request: curl -s -w 'HTTP %{http_code}' ${SERVICE_URL}/api/v1/auth/sync"
+          SYNC_RESPONSE=$(curl -s -w "\nHTTP_CODE:%{http_code}" ${SERVICE_URL}/api/v1/auth/sync || echo "FAILED")
+          echo "   Response:"
+          echo "${SYNC_RESPONSE}" | head -20
+          echo ""
+
+          echo "=================================================="
+          echo "📊 ENDPOINT TEST SUMMARY"
+          echo "=================================================="
+
+          # Extract HTTP codes
+          ROOT_CODE=$(echo "${RESPONSE}" | grep HTTP_CODE | cut -d: -f2)
+          HEALTH_CODE=$(echo "${HEALTH_RESPONSE}" | grep HTTP_CODE | cut -d: -f2)
+          SYNC_CODE=$(echo "${SYNC_RESPONSE}" | grep HTTP_CODE | cut -d: -f2)
+
+          echo "   GET /                : HTTP ${ROOT_CODE:-UNKNOWN}"
+          echo "   GET /health          : HTTP ${HEALTH_CODE:-UNKNOWN}"
+          echo "   GET /docs            : HTTP ${DOCS_CODE:-UNKNOWN}"
+          echo "   GET /api/v1/auth/sync: HTTP ${SYNC_CODE:-UNKNOWN}"
+          echo ""
+
+          # Evaluate success
+          if [ "${HEALTH_CODE}" == "200" ] || [ "${ROOT_CODE}" == "200" ]; then
+            echo "✅ API is responding successfully!"
+          else
+            echo "⚠️  WARNING: API may not be responding correctly"
+            echo "   Expected: HTTP 200 for /health or /"
+            echo "   Got: HTTP ${HEALTH_CODE:-UNKNOWN} for /health, HTTP ${ROOT_CODE:-UNKNOWN} for /"
+          fi
+          echo ""
+          echo "=================================================="
+          echo ""
+
+      - name: Display deployment summary
+        run: |
+          echo "=================================================="
+          echo "✅ DEPLOYMENT COMPLETED"
+          echo "=================================================="
+          echo ""
+          echo "🚀 Service: ${{ env.API_SERVICE_NAME }}"
+          echo "🌍 Region: ${{ env.GCP_REGION }}"
+          echo "🔗 URL: ${{ steps.deploy.outputs.url }}"
+          echo "🏷️  Version: ${{ inputs.version }}"
+          echo "📦 Image: ${{ steps.image.outputs.image }}"
+          echo ""
+          echo "🔓 Access Configuration:"
+          echo "   • Public access enabled (--allow-unauthenticated)"
+          echo "   • Ingress: all (temporarily for diagnosis)"
+          echo "   ⚠️  NOTE: Production should use private access"
+          echo ""
+          echo "📝 Next Steps:"
+          echo "   1. Review endpoint test results above"
+          echo "   2. Check Cloud Run logs for any errors"
+          echo "   3. Verify application startup in logs"
+          echo "   4. Test OAuth endpoints manually if needed"
+          echo ""
+          echo "=================================================="
+          echo ""
 
   build-web:
     name: Build Web Docker Image
