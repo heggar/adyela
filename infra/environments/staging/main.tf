@@ -6,12 +6,20 @@ terraform {
       source  = "hashicorp/google"
       version = "~> 6.0"
     }
+    cloudflare = {
+      source  = "cloudflare/cloudflare"
+      version = "~> 4.0"
+    }
   }
 }
 
 provider "google" {
   project = var.project_id
   region  = var.region
+}
+
+provider "cloudflare" {
+  # API token will be provided via CLOUDFLARE_API_TOKEN environment variable
 }
 
 # Local variables
@@ -80,23 +88,41 @@ module "service_account" {
 # IP: 34.96.108.162, Domain: staging.adyela.care
 # ================================================================================
 
-# module "load_balancer" {
-#   source = "../../modules/load-balancer"
+module "load_balancer" {
+  source = "../../modules/load-balancer"
 
-#   project_id     = var.project_id
-#   project_name   = var.project_name
-#   environment    = local.environment
-#   region         = var.region
-#   domain         = "staging.adyela.care"
+  project_id     = var.project_id
+  project_name   = var.project_name
+  environment    = local.environment
+  region         = var.region
+  domain         = "staging.adyela.care"
 
-#   # Cloud Run Web service
-#   cloud_run_service_name = "adyela-web-staging"
+  # Cloud Run services
+  cloud_run_service_name = "adyela-web-staging"
+  api_service_name       = "adyela-api-staging"
 
-#   # IAP configuration
-#   iap_enabled = true
+  # IAP configuration
+  iap_enabled = true
 
-#   labels = local.labels
-# }
+  labels = local.labels
+}
+
+# ================================================================================
+# Cloudflare CDN Module - Performance & Security
+# Cost: ~$5-8/month (vs $8-12 GCP CDN) - 40% savings
+# Provides: Global CDN, WAF, DDoS protection, SSL/TLS
+# ================================================================================
+
+module "cloudflare" {
+  source = "../../modules/cloudflare"
+
+  domain           = "adyela.care"
+  load_balancer_ip = "34.96.108.162" # Current Load Balancer IP
+  environment      = local.environment
+  project_name     = var.project_name
+
+  labels = local.labels
+}
 
 # ================================================================================
 # Cloud Run Module - HIPAA-Compliant Services
@@ -112,6 +138,9 @@ module "cloud_run" {
 
   service_account_email = module.service_account.service_account_email
   vpc_connector_name    = module.vpc.vpc_connector_name
+
+  # API URL for frontend (through load balancer)
+  api_url = "https://staging.adyela.care"
 
   # Docker images - these will be updated by CI/CD
   api_image = "us-central1-docker.pkg.dev/${var.project_id}/adyela/adyela-api-staging:latest"
@@ -204,3 +233,24 @@ output "web_service_url" {
 #   description = "Whether IAP is enabled for authentication"
 #   value       = module.load_balancer.iap_enabled
 # }
+
+# Cloudflare outputs
+output "cloudflare_zone_id" {
+  description = "Cloudflare Zone ID"
+  value       = module.cloudflare.zone_id
+}
+
+output "cloudflare_zone_name" {
+  description = "Cloudflare Zone Name"
+  value       = module.cloudflare.zone_name
+}
+
+output "staging_dns_record_id" {
+  description = "Staging DNS record ID in Cloudflare"
+  value       = module.cloudflare.staging_record_id
+}
+
+output "api_staging_dns_record_id" {
+  description = "API staging DNS record ID in Cloudflare"
+  value       = module.cloudflare.api_staging_record_id
+}

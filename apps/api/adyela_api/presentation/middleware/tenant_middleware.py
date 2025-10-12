@@ -8,10 +8,10 @@ from starlette.middleware.base import BaseHTTPMiddleware
 class TenantMiddleware(BaseHTTPMiddleware):
     """Middleware to extract and validate tenant context."""
 
-    async def dispatch(self, request: Request, call_next):  # type: ignore
+    async def dispatch(self, request: Request, call_next):
         """Process request and inject tenant context."""
-        # Skip tenant validation for health and docs endpoints
-        if request.url.path in ["/health", "/readiness", "/docs", "/openapi.json", "/redoc"]:
+        # Skip tenant validation for health, docs, and auth endpoints
+        if request.url.path in ["/health", "/readiness", "/docs", "/openapi.json", "/redoc"] or request.url.path.startswith("/api/v1/auth/"):
             return await call_next(request)
 
         # Extract tenant_id from header

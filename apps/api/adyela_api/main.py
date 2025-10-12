@@ -7,7 +7,7 @@ from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi import Limiter
 from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
 from starlette.exceptions import HTTPException as StarletteHTTPException
@@ -44,6 +44,7 @@ limiter = Limiter(key_func=get_remote_address)
 # Lifespan event handler
 from contextlib import asynccontextmanager
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Run on application startup and shutdown."""
@@ -54,17 +55,18 @@ async def lifespan(app: FastAPI):
         version=settings.app_version,
         environment=settings.environment,
     )
-    
+
     # Initialize Firebase (placeholder - add actual initialization)
     # Initialize database connections
     # Initialize cache connections
-    
+
     yield
-    
+
     # Shutdown
     logger.info("application_shutting_down")
     # Close database connections
     # Close cache connections
+
 
 # Create FastAPI application
 app = FastAPI(
@@ -79,7 +81,17 @@ app = FastAPI(
 
 # Add rate limiting
 app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+
+async def rate_limit_exceeded_handler(request: Request, exc: RateLimitExceeded) -> JSONResponse:
+    """Handle rate limit exceeded exceptions."""
+    return JSONResponse(
+        status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+        content={"detail": f"Rate limit exceeded: {exc.detail}"},
+    )
+
+
+app.add_exception_handler(RateLimitExceeded, rate_limit_exceeded_handler)
 
 # Add CORS middleware
 app.add_middleware(
@@ -126,10 +138,12 @@ async def global_exception_handler(request: Request, exc: Exception) -> JSONResp
     )
 
 
+# Include health check routes directly (no prefix)
+from adyela_api.presentation.api.v1.endpoints import health
+app.include_router(health.router, tags=["health"])
 
-
-# Include routers
-app.include_router(api_router)
+# Include other routers with /api prefix
+app.include_router(api_router, prefix="/api")
 
 
 # Root endpoint

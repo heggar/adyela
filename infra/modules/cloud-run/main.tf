@@ -20,7 +20,7 @@ resource "google_cloud_run_v2_service" "api" {
       image = var.api_image
 
       ports {
-        container_port = 8080
+        container_port = 8000
       }
 
       resources {
@@ -60,6 +60,11 @@ resource "google_cloud_run_v2_service" "api" {
         value = "true"
       }
 
+      env {
+        name  = "CORS_ORIGINS"
+        value = "https://staging.adyela.care,https://adyela-staging.firebaseapp.com,https://adyela-staging.web.app"
+      }
+
       # HIPAA Secrets
       dynamic "env" {
         for_each = var.hipaa_secrets
@@ -76,7 +81,7 @@ resource "google_cloud_run_v2_service" "api" {
     }
 
     vpc_access {
-      connector = var.vpc_connector_name
+      connector = "projects/${var.project_id}/locations/${var.region}/connectors/${var.vpc_connector_name}"
       egress    = "PRIVATE_RANGES_ONLY"
     }
 
@@ -91,6 +96,22 @@ resource "google_cloud_run_v2_service" "api" {
   }
 
   labels = var.labels
+}
+
+# Allow unauthenticated access to API service
+resource "google_cloud_run_service_iam_member" "api_public_access" {
+  service  = google_cloud_run_v2_service.api.name
+  location = google_cloud_run_v2_service.api.location
+  role     = "roles/run.invoker"
+  member   = "allUsers"
+}
+
+# Allow unauthenticated access to Web service
+resource "google_cloud_run_service_iam_member" "web_public_access" {
+  service  = google_cloud_run_v2_service.web.name
+  location = google_cloud_run_v2_service.web.location
+  role     = "roles/run.invoker"
+  member   = "allUsers"
 }
 
 # Cloud Run Web Service
@@ -117,7 +138,7 @@ resource "google_cloud_run_v2_service" "web" {
       resources {
         limits = {
           cpu    = "1"
-          memory = "256Mi"
+          memory = "512Mi"
         }
       }
 
@@ -140,10 +161,69 @@ resource "google_cloud_run_v2_service" "web" {
         name  = "AUDIT_LOGGING"
         value = "true"
       }
+
+      # API Backend URL
+      env {
+        name  = "VITE_API_URL"
+        value = var.api_url
+      }
+
+      # Firebase Configuration
+      env {
+        name  = "VITE_FIREBASE_PROJECT_ID"
+        value = var.project_id
+      }
+
+      env {
+        name  = "VITE_FIREBASE_AUTH_DOMAIN"
+        value = "${var.project_id}.firebaseapp.com"
+      }
+
+      env {
+        name  = "VITE_FIREBASE_STORAGE_BUCKET"
+        value = "${var.project_id}.appspot.com"
+      }
+
+      # Firebase secrets from Secret Manager
+      env {
+        name = "VITE_FIREBASE_API_KEY"
+        value_source {
+          secret_key_ref {
+            secret  = "firebase-web-api-key"
+            version = "latest"
+          }
+        }
+      }
+
+      env {
+        name = "VITE_FIREBASE_MESSAGING_SENDER_ID"
+        value_source {
+          secret_key_ref {
+            secret  = "firebase-messaging-sender-id"
+            version = "latest"
+          }
+        }
+      }
+
+      env {
+        name = "VITE_FIREBASE_APP_ID"
+        value_source {
+          secret_key_ref {
+            secret  = "firebase-web-app-id"
+            version = "latest"
+          }
+        }
+      }
+
+      # Jitsi Configuration
+      env {
+        name  = "VITE_JITSI_DOMAIN"
+        value = "meet.jit.si"
+      }
     }
 
     vpc_access {
-      connector = var.vpc_connector_name
+      connector = "projects/${var.project_id}/locations/${var.region}/connectors/${var.vpc_connector_name}"
       egress    = "PRIVATE_RANGES_ONLY"
     }
 

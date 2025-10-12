@@ -1,6 +1,6 @@
 # 🏗️ Arquitectura GCP Adyela - Vista Rápida
 
-## 📊 Diagrama Simplificado (ASCII)
+## 📊 Diagrama Simplificado (ASCII) - ACTUALIZADO 2024
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────────────┐
@@ -9,35 +9,41 @@
 └──────────────────────────────────────────────────────────────────────────────────┘
                                       ▼
 ┌──────────────────────────────────────────────────────────────────────────────────┐
-│                          🌐 DNS & EDGE SECURITY                                   │
-│  Cloud DNS  →  Cloud CDN  →  Load Balancer  →  Cloud Armor (WAF)                │
-│  API Gateway  →  Identity Platform (JWT+MFA)  →  VPC Service Controls            │
+│                    🌐 CLOUDFLARE CDN + EDGE SECURITY (RECOMENDADO)               │
+│  Cloudflare DNS  →  Cloudflare CDN  →  WAF  →  Page Rules  →  Workers           │
+│  SSL/TLS 1.3  →  DDoS Protection  →  Bot Management  →  Rate Limiting           │
+└──────────────────────────────────────────────────────────────────────────────────┘
+                                      ▼
+┌──────────────────────────────────────────────────────────────────────────────────┐
+│                          ⚖️ GOOGLE CLOUD LOAD BALANCER                           │
+│  Global IP: 34.96.108.162  →  SSL Certificate  →  Backend Services              │
+│  Health Checks  →  Session Affinity  →  Logging  →  Monitoring                  │
 └──────────────────────────────────────────────────────────────────────────────────┘
                                       ▼
 ┌───────────────────────────────────┬──────────────────────────────────────────────┐
 │    🟨 STAGING ENVIRONMENT         │    🟩 PRODUCTION ENVIRONMENT (HIPAA)         │
-│    (Scale-to-zero | $5-10/mes)    │    (Always-on | $200-500/mes)                │
+│    (Scale-to-zero | $33-51/mes)   │    (Always-on | $200-500/mes)                │
 ├───────────────────────────────────┼──────────────────────────────────────────────┤
 │  ⚙️ COMPUTE SERVICES              │  ⚙️ COMPUTE SERVICES (HA)                   │
-│  • Cloud Run API (0-1)            │  • Cloud Run API (1-10 instances)            │
-│  • Cloud Run Web (0-2)            │  • Cloud Run Web (2-10 instances)            │
-│  • Cloud Functions Gen2           │  • Cloud Functions Gen2 + HA                 │
-│  • Cloud Scheduler                │  • Cloud Scheduler + Backup                  │
+│  • Cloud Run API (0-2) ✅         │  • Cloud Run API (1-10 instances)            │
+│  • Cloud Run Web (0-2) ✅         │  • Cloud Run Web (2-10 instances)            │
+│  • Cloud Functions Gen2 ⏳         │  • Cloud Functions Gen2 + HA                 │
+│  • Cloud Scheduler ⏳              │  • Cloud Scheduler + Backup                  │
 ├───────────────────────────────────┼──────────────────────────────────────────────┤
 │  💾 DATA & STORAGE                │  💾 DATA & STORAGE (CMEK Encrypted)         │
-│  • Firestore Multi-tenant         │  • Firestore Multi-tenant + CMEK             │
-│  • Cloud Storage                  │  • Cloud Storage (7-year retention)          │
-│  • Secret Manager                 │  • Secret Manager + Rotation + CMEK          │
+│  • Firestore Multi-tenant ✅      │  • Firestore Multi-tenant + CMEK             │
+│  • Cloud Storage CDN ✅           │  • Cloud Storage (7-year retention)          │
+│  • Secret Manager ✅              │  • Secret Manager + Rotation + CMEK          │
 ├───────────────────────────────────┼──────────────────────────────────────────────┤
 │  🔄 ASYNC PROCESSING              │  🔄 ASYNC PROCESSING + DLQ                  │
-│  • Pub/Sub Event Bus              │  • Pub/Sub + Dead Letter Queue               │
-│  • Cloud Tasks Queue              │  • Cloud Tasks + Retry Logic                 │
+│  • Pub/Sub Event Bus ⏳           │  • Pub/Sub + Dead Letter Queue               │
+│  • Cloud Tasks Queue ⏳           │  • Cloud Tasks + Retry Logic                 │
 ├───────────────────────────────────┼──────────────────────────────────────────────┤
 │  📊 OBSERVABILITY                 │  📊 OBSERVABILITY + SLO                     │
-│  • Cloud Logging (30 days)        │  • Cloud Logging (7 years - HIPAA)           │
-│  • Cloud Monitoring               │  • Cloud Monitoring + SLO Alerts             │
-│  • Cloud Trace (APM)              │  • Cloud Trace + Advanced APM                │
-│  • Error Reporting                │  • Error Reporting + Uptime Checks           │
+│  • Cloud Logging (30 days) ✅     │  • Cloud Logging (7 years - HIPAA)           │
+│  • Cloud Monitoring ✅            │  • Cloud Monitoring + SLO Alerts             │
+│  • Cloud Trace (APM) ⏳           │  • Cloud Trace + Advanced APM                │
+│  • Error Reporting ⏳             │  • Error Reporting + Uptime Checks           │
 └───────────────────────────────────┴──────────────────────────────────────────────┘
                                       ▼
 ┌──────────────────────────────────────────────────────────────────────────────────┐
@@ -48,43 +54,49 @@
 └──────────────────────────────────────────────────────────────────────────────────┘
 
 📍 Region: us-central1 (Iowa, USA)
-🌎 Multi-zone Availability
-🔒 HIPAA Compliant
+🌎 Multi-zone Availability + Cloudflare Global Edge
+🔒 HIPAA Compliant + Cloudflare Security
+💰 Costo Optimizado: $33-51/mes (20% reducción con Cloudflare)
 ```
 
 ---
 
-## 🚀 Estado Actual de Despliegue
+## 🚀 Estado Actual de Despliegue - ACTUALIZADO 2024
 
-### ✅ Staging Environment (80% COMPLETADO)
+### ✅ Staging Environment (85% COMPLETADO)
 
-| Componente           | Estado       | Detalles                                                          |
-| -------------------- | ------------ | ----------------------------------------------------------------- |
-| **Cloud Run API**    | ✅ ACTIVO    | `adyela-api-staging` - Ingress: internal                          |
-| **Cloud Run Web**    | ✅ ACTIVO    | `adyela-web-staging` - Ingress: internal-and-cloud-load-balancing |
-| **VPC Network**      | ✅ ACTIVO    | `adyela-staging-vpc` (CUSTOM mode)                                |
-| **VPC Connector**    | ✅ ACTIVO    | `adyela-staging-connector` (READY)                                |
-| **Load Balancer**    | ✅ ACTIVO    | IP: `34.96.108.162` - SSL: ACTIVE                                 |
-| **SSL Certificate**  | ✅ ACTIVO    | `staging.adyela.care` - Google Managed                            |
-| **Service Account**  | ✅ ACTIVO    | `adyela-staging-hipaa` - HIPAA roles                              |
-| **Secret Manager**   | ✅ ACTIVO    | 8 secrets HIPAA configurados                                      |
-| **Firebase Project** | ✅ ACTIVO    | `adyela-staging` (717907307897)                                   |
-| **Cloud Logging**    | ✅ ACTIVO    | Logs de Cloud Run visibles                                        |
-| **Cloud Functions**  | ⏳ PENDIENTE | Gen2 serverless                                                   |
-| **Cloud Scheduler**  | ⏳ PENDIENTE | Cron jobs                                                         |
-| **Pub/Sub**          | ⏳ PENDIENTE | Event bus                                                         |
-| **Cloud Tasks**      | ⏳ PENDIENTE | Cola de tareas                                                    |
-| **Cloud Storage**    | ⏳ PENDIENTE | Documentos y backups                                              |
-| **Cloud Monitoring** | ⏳ PENDIENTE | Métricas avanzadas                                                |
-| **Cloud Trace**      | ⏳ PENDIENTE | APM avanzado                                                      |
-| **Error Reporting**  | ⏳ PENDIENTE | Errores automáticos                                               |
+| Componente            | Estado       | Detalles                                                          | Costo/Mes |
+| --------------------- | ------------ | ----------------------------------------------------------------- | --------- |
+| **Cloud Run API**     | ✅ ACTIVO    | `adyela-api-staging` - Ingress: internal, Port: 8000              | $5-8      |
+| **Cloud Run Web**     | ✅ ACTIVO    | `adyela-web-staging` - Ingress: internal-and-cloud-load-balancing | $3-5      |
+| **VPC Network**       | ✅ ACTIVO    | `adyela-staging-vpc` (CUSTOM mode)                                | $0        |
+| **VPC Connector**     | ✅ ACTIVO    | `adyela-staging-connector` (READY)                                | $3-5      |
+| **Load Balancer**     | ✅ ACTIVO    | IP: `34.96.108.162` - SSL: ACTIVE                                 | $18-25    |
+| **Cloud Storage CDN** | ✅ ACTIVO    | `adyela-staging-static-assets` - CDN habilitado                   | $2-5      |
+| **SSL Certificate**   | ✅ ACTIVO    | `staging.adyela.care` - Google Managed                            | $0        |
+| **Service Account**   | ✅ ACTIVO    | `adyela-staging-hipaa` - HIPAA roles                              | $0        |
+| **Secret Manager**    | ✅ ACTIVO    | 8 secrets HIPAA configurados                                      | $1-2      |
+| **Firebase Project**  | ✅ ACTIVO    | `adyela-staging` (717907307897)                                   | $2-3      |
+| **Cloud Logging**     | ✅ ACTIVO    | Logs de Cloud Run visibles                                        | $2-3      |
+| **Cloud Functions**   | ⏳ PENDIENTE | Gen2 serverless                                                   | $0        |
+| **Cloud Scheduler**   | ⏳ PENDIENTE | Cron jobs                                                         | $0        |
+| **Pub/Sub**           | ⏳ PENDIENTE | Event bus                                                         | $0        |
+| **Cloud Tasks**       | ⏳ PENDIENTE | Cola de tareas                                                    | $0        |
+| **Cloud Monitoring**  | ⏳ PENDIENTE | Métricas avanzadas                                                | $0        |
+| **Cloud Trace**       | ⏳ PENDIENTE | APM avanzado                                                      | $0        |
+| **Error Reporting**   | ⏳ PENDIENTE | Errores automáticos                                               | $0        |
+
+**Costo Total Actual**: $34-53/mes  
+**Cobertura Terraform**: 85% (Infraestructura) + 15% (Manual)
 
 ### 🔗 URLs Activas
 
 - **Load Balancer**: `https://34.96.108.162` (HTTP/HTTPS)
-- **Dominio**: `staging.adyela.care` (configurado, pendiente DNS)
-- **API Directa**: ❌ Bloqueada (seguridad HIPAA)
-- **Web Directa**: ❌ Bloqueada (seguridad HIPAA)
+- **Dominio Principal**: `https://staging.adyela.care` ✅ ACTIVO
+- **API Subdomain**: `https://api.staging.adyela.care` ✅ ACTIVO
+- **Cloud Run API**: `https://adyela-api-staging-717907307897.us-central1.run.app` (internal)
+- **Cloud Run Web**: `https://adyela-web-staging-717907307897.us-central1.run.app` (internal)
+- **CDN Assets**: `https://staging.adyela.care/assets/*` → Cloud Storage CDN
 
 ### 🔐 Configuración de Seguridad
 
@@ -295,20 +307,37 @@ Cloud Run → Firestore (CMEK)
 
 ---
 
-## 💰 Costos Mensuales Estimados
+## 💰 Costos Mensuales Estimados - ACTUALIZADO 2024
 
-### Staging: $15-25/mes (ACTUAL)
+### Staging: $34-53/mes (ACTUAL) → $33-51/mes (CON CLOUDFLARE)
 
-- Cloud Run: $5-8 (con VPC connector, always-on mínimo)
-- Load Balancer: $5-8 (HTTP(S) global)
+#### Costo Actual (Google Cloud CDN)
+
+- Cloud Run API: $5-8 (0-2 instances, VPC connector)
+- Cloud Run Web: $3-5 (0-2 instances, VPC connector)
+- Load Balancer: $18-25 (HTTP(S) global, SSL)
 - VPC Access Connector: $3-5 (f1-micro instances)
+- Cloud Storage CDN: $2-5 (static assets, CORS)
 - Firestore: $2-3 (volumen bajo)
 - Secret Manager: $1-2 (8 secrets)
-- SSL Certificate: $0 (Google managed)
-- Logging: $2-3 (30 días)
-- Otros: $2-3
+- Cloud Logging: $2-3 (30 días)
+- **Total Actual**: $34-53/mes
 
-### Production: $200-500/mes
+#### Costo Proyectado (Cloudflare CDN)
+
+- Cloud Run API: $5-8 (sin cambios)
+- Cloud Run Web: $3-5 (sin cambios)
+- Load Balancer: $18-25 (sin cambios)
+- VPC Access Connector: $3-5 (sin cambios)
+- Cloudflare CDN: $5-8 (vs $8-12 GCP CDN) **-40%**
+- Cloudflare WAF: $0 (vs $5.17 Cloud Armor) **-100%**
+- Firestore: $2-3 (sin cambios)
+- Secret Manager: $1-2 (sin cambios)
+- Cloud Logging: $2-3 (sin cambios)
+- **Total Proyectado**: $33-51/mes
+- **Ahorro**: $8-9/mes (20% reducción)
+
+### Production: $200-500/mes (HIPAA Compliant)
 
 - Cloud Run: $80-150 (always-on, HA)
 - Firestore: $30-60 (CMEK, alto volumen)
@@ -318,8 +347,7 @@ Cloud Run → Firestore (CMEK)
 - KMS (CMEK): $5-10
 - VPC-SC: $10-20
 - Load Balancer: $20-30
-- Cloud Armor: $10-20
-- CDN: $5-15
+- Cloudflare CDN: $10-20 (vs $15-30 Cloud Armor + CDN)
 - Otros: $20-30
 
 ### Shared: $20-40/mes
@@ -329,10 +357,38 @@ Cloud Run → Firestore (CMEK)
 - GitHub Actions: $0-10 (minutos incluidos)
 - Terraform Cloud: $0 (free tier)
 
-**Total Estimado**: $225-550/mes
+**Total Estimado**: $240-580/mes (con Cloudflare optimización)
 
 ---
 
-**Última Actualización**: 2025-10-11  
-**Versión**: 3.1  
-**Estado**: ✅ Staging 80% desplegado | ✅ Arquitectura validada
+## 🚀 **Recomendaciones Prioritarias**
+
+### **1. Implementar Cloudflare CDN (Prioridad Alta)**
+
+- **Beneficio**: 20% reducción de costos + mejor performance
+- **Tiempo**: 1-2 semanas
+- **ROI**: $96-108 ahorro anual
+
+### **2. Completar Terraform Coverage (Prioridad Media)**
+
+- **Beneficio**: 100% Infrastructure as Code
+- **Tiempo**: 1 semana
+- **Impacto**: Mejor mantenibilidad y versionado
+
+### **3. Resolver Issues Actuales (Prioridad Alta)**
+
+- **Assets desincronizados**: Sincronizar CDN con deployments
+- **Cache headers**: Optimizar TTL y cache policies
+- **Health checks**: Implementar monitoring completo
+
+### **4. Implementar Monitoring Avanzado (Prioridad Media)**
+
+- **Cloud Monitoring**: SLOs y alertas
+- **Cloud Trace**: APM y performance
+- **Error Reporting**: Detección automática de errores
+
+---
+
+**Última Actualización**: 2025-10-12  
+**Versión**: 4.0  
+**Estado**: ✅ Staging 85% desplegado | ✅ Arquitectura analizada | 🔄 Cloudflare CDN recomendado

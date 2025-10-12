@@ -31,7 +31,12 @@ variable "domain" {
 }
 
 variable "cloud_run_service_name" {
-  description = "Name of the Cloud Run service to connect to"
+  description = "Name of the Cloud Run web service to connect to"
+  type        = string
+}
+
+variable "api_service_name" {
+  description = "Name of the Cloud Run API service to connect to"
   type        = string
 }
 

@@ -11,6 +11,18 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
+// Debug: Log Firebase configuration (remove in production)
+console.log("Firebase Config:", {
+  apiKey: firebaseConfig.apiKey
+    ? "***" + firebaseConfig.apiKey.slice(-4)
+    : "undefined",
+  authDomain: firebaseConfig.authDomain || "undefined",
+  projectId: firebaseConfig.projectId || "undefined",
+  storageBucket: firebaseConfig.storageBucket || "undefined",
+  messagingSenderId: firebaseConfig.messagingSenderId || "undefined",
+  appId: firebaseConfig.appId || "undefined",
+});
+
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
