@@ -43,6 +43,58 @@ resource "google_compute_region_network_endpoint_group" "api_neg" {
   }
 }
 
+# Cloud Storage Bucket for Static Assets
+resource "google_storage_bucket" "static_assets" {
+  name          = "${var.project_name}-${var.environment}-static-assets"
+  location      = var.region
+  force_destroy = false
+
+  uniform_bucket_level_access = true
+  public_access_prevention    = "unspecified" # Allow public access for CDN
+
+  cors {
+    origin          = ["https://${var.domain}", "https://api.${var.domain}"]
+    method          = ["GET", "HEAD", "OPTIONS"]
+    response_header = ["*"]
+    max_age_seconds = 3600
+  }
+
+  lifecycle_rule {
+    condition {
+      age = 30
+    }
+    action {
+      type = "Delete"
+    }
+  }
+
+  labels = var.labels
+}
+
+# Make bucket publicly readable
+resource "google_storage_bucket_iam_member" "static_assets_public" {
+  bucket = google_storage_bucket.static_assets.name
+  role   = "roles/storage.objectViewer"
+  member = "allUsers"
+}
+
+# Backend Bucket for CDN
+resource "google_compute_backend_bucket" "static_backend" {
+  name        = "${var.project_name}-${var.environment}-static-backend"
+  bucket_name = google_storage_bucket.static_assets.name
+  enable_cdn  = true
+
+  cdn_policy {
+    cache_mode                   = "CACHE_ALL_STATIC"
+    default_ttl                  = 3600
+    client_ttl                   = 3600
+    max_ttl                      = 86400
+    negative_caching             = true
+    serve_while_stale            = 86400
+    request_coalescing           = true
+  }
+}
+
 # Backend Service for Cloud Run Web
 resource "google_compute_backend_service" "web_backend" {
   name        = "${var.project_name}-${var.environment}-web-backend"
@@ -150,6 +202,12 @@ resource "google_compute_url_map" "web_url_map" {
   path_matcher {
     name            = "allpaths"
     default_service = google_compute_backend_service.web_backend.id
+
+    # Route static assets to CDN
+    path_rule {
+      paths   = ["/static/*", "/assets/*"]
+      service = google_compute_backend_bucket.static_backend.id
+    }
 
     # Route API requests to API backend
     path_rule {

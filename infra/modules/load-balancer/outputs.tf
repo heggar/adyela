@@ -39,3 +39,18 @@ output "domain" {
   description = "Domain configured for the load balancer"
   value       = var.domain
 }
+
+output "static_bucket_name" {
+  description = "Name of the Cloud Storage bucket for static assets"
+  value       = google_storage_bucket.static_assets.name
+}
+
+output "static_bucket_url" {
+  description = "URL of the Cloud Storage bucket for static assets"
+  value       = google_storage_bucket.static_assets.url
+}
+
+output "cdn_backend_bucket_name" {
+  description = "Name of the CDN backend bucket"
+  value       = google_compute_backend_bucket.static_backend.name
+}

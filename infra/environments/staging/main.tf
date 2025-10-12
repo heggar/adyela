@@ -114,6 +114,9 @@ module "cloud_run" {
   service_account_email = module.service_account.service_account_email
   vpc_connector_name    = module.vpc.vpc_connector_name
 
+  # API URL for frontend (through load balancer)
+  api_url = "https://staging.adyela.care"
+
   # Docker images - these will be updated by CI/CD
   api_image = "us-central1-docker.pkg.dev/${var.project_id}/adyela/adyela-api-staging:latest"
   web_image = "us-central1-docker.pkg.dev/${var.project_id}/adyela/adyela-web-staging:latest"

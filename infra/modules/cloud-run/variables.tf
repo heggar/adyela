@@ -60,3 +60,8 @@ variable "labels" {
   type        = map(string)
   default     = {}
 }
+
+variable "api_url" {
+  description = "URL of the API backend for the web frontend"
+  type        = string
+}
