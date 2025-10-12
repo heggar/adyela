@@ -246,7 +246,7 @@ jobs:
           context: .
           file: ./apps/web/Dockerfile
           push: true
-          load: true
+          load: false
           target: production
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
