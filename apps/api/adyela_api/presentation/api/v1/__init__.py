@@ -6,8 +6,7 @@ from .endpoints import appointments, auth, data_deletion, health
 
 api_router = APIRouter()
 
-# Include health check routes (no auth required)
-api_router.include_router(health.router, tags=["health"])
+# Health check routes are included directly in main.py
 
 # Include public routes (no auth required)
 api_router.include_router(data_deletion.router, prefix="/api/v1")

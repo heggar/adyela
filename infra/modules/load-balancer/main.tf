@@ -86,11 +86,11 @@ resource "google_compute_backend_bucket" "static_backend" {
 
   cdn_policy {
     cache_mode                   = "CACHE_ALL_STATIC"
-    default_ttl                  = 3600
-    client_ttl                   = 3600
-    max_ttl                      = 86400
+    default_ttl                  = 86400      # 1 day
+    client_ttl                   = 31536000   # 1 year
+    max_ttl                      = 31536000   # 1 year
     negative_caching             = true
-    serve_while_stale            = 86400
+    serve_while_stale            = 86400      # 1 day
     request_coalescing           = true
   }
 }
@@ -181,7 +181,7 @@ resource "google_compute_health_check" "api_health_check" {
   unhealthy_threshold = 3
 
   http_health_check {
-    port         = 8080
+    port         = 8000
     request_path = "/health"
     proxy_header = "NONE"
   }
@@ -207,6 +207,12 @@ resource "google_compute_url_map" "web_url_map" {
     path_rule {
       paths   = ["/static/*", "/assets/*"]
       service = google_compute_backend_bucket.static_backend.id
+    }
+
+    # Route health checks to API backend
+    path_rule {
+      paths   = ["/health", "/readiness"]
+      service = google_compute_backend_service.api_backend.id
     }
 
     # Route API requests to API backend

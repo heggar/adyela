@@ -138,7 +138,11 @@ async def global_exception_handler(request: Request, exc: Exception) -> JSONResp
     )
 
 
-# Include routers with /api prefix
+# Include health check routes directly (no prefix)
+from adyela_api.presentation.api.v1.endpoints import health
+app.include_router(health.router, tags=["health"])
+
+# Include other routers with /api prefix
 app.include_router(api_router, prefix="/api")
 
 
