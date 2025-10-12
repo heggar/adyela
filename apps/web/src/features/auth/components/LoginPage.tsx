@@ -95,6 +95,20 @@ export function LoginPage() {
           </div>
 
           <OAuthButtons />
+
+          <div className="mt-6 text-center">
+            <p className="text-sm text-secondary-600">
+              {t("auth.bySigningIn")}{" "}
+              <a
+                href="/privacy"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary-600 hover:text-primary-700 underline"
+              >
+                {t("auth.privacyPolicy")}
+              </a>
+            </p>
+          </div>
         </section>
       </main>
     </div>

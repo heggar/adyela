@@ -23,7 +23,9 @@
     "continueWithApple": "Continuar con Apple",
     "continueWithMicrosoft": "Continuar con Microsoft",
     "signingIn": "Iniciando sesión...",
-    "oauthError": "Error de autenticación. Por favor, inténtalo de nuevo."
+    "oauthError": "Error de autenticación. Por favor, inténtalo de nuevo.",
+    "bySigningIn": "Al iniciar sesión, aceptas nuestra",
+    "privacyPolicy": "Política de Privacidad"
   },
   "dashboard": {
     "title": "Panel de control",
@@ -44,5 +46,111 @@
     "type": "Tipo",
     "videoCall": "Videollamada",
     "inPerson": "Presencial"
+  },
+  "legal": {
+    "privacyPolicy": {
+      "title": "Política de Privacidad",
+      "lastUpdated": "Última Actualización",
+      "sections": {
+        "informationWeCollect": {
+          "title": "1. Información que Recopilamos",
+          "personalInfo": {
+            "title": "Información Personal",
+            "email": "Dirección de correo electrónico e información de contacto",
+            "name": "Nombre completo y detalles de identificación",
+            "phone": "Número de teléfono para comunicación",
+            "dateOfBirth": "Fecha de nacimiento para verificación de edad",
+            "medicalInfo": "Historial médico, síntomas y registros de salud"
+          },
+          "oauthInfo": {
+            "title": "Información de Proveedores OAuth",
+            "description": "Cuando inicias sesión usando cuentas de redes sociales, recopilamos:",
+            "google": "Google: Correo electrónico, nombre, foto de perfil e información básica del perfil",
+            "facebook": "Facebook: Correo electrónico, nombre, foto de perfil y datos del perfil público",
+            "apple": "Apple: Correo electrónico, nombre (si se proporciona) e identificador único",
+            "microsoft": "Microsoft: Correo electrónico, nombre, foto de perfil e información básica del perfil"
+          },
+          "technicalInfo": {
+            "title": "Información Técnica",
+            "ipAddress": "Dirección IP y datos de ubicación",
+            "browserInfo": "Tipo y versión del navegador",
+            "deviceInfo": "Tipo de dispositivo y sistema operativo",
+            "usageData": "Patrones de uso de la aplicación y preferencias"
+          }
+        },
+        "howWeUseInfo": {
+          "title": "2. Cómo Usamos Su Información",
+          "provideServices": "Proporcionar y mantener nuestros servicios de atención médica",
+          "scheduleAppointments": "Programar y gestionar citas médicas",
+          "communicate": "Comunicarnos con usted sobre citas y servicios",
+          "improveServices": "Mejorar nuestros servicios y experiencia del usuario",
+          "compliance": "Cumplir con requisitos legales y regulatorios"
+        },
+        "sharingInfo": {
+          "title": "3. Compartir Información",
+          "healthcareProviders": {
+            "title": "Proveedores de Atención Médica",
+            "description": "Compartimos su información médica con proveedores de atención médica autorizados para brindar servicios médicos y coordinar la atención."
+          },
+          "serviceProviders": {
+            "title": "Proveedores de Servicios",
+            "description": "Podemos compartir información con proveedores de servicios terceros de confianza que nos ayudan a operar nuestra plataforma, como alojamiento en la nube, análisis y servicios de comunicación."
+          },
+          "legalRequirements": {
+            "title": "Requisitos Legales",
+            "description": "Podemos divulgar información cuando sea requerido por ley, orden judicial, o para proteger nuestros derechos, propiedad o seguridad, o la de nuestros usuarios."
+          }
+        },
+        "dataSecurity": {
+          "title": "4. Seguridad de Datos",
+          "description": "Implementamos medidas de seguridad integrales para proteger su información personal y médica:",
+          "encryption": "Cifrado de extremo a extremo para toda la transmisión y almacenamiento de datos",
+          "accessControls": "Controles de acceso estrictos y mecanismos de autenticación",
+          "auditLogs": "Registro de auditoría integral de todo el acceso a datos",
+          "hipaaCompliance": "Cumplimiento total con los requisitos de seguridad de HIPAA",
+          "regularAudits": "Auditorías de seguridad regulares y evaluaciones de vulnerabilidades"
+        },
+        "yourRights": {
+          "title": "5. Sus Derechos",
+          "access": "Acceder a su información personal y registros médicos",
+          "correction": "Solicitar corrección de información inexacta",
+          "deletion": "Solicitar eliminación de su información (sujeto a requisitos legales)",
+          "portability": "Solicitar portabilidad de datos a otro servicio",
+          "restriction": "Solicitar restricción del procesamiento",
+          "objection": "Oponerse a ciertos tipos de procesamiento de datos"
+        },
+        "cookies": {
+          "title": "6. Cookies y Tecnologías Similares",
+          "description": "Utilizamos cookies y tecnologías similares para mejorar su experiencia:",
+          "essential": "Cookies esenciales para funcionalidad básica y seguridad",
+          "analytics": "Cookies de análisis para entender patrones de uso",
+          "preferences": "Cookies de preferencias para recordar sus configuraciones"
+        },
+        "dataRetention": {
+          "title": "7. Retención de Datos",
+          "description": "Retenemos su información durante el tiempo necesario para brindar servicios, cumplir con obligaciones legales y resolver disputas. Los registros médicos se retienen según las regulaciones de atención médica aplicables."
+        },
+        "changes": {
+          "title": "8. Cambios a esta Política",
+          "description": "Podemos actualizar esta Política de Privacidad de vez en cuando. Le notificaremos de cualquier cambio material publicando la nueva política en esta página y actualizando la fecha de 'Última Actualización'."
+        },
+        "contact": {
+          "title": "9. Contáctenos",
+          "description": "Si tiene alguna pregunta sobre esta Política de Privacidad o nuestras prácticas de datos, por favor contáctenos:",
+          "email": "Correo Electrónico",
+          "address": "Dirección",
+          "addressValue": "Adyela Healthcare, 123 Medical Plaza, Suite 100, San Francisco, CA 94102",
+          "phone": "Teléfono"
+        },
+        "hipaa": {
+          "title": "10. Cumplimiento HIPAA",
+          "description": "Como proveedor de servicios de atención médica, cumplimos completamente con la Ley de Portabilidad y Responsabilidad del Seguro Médico (HIPAA). Esto incluye:",
+          "administrative": "Safeguards administrativos para capacitación de la fuerza laboral y gestión de acceso",
+          "physical": "Safeguards físicos para centros de datos y seguridad de dispositivos",
+          "technical": "Safeguards técnicos incluyendo cifrado y controles de acceso",
+          "breachNotification": "Procedimientos de notificación de violaciones y respuesta a incidentes"
+        }
+      }
+    }
   }
 }

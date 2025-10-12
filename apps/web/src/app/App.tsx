@@ -4,6 +4,7 @@ import { MainLayout } from "@/components/layout/MainLayout";
 import { LoginPage } from "@/features/auth/components/LoginPage";
 import { DashboardPage } from "@/features/dashboard/DashboardPage";
 import { AppointmentsPage } from "@/features/appointments/components/AppointmentsPage";
+import { PrivacyPolicyPage } from "@/features/legal/components/PrivacyPolicyPage";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
@@ -18,7 +19,11 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 function App() {
   return (
     <Routes>
+      {/* Public routes - no authentication required */}
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/privacy" element={<PrivacyPolicyPage />} />
+
+      {/* Protected routes - authentication required */}
       <Route
         path="/"
         element={
