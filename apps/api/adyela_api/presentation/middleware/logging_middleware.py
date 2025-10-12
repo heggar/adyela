@@ -13,7 +13,7 @@ logger = structlog.get_logger()
 class LoggingMiddleware(BaseHTTPMiddleware):
     """Middleware for structured logging of requests and responses."""
 
-    async def dispatch(self, request: Request, call_next):  # type: ignore
+    async def dispatch(self, request: Request, call_next):
         """Log request and response with structured logging."""
         request_id = str(uuid4())
         request.state.request_id = request_id
