@@ -17,7 +17,15 @@
     "password": "Password",
     "forgotPassword": "Forgot password?",
     "welcomeBack": "Welcome back!",
-    "loginToContinue": "Login to continue"
+    "loginToContinue": "Login to continue",
+    "continueWithGoogle": "Continue with Google",
+    "continueWithFacebook": "Continue with Facebook",
+    "continueWithApple": "Continue with Apple",
+    "continueWithMicrosoft": "Continue with Microsoft",
+    "signingIn": "Signing in...",
+    "oauthError": "Authentication failed. Please try again.",
+    "bySigningIn": "By signing in, you agree to our",
+    "privacyPolicy": "Privacy Policy"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -38,5 +46,152 @@
     "type": "Type",
     "videoCall": "Video call",
     "inPerson": "In person"
+  },
+  "legal": {
+    "privacyPolicy": {
+      "title": "Privacy Policy",
+      "lastUpdated": "Last Updated",
+      "sections": {
+        "informationWeCollect": {
+          "title": "1. Information We Collect",
+          "personalInfo": {
+            "title": "Personal Information",
+            "email": "Email address and contact information",
+            "name": "Full name and identification details",
+            "phone": "Phone number for communication",
+            "dateOfBirth": "Date of birth for age verification",
+            "medicalInfo": "Medical history, symptoms, and health records"
+          },
+          "oauthInfo": {
+            "title": "OAuth Provider Information",
+            "description": "When you sign in using social media accounts, we collect:",
+            "google": "Google: Email, name, profile picture, and basic profile information",
+            "facebook": "Facebook: Email, name, profile picture, and public profile data",
+            "apple": "Apple: Email, name (if provided), and unique identifier",
+            "microsoft": "Microsoft: Email, name, profile picture, and basic profile information"
+          },
+          "technicalInfo": {
+            "title": "Technical Information",
+            "ipAddress": "IP address and location data",
+            "browserInfo": "Browser type and version",
+            "deviceInfo": "Device type and operating system",
+            "usageData": "App usage patterns and preferences"
+          }
+        },
+        "howWeUseInfo": {
+          "title": "2. How We Use Your Information",
+          "provideServices": "Provide and maintain our healthcare services",
+          "scheduleAppointments": "Schedule and manage medical appointments",
+          "communicate": "Communicate with you about appointments and services",
+          "improveServices": "Improve our services and user experience",
+          "compliance": "Comply with legal and regulatory requirements"
+        },
+        "sharingInfo": {
+          "title": "3. Information Sharing",
+          "healthcareProviders": {
+            "title": "Healthcare Providers",
+            "description": "We share your medical information with authorized healthcare providers to deliver medical services and coordinate care."
+          },
+          "serviceProviders": {
+            "title": "Service Providers",
+            "description": "We may share information with trusted third-party service providers who assist us in operating our platform, such as cloud hosting, analytics, and communication services."
+          },
+          "legalRequirements": {
+            "title": "Legal Requirements",
+            "description": "We may disclose information when required by law, court order, or to protect our rights, property, or safety, or that of our users."
+          }
+        },
+        "dataSecurity": {
+          "title": "4. Data Security",
+          "description": "We implement comprehensive security measures to protect your personal and medical information:",
+          "encryption": "End-to-end encryption for all data transmission and storage",
+          "accessControls": "Strict access controls and authentication mechanisms",
+          "auditLogs": "Comprehensive audit logging of all data access",
+          "hipaaCompliance": "Full compliance with HIPAA security requirements",
+          "regularAudits": "Regular security audits and vulnerability assessments"
+        },
+        "yourRights": {
+          "title": "5. Your Rights",
+          "access": "Access your personal information and medical records",
+          "correction": "Request correction of inaccurate information",
+          "deletion": "Request deletion of your information (subject to legal requirements)",
+          "portability": "Request data portability to another service",
+          "restriction": "Request restriction of processing",
+          "objection": "Object to certain types of data processing"
+        },
+        "cookies": {
+          "title": "6. Cookies and Similar Technologies",
+          "description": "We use cookies and similar technologies to enhance your experience:",
+          "essential": "Essential cookies for basic functionality and security",
+          "analytics": "Analytics cookies to understand usage patterns",
+          "preferences": "Preference cookies to remember your settings"
+        },
+        "dataRetention": {
+          "title": "7. Data Retention",
+          "description": "We retain your information for as long as necessary to provide services, comply with legal obligations, and resolve disputes. Medical records are retained according to applicable healthcare regulations."
+        },
+        "changes": {
+          "title": "8. Changes to This Policy",
+          "description": "We may update this Privacy Policy from time to time. We will notify you of any material changes by posting the new policy on this page and updating the 'Last Updated' date."
+        },
+        "contact": {
+          "title": "9. Contact Us",
+          "description": "If you have any questions about this Privacy Policy or our data practices, please contact us:",
+          "email": "Email",
+          "address": "Address",
+          "addressValue": "Adyela Healthcare, 123 Medical Plaza, Suite 100, San Francisco, CA 94102",
+          "phone": "Phone"
+        },
+        "hipaa": {
+          "title": "10. HIPAA Compliance",
+          "description": "As a healthcare service provider, we are fully compliant with the Health Insurance Portability and Accountability Act (HIPAA). This includes:",
+          "administrative": "Administrative safeguards for workforce training and access management",
+          "physical": "Physical safeguards for data centers and device security",
+          "technical": "Technical safeguards including encryption and access controls",
+          "breachNotification": "Breach notification procedures and incident response"
+        }
+      }
+    }
+  },
+  "dataDeletion": {
+    "title": "Data Deletion Request",
+    "description": "Request the permanent deletion of your personal data from our platform in compliance with GDPR, CCPA, and other privacy regulations.",
+    "whatWeDelete": "What We Will Delete",
+    "personalInfo": "Personal information (name, email, phone number)",
+    "medicalRecords": "Medical records and health information",
+    "appointmentHistory": "Appointment history and scheduling data",
+    "authenticationData": "Authentication data and login history",
+    "usageAnalytics": "Usage analytics and preferences",
+    "uploadedFiles": "Files and documents you've uploaded",
+    "importantNotes": "Important Information",
+    "irreversible": "This action is irreversible",
+    "irreversibleDescription": "Once your data is deleted, it cannot be recovered. Please ensure you have backed up any important information.",
+    "processingTime": "Processing Time",
+    "processingTimeDescription": "Data deletion requests are processed within 30 days of submission, as required by law.",
+    "legalRetention": "Legal Retention Requirements",
+    "legalRetentionDescription": "Some data may be retained for legal or regulatory compliance purposes, including audit logs for up to 7 years.",
+    "requestForm": "Submit Data Deletion Request",
+    "emailAddress": "Email Address",
+    "emailPlaceholder": "Enter the email address associated with your account",
+    "emailDescription": "We will use this email to verify your identity and send confirmation of the deletion request.",
+    "reason": "Reason for Deletion (Optional)",
+    "reasonPlaceholder": "Please let us know why you're requesting data deletion...",
+    "reasonDescription": "This information helps us improve our services and is not required for processing your request.",
+    "confirmation": "I understand that this action is permanent and cannot be undone. I confirm that I want to delete all my personal data from the Adyela platform.",
+    "submitRequest": "Submit Deletion Request",
+    "submitting": "Submitting Request...",
+    "error": "Error",
+    "requestSubmitted": "Request Submitted Successfully",
+    "requestSubmittedDescription": "Your data deletion request has been received and will be processed within 30 days.",
+    "requestDetails": "Request Details",
+    "requestId": "Request ID",
+    "status": "Status",
+    "estimatedCompletion": "Estimated Completion",
+    "nextSteps": "What Happens Next",
+    "nextStep1": "We will verify your identity using the email address provided",
+    "nextStep2": "Your data will be permanently deleted from all our systems within 30 days",
+    "nextStep3": "You will receive a confirmation email once the process is complete",
+    "viewPrivacyPolicy": "View Privacy Policy",
+    "questions": "Questions about data deletion? Contact us at"
   }
 }

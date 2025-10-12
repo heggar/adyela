@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuthStore } from "@/store/authStore";
+import { OAuthButtons } from "./OAuthButtons";
 
 export function LoginPage() {
   const { t } = useTranslation();
@@ -88,6 +89,26 @@ export function LoginPage() {
               {t("auth.login")}
             </button>
           </form>
+
+          <div className="my-6 text-center">
+            <span className="text-secondary-600 text-sm">or</span>
+          </div>
+
+          <OAuthButtons />
+
+          <div className="mt-6 text-center">
+            <p className="text-sm text-secondary-600">
+              {t("auth.bySigningIn")}{" "}
+              <a
+                href="/privacy"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary-600 hover:text-primary-700 underline"
+              >
+                {t("auth.privacyPolicy")}
+              </a>
+            </p>
+          </div>
         </section>
       </main>
     </div>

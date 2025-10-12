@@ -58,10 +58,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          ref: "main"
-
-      - name: Reset to specific commit
-        run: git reset --hard ${{ inputs.version }}
+          ref: ${{ github.ref }}
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -122,10 +119,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          ref: "main"
-
-      - name: Reset to specific commit
-        run: git reset --hard ${{ inputs.version }}
+          ref: ${{ github.ref }}
 
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
@@ -160,7 +154,7 @@ jobs:
             --region ${{ env.GCP_REGION }} \
             --platform managed \
             --set-env-vars="ENVIRONMENT=${{ env.ENVIRONMENT }},VERSION=${{ inputs.version }},GCP_PROJECT_ID=${{ secrets.GCP_PROJECT_ID_STAGING }},HIPAA_COMPLIANCE=true,AUDIT_LOGGING=true,DATA_ENCRYPTION=true" \
-            --set-secrets="SECRET_KEY=api-secret-key:latest,FIREBASE_PROJECT_ID=firebase-project-id:latest,FIREBASE_ADMIN_KEY=firebase-admin-key:latest,JWT_SECRET=jwt-secret-key:latest,ENCRYPTION_KEY=encryption-key:latest,DATABASE_URL=database-connection-string:latest,SMTP_CREDENTIALS=smtp-credentials:latest,EXTERNAL_API_KEYS=external-api-keys:latest" \
+            --set-secrets="SECRET_KEY=api-secret-key:latest,FIREBASE_PROJECT_ID=firebase-project-id:latest,FIREBASE_ADMIN_KEY=firebase-admin-key:latest,JWT_SECRET=jwt-secret-key:latest,ENCRYPTION_KEY=encryption-key:latest,DATABASE_URL=database-connection-string:latest,SMTP_CREDENTIALS=smtp-credentials:latest,EXTERNAL_API_KEYS=external-api-keys:latest,OAUTH_GOOGLE_CLIENT_ID=oauth-google-client-id:latest,OAUTH_GOOGLE_CLIENT_SECRET=oauth-google-client-secret:latest,OAUTH_FACEBOOK_APP_ID=oauth-facebook-app-id:latest,OAUTH_FACEBOOK_APP_SECRET=oauth-facebook-app-secret:latest,OAUTH_APPLE_CLIENT_ID=oauth-apple-client-id:latest,OAUTH_APPLE_CLIENT_SECRET=oauth-apple-client-secret:latest,OAUTH_MICROSOFT_CLIENT_ID=oauth-microsoft-client-id:latest,OAUTH_MICROSOFT_CLIENT_SECRET=oauth-microsoft-client-secret:latest" \
             --min-instances=0 \
             --max-instances=1 \
             --memory=512Mi \
@@ -221,10 +215,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          ref: "main"
-
-      - name: Reset to specific commit
-        run: git reset --hard ${{ inputs.version }}
+          ref: ${{ github.ref }}
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -305,10 +296,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          ref: "main"
-
-      - name: Reset to specific commit
-        run: git reset --hard ${{ inputs.version }}
+          ref: ${{ github.ref }}
 
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
@@ -390,10 +378,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          ref: "main"
-
-      - name: Reset to specific commit
-        run: git reset --hard ${{ inputs.version }}
+          ref: ${{ github.ref }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -449,10 +434,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          ref: "main"
-
-      - name: Reset to specific commit
-        run: git reset --hard ${{ inputs.version }}
+          ref: ${{ github.ref }}
 
       - name: Check if performance tests exist
         id: check-perf-tests
@@ -489,10 +471,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          ref: "main"
-
-      - name: Reset to specific commit
-        run: git reset --hard ${{ inputs.version }}
+          ref: ${{ github.ref }}
 
       - name: Check if ZAP rules exist
         id: check-zap-rules

@@ -1,6 +1,6 @@
 """Unit tests for Appointment entity."""
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 import pytest
 
@@ -12,7 +12,7 @@ from adyela_api.domain.value_objects import DateTimeRange, TenantId
 @pytest.fixture
 def appointment() -> Appointment:
     """Create a test appointment."""
-    start = datetime.utcnow() + timedelta(days=1)
+    start = datetime.now(timezone.utc) + timedelta(days=1)
     end = start + timedelta(hours=1)
 
     return Appointment(
@@ -67,7 +67,7 @@ class TestAppointment:
 
     def test_cannot_set_video_room_for_in_person(self) -> None:
         """Test that video room cannot be set for in-person appointments."""
-        start = datetime.utcnow() + timedelta(days=1)
+        start = datetime.now(timezone.utc) + timedelta(days=1)
         end = start + timedelta(hours=1)
 
         appointment = Appointment(

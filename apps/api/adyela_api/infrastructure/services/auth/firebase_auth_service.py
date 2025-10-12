@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from firebase_admin import auth  # type: ignore
+from firebase_admin import auth
 
 from adyela_api.application.ports import AuthenticationService
 from adyela_api.domain import AuthenticationError
