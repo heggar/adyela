@@ -138,8 +138,8 @@ async def global_exception_handler(request: Request, exc: Exception) -> JSONResp
     )
 
 
-# Include routers
-app.include_router(api_router)
+# Include routers with /api prefix
+app.include_router(api_router, prefix="/api")
 
 
 # Root endpoint
