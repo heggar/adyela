@@ -295,7 +295,8 @@ jobs:
             --image ${{ steps.image.outputs.image }} \
             --region ${{ env.GCP_REGION }} \
             --platform managed \
-            --set-env-vars="ENVIRONMENT=${{ env.ENVIRONMENT }},VERSION=${{ inputs.version }},GCP_PROJECT_ID=${{ secrets.GCP_PROJECT_ID_STAGING }},HIPAA_COMPLIANCE=true,AUDIT_LOGGING=true,DATA_ENCRYPTION=true,CORS_ORIGINS=https://staging.adyela.care,https://adyela-staging.firebaseapp.com,https://adyela-staging.web.app" \
+            --set-env-vars="ENVIRONMENT=${{ env.ENVIRONMENT }},VERSION=${{ inputs.version }},GCP_PROJECT_ID=${{ secrets.GCP_PROJECT_ID_STAGING }},HIPAA_COMPLIANCE=true,AUDIT_LOGGING=true,DATA_ENCRYPTION=true" \
+            --update-env-vars="CORS_ORIGINS=https://staging.adyela.care,https://adyela-staging.firebaseapp.com,https://adyela-staging.web.app" \
             --set-secrets="SECRET_KEY=api-secret-key:latest,FIREBASE_PROJECT_ID=firebase-project-id:latest,FIREBASE_ADMIN_KEY=firebase-admin-key:latest,JWT_SECRET=jwt-secret-key:latest,ENCRYPTION_KEY=encryption-key:latest,DATABASE_URL=database-connection-string:latest,SMTP_CREDENTIALS=smtp-credentials:latest,EXTERNAL_API_KEYS=external-api-keys:latest,OAUTH_GOOGLE_CLIENT_ID=oauth-google-client-id:latest,OAUTH_GOOGLE_CLIENT_SECRET=oauth-google-client-secret:latest,OAUTH_FACEBOOK_APP_ID=oauth-facebook-app-id:latest,OAUTH_FACEBOOK_APP_SECRET=oauth-facebook-app-secret:latest,OAUTH_APPLE_CLIENT_ID=oauth-apple-client-id:latest,OAUTH_APPLE_CLIENT_SECRET=oauth-apple-client-secret:latest,OAUTH_MICROSOFT_CLIENT_ID=oauth-microsoft-client-id:latest,OAUTH_MICROSOFT_CLIENT_SECRET=oauth-microsoft-client-secret:latest" \
             --min-instances=0 \
             --max-instances=1 \
