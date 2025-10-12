@@ -358,6 +358,36 @@ export function PrivacyPolicyPage() {
                   </ul>
                 </div>
               </section>
+
+              {/* 11. Eliminación de Datos */}
+              <section className="mb-8">
+                <h2 className="text-2xl font-semibold text-gray-900 mb-4">
+                  Derechos de Eliminación de Datos
+                </h2>
+                <div className="bg-red-50 p-6 rounded-lg border-l-4 border-red-400">
+                  <p className="text-gray-700 mb-4">
+                    Tienes el derecho de solicitar la eliminación de tus datos
+                    personales en cualquier momento. Procesaremos tu solicitud
+                    dentro de 30 días y eliminaremos permanentemente tus datos
+                    de nuestros sistemas.
+                  </p>
+                  <div className="bg-white p-4 rounded-lg border border-red-200">
+                    <p className="text-red-800 font-medium mb-2">
+                      Solicitar Eliminación de Datos
+                    </p>
+                    <p className="text-red-700 text-sm mb-3">
+                      Para solicitar la eliminación de tus datos personales,
+                      visita nuestra página de eliminación de datos.
+                    </p>
+                    <a
+                      href="/data-deletion"
+                      className="inline-flex items-center px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition-colors duration-200"
+                    >
+                      Solicitar Eliminación de Datos
+                    </a>
+                  </div>
+                </div>
+              </section>
             </div>
           </div>
         </div>

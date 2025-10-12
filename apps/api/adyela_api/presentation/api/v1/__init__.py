@@ -2,12 +2,15 @@
 
 from fastapi import APIRouter
 
-from .endpoints import appointments, health, auth
+from .endpoints import appointments, health, auth, data_deletion
 
 api_router = APIRouter()
 
 # Include health check routes (no auth required)
 api_router.include_router(health.router, tags=["health"])
+
+# Include public routes (no auth required)
+api_router.include_router(data_deletion.router, prefix="/api/v1")
 
 # Include protected routes
 api_router.include_router(appointments.router, prefix="/api/v1")
