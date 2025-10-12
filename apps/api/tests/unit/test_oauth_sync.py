@@ -36,7 +36,7 @@ class TestOAuthSync:
                 displayName="Test User",
                 photoURL="https://example.com/photo.jpg",
                 provider="google",
-                emailVerified=True
+                emailVerified=True,
             )
         )
 
@@ -50,17 +50,12 @@ class TestOAuthSync:
             "email_verified": True,
             "tenant_id": "default",
             "roles": ["patient"],
-            "firebase": {
-                "sign_in_provider": "google.com"
-            }
+            "firebase": {"sign_in_provider": "google.com"},
         }
 
     @pytest.mark.asyncio
     async def test_sync_oauth_user_success(
-        self, 
-        mock_auth_service, 
-        valid_oauth_request, 
-        valid_firebase_claims
+        self, mock_auth_service, valid_oauth_request, valid_firebase_claims
     ):
         """Test successful OAuth user synchronization."""
         # Arrange
@@ -68,13 +63,13 @@ class TestOAuthSync:
         authorization = "Bearer valid-firebase-token"
 
         # Act
-        with patch('adyela_api.presentation.api.v1.endpoints.auth.datetime') as mock_datetime:
+        with patch("adyela_api.presentation.api.v1.endpoints.auth.datetime") as mock_datetime:
             mock_datetime.utcnow.return_value.isoformat.return_value = "2024-01-01T00:00:00"
-            
+
             result = await sync_oauth_user(
                 request=valid_oauth_request,
                 authorization=authorization,
-                auth_service=mock_auth_service
+                auth_service=mock_auth_service,
             )
 
         # Assert
@@ -88,11 +83,7 @@ class TestOAuthSync:
         mock_auth_service.verify_token.assert_called_once_with("valid-firebase-token")
 
     @pytest.mark.asyncio
-    async def test_sync_oauth_user_invalid_token(
-        self, 
-        mock_auth_service, 
-        valid_oauth_request
-    ):
+    async def test_sync_oauth_user_invalid_token(self, mock_auth_service, valid_oauth_request):
         """Test OAuth sync with invalid token."""
         # Arrange
         mock_auth_service.verify_token.side_effect = Exception("Invalid token")
@@ -103,18 +94,14 @@ class TestOAuthSync:
             await sync_oauth_user(
                 request=valid_oauth_request,
                 authorization=authorization,
-                auth_service=mock_auth_service
+                auth_service=mock_auth_service,
             )
 
         assert exc_info.value.status_code == 401
         assert "Authentication failed" in exc_info.value.detail
 
     @pytest.mark.asyncio
-    async def test_sync_oauth_user_missing_email(
-        self, 
-        mock_auth_service, 
-        valid_firebase_claims
-    ):
+    async def test_sync_oauth_user_missing_email(self, mock_auth_service, valid_firebase_claims):
         """Test OAuth sync with missing email."""
         # Arrange
         oauth_request = OAuthSyncRequest(
@@ -124,7 +111,7 @@ class TestOAuthSync:
                 displayName="Test User",
                 photoURL=None,
                 provider="google",
-                emailVerified=False
+                emailVerified=False,
             )
         )
         valid_firebase_claims["email"] = "fallback@example.com"
@@ -132,24 +119,18 @@ class TestOAuthSync:
         authorization = "Bearer valid-token"
 
         # Act
-        with patch('adyela_api.presentation.api.v1.endpoints.auth.datetime') as mock_datetime:
+        with patch("adyela_api.presentation.api.v1.endpoints.auth.datetime") as mock_datetime:
             mock_datetime.utcnow.return_value.isoformat.return_value = "2024-01-01T00:00:00"
-            
+
             result = await sync_oauth_user(
-                request=oauth_request,
-                authorization=authorization,
-                auth_service=mock_auth_service
+                request=oauth_request, authorization=authorization, auth_service=mock_auth_service
             )
 
         # Assert
         assert result.user["email"] == "fallback@example.com"
 
     @pytest.mark.asyncio
-    async def test_sync_oauth_user_default_tenant(
-        self, 
-        mock_auth_service, 
-        valid_oauth_request
-    ):
+    async def test_sync_oauth_user_default_tenant(self, mock_auth_service, valid_oauth_request):
         """Test OAuth sync with default tenant assignment."""
         # Arrange
         claims_without_tenant = {
@@ -158,21 +139,19 @@ class TestOAuthSync:
             "name": "Test User",
             "email_verified": True,
             "roles": ["patient"],
-            "firebase": {
-                "sign_in_provider": "google.com"
-            }
+            "firebase": {"sign_in_provider": "google.com"},
         }
         mock_auth_service.verify_token.return_value = claims_without_tenant
         authorization = "Bearer valid-token"
 
         # Act
-        with patch('adyela_api.presentation.api.v1.endpoints.auth.datetime') as mock_datetime:
+        with patch("adyela_api.presentation.api.v1.endpoints.auth.datetime") as mock_datetime:
             mock_datetime.utcnow.return_value.isoformat.return_value = "2024-01-01T00:00:00"
-            
+
             result = await sync_oauth_user(
                 request=valid_oauth_request,
                 authorization=authorization,
-                auth_service=mock_auth_service
+                auth_service=mock_auth_service,
             )
 
         # Assert
@@ -180,11 +159,7 @@ class TestOAuthSync:
         assert result.user["tenant_id"] == "default"
 
     @pytest.mark.asyncio
-    async def test_sync_oauth_user_default_roles(
-        self, 
-        mock_auth_service, 
-        valid_oauth_request
-    ):
+    async def test_sync_oauth_user_default_roles(self, mock_auth_service, valid_oauth_request):
         """Test OAuth sync with default role assignment."""
         # Arrange
         claims_without_roles = {
@@ -193,21 +168,19 @@ class TestOAuthSync:
             "name": "Test User",
             "email_verified": True,
             "tenant_id": "default",
-            "firebase": {
-                "sign_in_provider": "google.com"
-            }
+            "firebase": {"sign_in_provider": "google.com"},
         }
         mock_auth_service.verify_token.return_value = claims_without_roles
         authorization = "Bearer valid-token"
 
         # Act
-        with patch('adyela_api.presentation.api.v1.endpoints.auth.datetime') as mock_datetime:
+        with patch("adyela_api.presentation.api.v1.endpoints.auth.datetime") as mock_datetime:
             mock_datetime.utcnow.return_value.isoformat.return_value = "2024-01-01T00:00:00"
-            
+
             result = await sync_oauth_user(
                 request=valid_oauth_request,
                 authorization=authorization,
-                auth_service=mock_auth_service
+                auth_service=mock_auth_service,
             )
 
         # Assert
@@ -216,13 +189,11 @@ class TestOAuthSync:
 
     @pytest.mark.asyncio
     async def test_sync_oauth_user_different_providers(
-        self, 
-        mock_auth_service, 
-        valid_firebase_claims
+        self, mock_auth_service, valid_firebase_claims
     ):
         """Test OAuth sync with different providers."""
         providers = ["google", "facebook", "apple", "microsoft"]
-        
+
         for provider in providers:
             # Arrange
             oauth_request = OAuthSyncRequest(
@@ -232,20 +203,20 @@ class TestOAuthSync:
                     displayName="Test User",
                     photoURL=None,
                     provider=provider,
-                    emailVerified=True
+                    emailVerified=True,
                 )
             )
             mock_auth_service.verify_token.return_value = valid_firebase_claims
             authorization = "Bearer valid-token"
 
             # Act
-            with patch('adyela_api.presentation.api.v1.endpoints.auth.datetime') as mock_datetime:
+            with patch("adyela_api.presentation.api.v1.endpoints.auth.datetime") as mock_datetime:
                 mock_datetime.utcnow.return_value.isoformat.return_value = "2024-01-01T00:00:00"
-                
+
                 result = await sync_oauth_user(
                     request=oauth_request,
                     authorization=authorization,
-                    auth_service=mock_auth_service
+                    auth_service=mock_auth_service,
                 )
 
             # Assert
@@ -258,8 +229,8 @@ class TestOAuthSync:
         response = client.post(
             "/api/v1/auth/sync",
             json=valid_oauth_request.dict(),
-            headers={"Authorization": "Bearer mock-token"}
+            headers={"Authorization": "Bearer mock-token"},
         )
-        
+
         # Should return 401 without proper authentication
         assert response.status_code == 401

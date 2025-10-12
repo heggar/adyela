@@ -6,6 +6,7 @@ from pydantic import BaseModel, EmailStr
 
 class OAuthUserData(BaseModel):
     """OAuth user data from frontend."""
+
     uid: str
     email: Optional[str] = None
     displayName: Optional[str] = None
@@ -16,11 +17,13 @@ class OAuthUserData(BaseModel):
 
 class OAuthSyncRequest(BaseModel):
     """OAuth synchronization request."""
+
     user_data: OAuthUserData
 
 
 class OAuthSyncResponse(BaseModel):
     """OAuth synchronization response."""
+
     user: dict
     tenant_id: str
     roles: List[str]
@@ -28,6 +31,7 @@ class OAuthSyncResponse(BaseModel):
 
 class UserProfile(BaseModel):
     """User profile data."""
+
     uid: str
     email: str
     displayName: Optional[str] = None
@@ -42,5 +46,6 @@ class UserProfile(BaseModel):
 
 class AuthError(BaseModel):
     """Authentication error response."""
+
     detail: str
     error_code: Optional[str] = None
