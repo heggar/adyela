@@ -1,6 +1,6 @@
-from pydantic import BaseModel, EmailStr
-from typing import Optional
 from enum import Enum
+
+from pydantic import BaseModel, EmailStr
 
 
 class DataDeletionStatus(str, Enum):
@@ -16,7 +16,7 @@ class DataDeletionRequest(BaseModel):
     """Request for data deletion."""
 
     email: EmailStr
-    reason: Optional[str] = None
+    reason: str | None = None
     confirmation_required: bool = True
 
 
@@ -26,7 +26,7 @@ class DataDeletionResponse(BaseModel):
     request_id: str
     status: DataDeletionStatus
     message: str
-    estimated_completion: Optional[str] = None
+    estimated_completion: str | None = None
 
 
 class DataDeletionStatusResponse(BaseModel):
@@ -35,5 +35,5 @@ class DataDeletionStatusResponse(BaseModel):
     request_id: str
     status: DataDeletionStatus
     created_at: str
-    completed_at: Optional[str] = None
+    completed_at: str | None = None
     message: str

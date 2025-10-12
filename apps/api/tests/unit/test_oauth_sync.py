@@ -1,14 +1,15 @@
 """Unit tests for OAuth synchronization endpoint."""
 
-import pytest
-from unittest.mock import Mock, patch, AsyncMock
-from fastapi.testclient import TestClient
-from fastapi import HTTPException
+from unittest.mock import AsyncMock, Mock, patch
 
+import pytest
+from fastapi import HTTPException
+from fastapi.testclient import TestClient
+
+from adyela_api.infrastructure.services.auth.firebase_auth_service import FirebaseAuthService
 from adyela_api.main import app
 from adyela_api.presentation.api.v1.endpoints.auth import sync_oauth_user
 from adyela_api.presentation.schemas.auth import OAuthSyncRequest, OAuthUserData
-from adyela_api.infrastructure.services.auth.firebase_auth_service import FirebaseAuthService
 
 
 class TestOAuthSync:

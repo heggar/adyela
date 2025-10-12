@@ -21,7 +21,8 @@ export function OAuthButtons() {
       id: "facebook" as const,
       name: t("auth.continueWithFacebook"),
       icon: FacebookIcon,
-      className: "bg-[#1877F2] text-white hover:bg-[#166FE5]",
+      className:
+        "bg-[#1877F2] text-white hover:bg-[#166FE5] focus:ring-2 focus:ring-[#1877F2] focus:ring-offset-2",
     },
     {
       id: "apple" as const,
@@ -33,7 +34,8 @@ export function OAuthButtons() {
       id: "microsoft" as const,
       name: t("auth.continueWithMicrosoft"),
       icon: MicrosoftIcon,
-      className: "bg-[#00BCF2] text-white hover:bg-[#00A8D4]",
+      className:
+        "bg-[#0078D4] text-white hover:bg-[#106EBE] focus:ring-2 focus:ring-[#0078D4] focus:ring-offset-2",
     },
   ];
 

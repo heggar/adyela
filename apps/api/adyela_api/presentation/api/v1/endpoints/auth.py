@@ -2,17 +2,14 @@
 
 import logging
 from datetime import datetime
-from typing import Dict, Any
 
 from fastapi import APIRouter, Depends, Header, HTTPException, status
-from firebase_admin import auth as firebase_auth
 
 from adyela_api.infrastructure.services.auth.firebase_auth_service import FirebaseAuthService
 from adyela_api.presentation.schemas.auth import (
     OAuthSyncRequest,
     OAuthSyncResponse,
     UserProfile,
-    AuthError,
 )
 
 logger = logging.getLogger(__name__)
@@ -85,7 +82,7 @@ async def sync_oauth_user(
         )
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail=f"Authentication failed: {str(e)}"
-        )
+        ) from e
 
 
 @router.get("/profile", response_model=UserProfile)
@@ -118,13 +115,13 @@ async def get_user_profile(
         logger.error("Error getting user profile", extra={"error": str(e)})
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail=f"Authentication failed: {str(e)}"
-        )
+        ) from e
 
 
 @router.post("/logout")
 async def logout_user(
     authorization: str = Header(..., description="Firebase ID token")
-) -> Dict[str, str]:
+) -> dict[str, str]:
     """
     Logout user (client-side token invalidation).
 
@@ -145,4 +142,4 @@ async def logout_user(
         logger.error("Error during logout", extra={"error": str(e)})
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Logout failed"
-        )
+        ) from e

@@ -1,18 +1,17 @@
-from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
-from datetime import datetime, timedelta
-import uuid
 import logging
-from typing import Dict, Any, Optional
+import uuid
+from datetime import datetime, timedelta
 
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
+
+from adyela_api.application.ports import AuthenticationService
+from adyela_api.infrastructure.services.auth import FirebaseAuthService
 from adyela_api.presentation.schemas.data_deletion import (
     DataDeletionRequest,
     DataDeletionResponse,
-    DataDeletionStatusResponse,
     DataDeletionStatus,
+    DataDeletionStatusResponse,
 )
-from adyela_api.infrastructure.services.auth import FirebaseAuthService
-from adyela_api.application.ports import AuthenticationService
-from adyela_api.domain import AuthenticationError
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -21,10 +20,10 @@ router = APIRouter(prefix="/data-deletion", tags=["data-deletion"])
 
 # In-memory storage for demo purposes
 # In production, this should be stored in Firestore or a database
-deletion_requests: Dict[str, Dict[str, Any]] = {}
+deletion_requests: dict[str, dict[str, str]] = {}
 
 
-async def process_data_deletion(request_id: str, email: str, user_id: Optional[str] = None) -> None:
+async def process_data_deletion(request_id: str, email: str, user_id: str | None = None) -> None:
     """
     Background task to process data deletion.
     This is a placeholder implementation - in production, this would:
@@ -117,7 +116,7 @@ async def request_data_deletion(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to process data deletion request: {str(e)}",
-        )
+        ) from e
 
 
 @router.get("/status/{request_id}", response_model=DataDeletionStatusResponse)
@@ -144,7 +143,7 @@ async def get_deletion_status(request_id: str) -> DataDeletionStatusResponse:
 @router.post("/confirm/{request_id}", status_code=status.HTTP_200_OK)
 async def confirm_data_deletion(
     request_id: str, auth_service: AuthenticationService = Depends(FirebaseAuthService)
-) -> Dict[str, str]:
+) -> dict[str, str]:
     """
     Confirm data deletion request (requires authentication).
     This endpoint is used when the user needs to authenticate to confirm deletion.
@@ -183,11 +182,11 @@ async def confirm_data_deletion(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to confirm data deletion: {str(e)}",
-        )
+        ) from e
 
 
 @router.get("/info", status_code=status.HTTP_200_OK)
-async def get_deletion_info() -> Dict[str, Any]:
+async def get_deletion_info() -> dict[str, str]:
     """
     Get information about data deletion process.
     This is a public endpoint that provides information about how data deletion works.

@@ -2,7 +2,7 @@
 
 from fastapi import APIRouter
 
-from .endpoints import appointments, health, auth, data_deletion
+from .endpoints import appointments, auth, data_deletion, health
 
 api_router = APIRouter()
 

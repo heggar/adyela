@@ -1,16 +1,15 @@
 """Authentication schemas for OAuth and user management."""
 
-from typing import Optional, List
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel
 
 
 class OAuthUserData(BaseModel):
     """OAuth user data from frontend."""
 
     uid: str
-    email: Optional[str] = None
-    displayName: Optional[str] = None
-    photoURL: Optional[str] = None
+    email: str | None = None
+    displayName: str | None = None
+    photoURL: str | None = None
     provider: str
     emailVerified: bool = False
 
@@ -26,7 +25,7 @@ class OAuthSyncResponse(BaseModel):
 
     user: dict
     tenant_id: str
-    roles: List[str]
+    roles: list[str]
 
 
 class UserProfile(BaseModel):
@@ -34,18 +33,18 @@ class UserProfile(BaseModel):
 
     uid: str
     email: str
-    displayName: Optional[str] = None
-    photoURL: Optional[str] = None
+    displayName: str | None = None
+    photoURL: str | None = None
     provider: str
     emailVerified: bool
     tenant_id: str
-    roles: List[str]
-    created_at: Optional[str] = None
-    updated_at: Optional[str] = None
+    roles: list[str]
+    created_at: str | None = None
+    updated_at: str | None = None
 
 
 class AuthError(BaseModel):
     """Authentication error response."""
 
     detail: str
-    error_code: Optional[str] = None
+    error_code: str | None = None
