@@ -12,8 +12,8 @@ resource "google_cloud_run_v2_service" "api" {
     service_account = var.service_account_email
 
     scaling {
-      min_instance_count = 0
-      max_instance_count = 2
+      min_instance_count = var.min_instances
+      max_instance_count = var.max_instances
     }
 
     containers {
@@ -124,8 +124,8 @@ resource "google_cloud_run_v2_service" "web" {
     service_account = var.service_account_email
 
     scaling {
-      min_instance_count = 0
-      max_instance_count = 2
+      min_instance_count = var.min_instances
+      max_instance_count = var.max_instances
     }
 
     containers {

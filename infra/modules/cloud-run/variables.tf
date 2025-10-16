@@ -65,3 +65,15 @@ variable "api_url" {
   description = "URL of the API backend for the web frontend"
   type        = string
 }
+
+variable "min_instances" {
+  description = "Minimum number of instances (0 = scale-to-zero, 1+ = always-on)"
+  type        = number
+  default     = 0
+}
+
+variable "max_instances" {
+  description = "Maximum number of instances"
+  type        = number
+  default     = 10
+}
