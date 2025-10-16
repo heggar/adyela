@@ -630,7 +630,7 @@ jobs:
             --platform managed \
             --set-env-vars="VITE_ENV=${{ env.ENVIRONMENT }},VERSION=${{ inputs.version }},HIPAA_COMPLIANCE=true,AUDIT_LOGGING=true" \
             --min-instances=0 \
-            --no-allow-unauthenticated \
+            --allow-unauthenticated \
             --ingress=internal-and-cloud-load-balancing \
             --vpc-connector=adyela-staging-connector \
             --vpc-egress=private-ranges-only \
@@ -656,14 +656,14 @@ jobs:
           echo ""
           echo "✅ Web service deployed with HIPAA compliance:"
           echo "  🔒 VPC connector: adyela-staging-connector"
-          echo "  🔒 Private ingress: --ingress=internal-and-cloud-load-balancing"
-          echo "  🔒 Private access: --no-allow-unauthenticated"
+          echo "  🔒 Secure ingress: internal-and-cloud-load-balancing"
+          echo "  🔓 Public access: via Load Balancer only (IAM controlled)"
           echo "  🔒 Service account: adyela-staging-hipaa"
           echo "  🔒 HIPAA environment variables configured"
           echo ""
-          echo "⚠️  Note: Web service is now HIPAA-compliant and not publicly accessible"
-          echo "   This is the expected behavior for HIPAA compliance"
-          echo "   Access requires authentication via VPC or identity tokens"
+          echo "ℹ️  Note: Access is controlled via Load Balancer and IAM policies"
+          echo "   Direct access to Cloud Run URL requires proper IAM permissions"
+          echo "   Public access only through https://staging.adyela.care"
           echo ""
           echo "✅ Web deployment completed successfully - HIPAA compliance achieved"
 

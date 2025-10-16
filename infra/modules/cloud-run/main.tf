@@ -98,22 +98,6 @@ resource "google_cloud_run_v2_service" "api" {
   labels = var.labels
 }
 
-# Allow unauthenticated access to API service
-resource "google_cloud_run_service_iam_member" "api_public_access" {
-  service  = google_cloud_run_v2_service.api.name
-  location = google_cloud_run_v2_service.api.location
-  role     = "roles/run.invoker"
-  member   = "allUsers"
-}
-
-# Allow unauthenticated access to Web service
-resource "google_cloud_run_service_iam_member" "web_public_access" {
-  service  = google_cloud_run_v2_service.web.name
-  location = google_cloud_run_v2_service.web.location
-  role     = "roles/run.invoker"
-  member   = "allUsers"
-}
-
 # Cloud Run Web Service
 resource "google_cloud_run_v2_service" "web" {
   name     = "${var.project_name}-web-${var.environment}"
@@ -238,4 +222,24 @@ resource "google_cloud_run_v2_service" "web" {
   }
 
   labels = var.labels
+}
+
+# ================================================================================
+# IAM Bindings - Public Access via Load Balancer
+# ================================================================================
+
+# Allow public access to API service through Load Balancer
+resource "google_cloud_run_service_iam_member" "api_public_access" {
+  service  = google_cloud_run_v2_service.api.name
+  location = google_cloud_run_v2_service.api.location
+  role     = "roles/run.invoker"
+  member   = "allUsers"
+}
+
+# Allow public access to Web service through Load Balancer
+resource "google_cloud_run_service_iam_member" "web_public_access" {
+  service  = google_cloud_run_v2_service.web.name
+  location = google_cloud_run_v2_service.web.location
+  role     = "roles/run.invoker"
+  member   = "allUsers"
 }
