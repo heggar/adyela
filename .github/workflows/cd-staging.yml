@@ -574,7 +574,10 @@ jobs:
           docker run --rm --entrypoint tar ${IMAGE_NAME} -czf - -C /usr/share/nginx/html assets 2>/dev/null | tar -xzf - -C /tmp/static-assets/ || echo "No assets found in image"
           if [ -d "/tmp/static-assets/assets" ]; then
             echo "☁️ Subiendo assets a Cloud Storage..."
-            gsutil -m -h "Cache-Control:public,max-age=31536000,immutable" cp -r /tmp/static-assets/assets/* gs://${{ env.STATIC_BUCKET_NAME }}/assets/ || true
+            # Usar gcloud storage en lugar de gsutil para mejor compatibilidad con permisos
+            gcloud storage cp -r /tmp/static-assets/assets/* gs://${{ env.STATIC_BUCKET_NAME }}/assets/ \
+              --metadata="Cache-Control=public,max-age=31536000,immutable" \
+              --project=${{ secrets.GCP_PROJECT_ID_STAGING }}
             echo "✅ Assets desplegados exitosamente"
           else
             echo "⚠️ No se encontraron assets para desplegar"
