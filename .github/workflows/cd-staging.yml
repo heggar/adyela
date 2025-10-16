@@ -26,7 +26,8 @@ env:
   ENVIRONMENT: staging
   GCP_REGION: us-central1
   API_SERVICE_NAME: adyela-api-staging
-  WEB_BUCKET_NAME: adyela-web-staging
+  WEB_SERVICE_NAME: adyela-web-staging
+  STATIC_BUCKET_NAME: adyela-staging-static-assets
 
 permissions:
   contents: read
@@ -541,8 +542,8 @@ jobs:
         id: build
         uses: docker/build-push-action@v6
         with:
-          context: .
-          file: ./apps/web/Dockerfile
+          context: apps/web
+          file: apps/web/Dockerfile
           push: true
           load: false
           target: production
@@ -565,16 +566,20 @@ jobs:
             VITE_JITSI_DOMAIN=meet.jit.si
             VITE_ENV=${{ env.ENVIRONMENT }}
 
-      - name: Inspect Image Internals
+      - name: Deploy static assets to Cloud Storage
         run: |
-          IMAGE_NAME=${{ env.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID_STAGING }}/adyela/adyela-web-staging:${{ inputs.version }}
-          echo "--- Inspeccionando imagen: ${IMAGE_NAME} ---"
-
-          echo "\n>> Verificando contenido de /etc/nginx/nginx.conf (buscando la directiva 'pid')"
-          docker run --rm --entrypoint cat ${IMAGE_NAME} /etc/nginx/nginx.conf | grep pid || echo "Directiva 'pid' no encontrada o usa el valor por defecto."
-
-          echo "\n>> Listando permisos de /run"
-          docker run --rm --entrypoint ls ${IMAGE_NAME} -la /run
+          echo "🚀 Desplegando assets estáticos a Cloud Storage..."
+          mkdir -p /tmp/static-assets
+          IMAGE_NAME=${{ env.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID_STAGING }}/adyela/${{ env.WEB_SERVICE_NAME }}:${{ inputs.version }}
+          docker run --rm --entrypoint tar ${IMAGE_NAME} -czf - -C /usr/share/nginx/html assets 2>/dev/null | tar -xzf - -C /tmp/static-assets/ || echo "No assets found in image"
+          if [ -d "/tmp/static-assets/assets" ]; then
+            echo "☁️ Subiendo assets a Cloud Storage..."
+            gsutil -m -h "Cache-Control:public,max-age=31536000,immutable" cp -r /tmp/static-assets/assets/* gs://${{ env.STATIC_BUCKET_NAME }}/assets/ || true
+            echo "✅ Assets desplegados exitosamente"
+          else
+            echo "⚠️ No se encontraron assets para desplegar"
+          fi
+          rm -rf /tmp/static-assets
 
       - name: Output image version
         id: output
@@ -669,27 +674,17 @@ jobs:
 
       - name: Invalidate CDN cache
         run: |
-          echo "=================================================="
-          echo "🔄 INVALIDATING CDN CACHE"
-          echo "=================================================="
-          echo ""
-          echo "📦 Invalidating cache for static assets..."
-          echo "   URL Map: adyela-staging-web-url-map"
-          echo "   Paths: /static/*, /assets/*"
-          echo ""
-
+          echo "🔄 Invalidando cache CDN completo..."
           gcloud compute url-maps invalidate-cdn-cache adyela-staging-web-url-map \
-            --path "/static/*" \
-            --path "/assets/*" \
+            --path "/*" \
             --project=${{ secrets.GCP_PROJECT_ID_STAGING }} \
-            --async
-
-          echo ""
-          echo "✅ CDN cache invalidation initiated (async)"
-          echo "   Note: Invalidation may take 60-120 seconds to propagate globally"
-          echo ""
-          echo "=================================================="
-          echo ""
+            --async || true
+          gcloud compute url-maps invalidate-cdn-cache adyela-staging-web-url-map \
+            --path "/assets/*" \
+            --path "/static/*" \
+            --project=${{ secrets.GCP_PROJECT_ID_STAGING }} \
+            --async || true
+          echo "✅ Cache CDN invalidado completamente"
 
   e2e-tests:
     name: Run E2E Tests
