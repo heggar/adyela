@@ -667,6 +667,30 @@ jobs:
           echo ""
           echo "✅ Web deployment completed successfully - HIPAA compliance achieved"
 
+      - name: Invalidate CDN cache
+        run: |
+          echo "=================================================="
+          echo "🔄 INVALIDATING CDN CACHE"
+          echo "=================================================="
+          echo ""
+          echo "📦 Invalidating cache for static assets..."
+          echo "   URL Map: adyela-staging-web-url-map"
+          echo "   Paths: /static/*, /assets/*"
+          echo ""
+
+          gcloud compute url-maps invalidate-cdn-cache adyela-staging-web-url-map \
+            --path "/static/*" \
+            --path "/assets/*" \
+            --project=${{ secrets.GCP_PROJECT_ID_STAGING }} \
+            --async
+
+          echo ""
+          echo "✅ CDN cache invalidation initiated (async)"
+          echo "   Note: Invalidation may take 60-120 seconds to propagate globally"
+          echo ""
+          echo "=================================================="
+          echo ""
+
   e2e-tests:
     name: Run E2E Tests
     runs-on: ubuntu-latest
