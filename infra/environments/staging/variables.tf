@@ -18,5 +18,5 @@ variable "region" {
 variable "alert_email" {
   description = "Email address for monitoring alerts"
   type        = string
-  default     = "dev@adyela.com"  # TODO: Change to your email
+  default     = "hever_gonzalezg@adyela.care"
 }
