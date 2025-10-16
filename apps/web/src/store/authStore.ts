@@ -25,6 +25,33 @@ interface AuthState {
   ) => Promise<void>;
 }
 
+/**
+ * Get the API base URL dynamically based on the environment
+ *
+ * @returns API base URL
+ *
+ * Logic:
+ * - Development: http://localhost:8000
+ * - Production/Staging: Same origin (Load Balancer handles routing)
+ *
+ * The Load Balancer is configured to route:
+ * - / → Web service (port 8080)
+ * - /api/v1/* → API service (port 8000)
+ *
+ * This allows the frontend to call the API using the same domain
+ * without needing environment-specific configuration.
+ */
+const getApiBaseUrl = (): string => {
+  // In development, use localhost
+  if (import.meta.env.DEV) {
+    return "http://localhost:8000";
+  }
+
+  // In production/staging, use the same origin
+  // The Load Balancer will route /api/v1/* to the API service
+  return window.location.origin;
+};
+
 export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
@@ -48,8 +75,7 @@ export const useAuthStore = create<AuthState>()(
         oauthData: OAuthUserData,
       ) => {
         try {
-          const apiBaseUrl =
-            import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
+          const apiBaseUrl = getApiBaseUrl();
           const response = await fetch(`${apiBaseUrl}/api/v1/auth/sync`, {
             method: "POST",
             headers: {
