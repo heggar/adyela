@@ -576,7 +576,7 @@ jobs:
             echo "☁️ Subiendo assets a Cloud Storage..."
             # Usar gcloud storage en lugar de gsutil para mejor compatibilidad con permisos
             gcloud storage cp -r /tmp/static-assets/assets/* gs://${{ env.STATIC_BUCKET_NAME }}/assets/ \
-              --custom-metadata="Cache-Control=public,max-age=31536000,immutable" \
+              --cache-control="public,max-age=31536000,immutable" \
               --project=${{ secrets.GCP_PROJECT_ID_STAGING }}
             echo "✅ Assets desplegados exitosamente"
           else
