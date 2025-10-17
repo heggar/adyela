@@ -63,12 +63,12 @@
 
 ## 🚀 Estado Actual de Despliegue - ACTUALIZADO 2024
 
-### ✅ Staging Environment (85% COMPLETADO)
+### ⚠️ Staging Environment (90% COMPLETADO - 4 ISSUES CRÍTICOS IDENTIFICADOS)
 
-| Componente            | Estado       | Detalles                                                          | Costo/Mes |
-| --------------------- | ------------ | ----------------------------------------------------------------- | --------- |
-| **Cloud Run API**     | ✅ ACTIVO    | `adyela-api-staging` - Ingress: internal, Port: 8000              | $5-8      |
-| **Cloud Run Web**     | ✅ ACTIVO    | `adyela-web-staging` - Ingress: internal-and-cloud-load-balancing | $3-5      |
+| Componente            | Estado       | Detalles                                                          | Costo/Mes | Issues                  |
+| --------------------- | ------------ | ----------------------------------------------------------------- | --------- | ----------------------- |
+| **Cloud Run API**     | ✅ ACTIVO    | `adyela-api-staging` - Funcional (Issue: Cloudflare HIPAA)        | $5-8      | Cloudflare proxy en API |
+| **Cloud Run Web**     | ✅ ACTIVO    | `adyela-web-staging` - Ingress: internal-and-cloud-load-balancing | $3-5      | -                       |
 | **VPC Network**       | ✅ ACTIVO    | `adyela-staging-vpc` (CUSTOM mode)                                | $0        |
 | **VPC Connector**     | ✅ ACTIVO    | `adyela-staging-connector` (READY)                                | $3-5      |
 | **Load Balancer**     | ✅ ACTIVO    | IP: `34.96.108.162` - SSL: ACTIVE                                 | $18-25    |
@@ -86,8 +86,9 @@
 | **Cloud Trace**       | ⏳ PENDIENTE | APM avanzado                                                      | $0        |
 | **Error Reporting**   | ⏳ PENDIENTE | Errores automáticos                                               | $0        |
 
-**Costo Total Actual**: $34-53/mes  
-**Cobertura Terraform**: 85% (Infraestructura) + 15% (Manual)
+**Costo Total Actual**: $34-53/mes
+**Cobertura Terraform**: 90% (53 recursos gestionados en 6 módulos)
+**Estado Crítico**: ⚠️ 4 issues críticos identificados - Correcciones listas para deployment
 
 ### 🔗 URLs Activas
 
@@ -361,27 +362,46 @@ Cloud Run → Firestore (CMEK)
 
 ---
 
-## 🚀 **Recomendaciones Prioritarias**
+## 🚀 **Recomendaciones Prioritarias - ACTUALIZADO 2025-10-15**
 
-### **1. Implementar Cloudflare CDN (Prioridad Alta)**
+### **1. IMPLEMENTAR CORRECCIONES STAGING (Prioridad ALTA)** 🟠
+
+**Enfoque Pragmático para Staging** (NO requiere HIPAA 100%):
+
+1. **Cloudflare DNS-only para API** - API directo a GCP, frontend puede usar CDN
+2. **No Uptime Monitoring** - Deploy monitoring module (YA CREADO)
+3. **IAP Innecesario** - Deshabilitar (auth via Identity Platform)
+4. **Min Instances Hardcoded** - Hacer configurable
+
+**Estado**: ✅ **PLAN PRAGMÁTICO LISTO**
+
+- Monitoring module creado (462 líneas)
+- Plan simplificado para staging (no compliance estricto)
+- HIPAA 100% solo para production (futuro)
+
+**Tiempo**: 32 minutos total
+**Costo**: $0 adicional
+**Ver**: `docs/architecture/STAGING_PRAGMATIC_PLAN.md`
+
+### **2. Implementar Cloudflare CDN (Prioridad Alta)** 🟠
 
 - **Beneficio**: 20% reducción de costos + mejor performance
 - **Tiempo**: 1-2 semanas
 - **ROI**: $96-108 ahorro anual
 
-### **2. Completar Terraform Coverage (Prioridad Media)**
+### **3. Completar Terraform Coverage (Prioridad Media)** 🟡
 
 - **Beneficio**: 100% Infrastructure as Code
 - **Tiempo**: 1 semana
 - **Impacto**: Mejor mantenibilidad y versionado
 
-### **3. Resolver Issues Actuales (Prioridad Alta)**
+### **4. Resolver Issues Actuales (Prioridad Alta)** 🟠
 
 - **Assets desincronizados**: Sincronizar CDN con deployments
 - **Cache headers**: Optimizar TTL y cache policies
 - **Health checks**: Implementar monitoring completo
 
-### **4. Implementar Monitoring Avanzado (Prioridad Media)**
+### **5. Implementar Monitoring Avanzado (Prioridad Media)** 🟡
 
 - **Cloud Monitoring**: SLOs y alertas
 - **Cloud Trace**: APM y performance
@@ -389,6 +409,31 @@ Cloud Run → Firestore (CMEK)
 
 ---
 
-**Última Actualización**: 2025-10-12  
-**Versión**: 4.0  
-**Estado**: ✅ Staging 85% desplegado | ✅ Arquitectura analizada | 🔄 Cloudflare CDN recomendado
+**Última Actualización**: 2025-10-15
+**Versión**: 5.0
+**Estado**: ✅ Staging 90% desplegado | ✅ API funcional | 🟠 Plan pragmático listo (32 min)
+
+---
+
+## 📋 **NUEVO: Plan Pragmático para Staging**
+
+### 🎯 **Enfoque Pragmático**
+
+- **Staging**: Funcionalidad + Estabilidad (NO HIPAA 100%)
+- **Production**: HIPAA 100% + Compliance estricto (futuro)
+
+### ✅ **Módulos Listos**
+
+- `infra/modules/monitoring/` - Uptime checks + alertas ($0/mes)
+- `docs/architecture/STAGING_PRAGMATIC_PLAN.md` - Guía paso a paso
+
+### 📝 **4 Cambios Simples** (32 minutos)
+
+1. Cloudflare DNS-only para API (5 min)
+2. Deshabilitar IAP (2 min)
+3. Deploy monitoring (15 min)
+4. Variables min_instances (10 min)
+
+**Resultado**: Staging estable + Monitoring básico a **$0 adicional**
+
+**Ver**: `docs/architecture/STAGING_PRAGMATIC_PLAN.md` para implementación

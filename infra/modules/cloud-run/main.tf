@@ -1,6 +1,26 @@
 # ================================================================================
 # Cloud Run Module - HIPAA-Compliant Services
 # ================================================================================
+#
+# IMPORTANT: Image versions are managed by CI/CD, not Terraform
+# 
+# Terraform creates and configures the Cloud Run service infrastructure:
+# - CPU, memory, scaling configuration
+# - Environment variables and secrets
+# - VPC connectivity and ingress rules
+# - Service account permissions
+#
+# CI/CD (GitHub Actions) handles image deployments:
+# - Builds Docker images with specific versions
+# - Deploys directly to Cloud Run using gcloud
+# - Updates the service without touching Terraform state
+#
+# Expected workflow:
+# 1. Terraform applies infrastructure changes (networking, scaling, secrets)
+# 2. CI/CD deploys new images independently
+# 3. Terraform plan will show "image" differences - THIS IS EXPECTED AND SAFE
+# 4. Only apply Terraform when infrastructure configuration changes
+# ================================================================================
 
 # Cloud Run API Service
 resource "google_cloud_run_v2_service" "api" {
@@ -12,8 +32,8 @@ resource "google_cloud_run_v2_service" "api" {
     service_account = var.service_account_email
 
     scaling {
-      min_instance_count = 0
-      max_instance_count = 2
+      min_instance_count = var.min_instances
+      max_instance_count = var.max_instances
     }
 
     containers {
@@ -86,8 +106,10 @@ resource "google_cloud_run_v2_service" "api" {
     }
 
     annotations = {
-      "run.googleapis.com/ingress" = "internal"
+      "run.googleapis.com/ingress" = "internal-and-cloud-load-balancing"
     }
+
+    labels = var.labels
   }
 
   traffic {
@@ -96,22 +118,6 @@ resource "google_cloud_run_v2_service" "api" {
   }
 
   labels = var.labels
-}
-
-# Allow unauthenticated access to API service
-resource "google_cloud_run_service_iam_member" "api_public_access" {
-  service  = google_cloud_run_v2_service.api.name
-  location = google_cloud_run_v2_service.api.location
-  role     = "roles/run.invoker"
-  member   = "allUsers"
-}
-
-# Allow unauthenticated access to Web service
-resource "google_cloud_run_service_iam_member" "web_public_access" {
-  service  = google_cloud_run_v2_service.web.name
-  location = google_cloud_run_v2_service.web.location
-  role     = "roles/run.invoker"
-  member   = "allUsers"
 }
 
 # Cloud Run Web Service
@@ -124,8 +130,8 @@ resource "google_cloud_run_v2_service" "web" {
     service_account = var.service_account_email
 
     scaling {
-      min_instance_count = 0
-      max_instance_count = 2
+      min_instance_count = var.min_instances
+      max_instance_count = var.max_instances
     }
 
     containers {
@@ -230,6 +236,8 @@ resource "google_cloud_run_v2_service" "web" {
     annotations = {
       "run.googleapis.com/ingress" = "internal-and-cloud-load-balancing"
     }
+
+    labels = var.labels
   }
 
   traffic {
@@ -238,4 +246,24 @@ resource "google_cloud_run_v2_service" "web" {
   }
 
   labels = var.labels
+}
+
+# ================================================================================
+# IAM Bindings - Public Access via Load Balancer
+# ================================================================================
+
+# Allow public access to API service through Load Balancer
+resource "google_cloud_run_service_iam_member" "api_public_access" {
+  service  = google_cloud_run_v2_service.api.name
+  location = google_cloud_run_v2_service.api.location
+  role     = "roles/run.invoker"
+  member   = "allUsers"
+}
+
+# Allow public access to Web service through Load Balancer
+resource "google_cloud_run_service_iam_member" "web_public_access" {
+  service  = google_cloud_run_v2_service.web.name
+  location = google_cloud_run_v2_service.web.location
+  role     = "roles/run.invoker"
+  member   = "allUsers"
 }

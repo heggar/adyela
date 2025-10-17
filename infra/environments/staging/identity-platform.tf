@@ -47,8 +47,8 @@ module "identity_platform" {
   # Enable authentication providers
   enable_email_password = true
   enable_google_oauth   = true
-  enable_facebook       = false  # Disabled - placeholder credentials only
-  enable_microsoft      = true   # Enabled with real credentials
+  enable_facebook       = false # Disabled - placeholder credentials only
+  enable_microsoft      = true  # Enabled with real credentials
 
   # OAuth credentials from Secret Manager
   google_oauth_client_id     = data.google_secret_manager_secret_version.google_oauth_client_id.secret_data
@@ -63,13 +63,13 @@ module "identity_platform" {
 
   # Password policy for staging (relaxed for testing)
   password_policy = {
-    min_length             = 12
-    require_uppercase      = true
-    require_lowercase      = true
-    require_numeric        = true
-    require_special_char   = true
-    max_failed_attempts    = 5
-    lockout_duration       = "15m"
+    min_length           = 12
+    require_uppercase    = true
+    require_lowercase    = true
+    require_numeric      = true
+    require_special_char = true
+    max_failed_attempts  = 5
+    lockout_duration     = "15m"
   }
 
   # MFA configuration (optional for staging)
@@ -133,12 +133,12 @@ output "identity_platform_oauth_providers" {
 output "identity_platform_config" {
   description = "Complete Identity Platform configuration"
   value = {
-    tenant_id              = module.identity_platform.tenant_id
-    service_account_email  = module.identity_platform.service_account_email
-    authorized_domains     = module.identity_platform.authorized_domains
-    mfa_enabled            = module.identity_platform.mfa_enabled
-    oauth_providers        = module.identity_platform.oauth_providers_configured
-    audit_logging_enabled  = module.identity_platform.audit_logging_enabled
+    tenant_id             = module.identity_platform.tenant_id
+    service_account_email = module.identity_platform.service_account_email
+    authorized_domains    = module.identity_platform.authorized_domains
+    mfa_enabled           = module.identity_platform.mfa_enabled
+    oauth_providers       = module.identity_platform.oauth_providers_configured
+    audit_logging_enabled = module.identity_platform.audit_logging_enabled
   }
   sensitive = false
 }

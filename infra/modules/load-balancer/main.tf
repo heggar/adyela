@@ -85,13 +85,13 @@ resource "google_compute_backend_bucket" "static_backend" {
   enable_cdn  = true
 
   cdn_policy {
-    cache_mode                   = "CACHE_ALL_STATIC"
-    default_ttl                  = 86400      # 1 day
-    client_ttl                   = 31536000   # 1 year
-    max_ttl                      = 31536000   # 1 year
-    negative_caching             = true
-    serve_while_stale            = 86400      # 1 day
-    request_coalescing           = true
+    cache_mode         = "CACHE_ALL_STATIC"
+    default_ttl        = 86400    # 1 day
+    client_ttl         = 31536000 # 1 year
+    max_ttl            = 31536000 # 1 year
+    negative_caching   = true
+    serve_while_stale  = 86400 # 1 day
+    request_coalescing = true
   }
 }
 
@@ -203,11 +203,11 @@ resource "google_compute_url_map" "web_url_map" {
     name            = "allpaths"
     default_service = google_compute_backend_service.web_backend.id
 
-    # Route static assets to CDN
-    path_rule {
-      paths   = ["/static/*", "/assets/*"]
-      service = google_compute_backend_bucket.static_backend.id
-    }
+    # Route static assets to CDN - TEMPORARILY DISABLED
+    # path_rule {
+    #   paths   = ["/static/*", "/assets/*"]
+    #   service = google_compute_backend_bucket.static_backend.id
+    # }
 
     # Route health checks to API backend
     path_rule {

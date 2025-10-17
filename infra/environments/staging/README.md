@@ -47,6 +47,52 @@ This staging environment implements a **HIPAA-Ready infrastructure** with 85% co
 3. **gcloud CLI** installed and authenticated
 4. **Service Account** with required permissions
 
+---
+
+## 📦 Deployment Workflow
+
+### Infrastructure Changes (Terraform)
+
+Terraform manages infrastructure configuration only, NOT application deployments:
+
+```bash
+cd infra/environments/staging
+terraform plan    # Review infrastructure changes
+terraform apply   # Apply ONLY infrastructure changes
+```
+
+### Application Deployments (CI/CD)
+
+Application deployments are handled by GitHub Actions (`.github/workflows/cd-staging.yml`):
+
+- CI/CD builds and deploys images directly to Cloud Run
+- Terraform is NOT involved in image deployments
+- Images are updated via `gcloud run deploy`
+
+### Expected Drift
+
+Terraform will always show drift in:
+
+- `template[0].containers[0].image` - CI/CD manages images
+- `template[0].labels["version"]` - Updated by CI/CD
+- `client` / `client_version` - Metadata from gcloud
+
+**This drift is expected and safe.** Do NOT apply Terraform to "fix" these differences.
+
+### When to Apply Terraform
+
+Only apply Terraform when you need to change:
+
+- Scaling configuration (min/max instances)
+- Environment variables or secrets
+- VPC configuration
+- Resource limits (CPU/memory)
+- Networking or load balancer settings
+
+**Important:** Never apply Terraform just to sync image versions. This is managed by CI/CD.
+
+---
+
 ### 1. Authenticate to GCP
 
 ```bash

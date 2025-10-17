@@ -14,3 +14,9 @@ variable "region" {
   type        = string
   default     = "us-central1"
 }
+
+variable "alert_email" {
+  description = "Email address for monitoring alerts"
+  type        = string
+  default     = "hever_gonzalezg@adyela.care"
+}

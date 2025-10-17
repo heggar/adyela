@@ -11,7 +11,13 @@ class TenantMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         """Process request and inject tenant context."""
         # Skip tenant validation for health, docs, and auth endpoints
-        if request.url.path in ["/health", "/readiness", "/docs", "/openapi.json", "/redoc"] or request.url.path.startswith("/api/v1/auth/"):
+        if request.url.path in [
+            "/health",
+            "/readiness",
+            "/docs",
+            "/openapi.json",
+            "/redoc",
+        ] or request.url.path.startswith("/api/v1/auth/"):
             return await call_next(request)
 
         # Extract tenant_id from header

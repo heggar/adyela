@@ -1,6 +1,7 @@
 """FastAPI application entry point."""
 
 import logging
+from contextlib import asynccontextmanager
 
 import structlog
 from fastapi import FastAPI, Request, status
@@ -34,15 +35,13 @@ structlog.configure(
 )
 
 from adyela_api.presentation.api.v1 import api_router  # noqa: E402
+from adyela_api.presentation.api.v1.endpoints import health  # noqa: E402
 from adyela_api.presentation.middleware import LoggingMiddleware, TenantMiddleware  # noqa: E402
 
 logger = structlog.get_logger()
 
 # Initialize rate limiter
 limiter = Limiter(key_func=get_remote_address)
-
-# Lifespan event handler
-from contextlib import asynccontextmanager
 
 
 @asynccontextmanager
@@ -56,7 +55,33 @@ async def lifespan(app: FastAPI):
         environment=settings.environment,
     )
 
-    # Initialize Firebase (placeholder - add actual initialization)
+    # Initialize Firebase Admin SDK
+    try:
+        import firebase_admin
+        from firebase_admin import credentials
+
+        # Check if Firebase is already initialized
+        if not firebase_admin._apps:
+            if settings.firebase_credentials_path:
+                # Use service account key file
+                cred = credentials.Certificate(settings.firebase_credentials_path)
+            else:
+                # Use default credentials (GCP service account)
+                cred = credentials.ApplicationDefault()
+
+            firebase_admin.initialize_app(
+                cred,
+                {
+                    "projectId": settings.firebase_project_id,
+                },
+            )
+            logger.info("firebase_admin_initialized", project_id=settings.firebase_project_id)
+        else:
+            logger.info("firebase_admin_already_initialized")
+    except Exception as e:
+        logger.error("firebase_admin_initialization_failed", error=str(e))
+        raise
+
     # Initialize database connections
     # Initialize cache connections
 
@@ -91,7 +116,7 @@ async def rate_limit_exceeded_handler(request: Request, exc: RateLimitExceeded) 
     )
 
 
-app.add_exception_handler(RateLimitExceeded, rate_limit_exceeded_handler)
+app.add_exception_handler(RateLimitExceeded, rate_limit_exceeded_handler)  # type: ignore[arg-type]
 
 # Add CORS middleware
 app.add_middleware(
@@ -139,7 +164,6 @@ async def global_exception_handler(request: Request, exc: Exception) -> JSONResp
 
 
 # Include health check routes directly (no prefix)
-from adyela_api.presentation.api.v1.endpoints import health
 app.include_router(health.router, tags=["health"])
 
 # Include other routers with /api prefix
