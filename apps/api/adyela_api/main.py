@@ -1,6 +1,7 @@
 """FastAPI application entry point."""
 
 import logging
+from contextlib import asynccontextmanager
 
 import structlog
 from fastapi import FastAPI, Request, status
@@ -34,15 +35,13 @@ structlog.configure(
 )
 
 from adyela_api.presentation.api.v1 import api_router  # noqa: E402
+from adyela_api.presentation.api.v1.endpoints import health  # noqa: E402
 from adyela_api.presentation.middleware import LoggingMiddleware, TenantMiddleware  # noqa: E402
 
 logger = structlog.get_logger()
 
 # Initialize rate limiter
 limiter = Limiter(key_func=get_remote_address)
-
-# Lifespan event handler
-from contextlib import asynccontextmanager
 
 
 @asynccontextmanager
@@ -165,8 +164,6 @@ async def global_exception_handler(request: Request, exc: Exception) -> JSONResp
 
 
 # Include health check routes directly (no prefix)
-from adyela_api.presentation.api.v1.endpoints import health
-
 app.include_router(health.router, tags=["health"])
 
 # Include other routers with /api prefix

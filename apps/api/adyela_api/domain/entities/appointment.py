@@ -1,7 +1,7 @@
 """Appointment entity."""
 
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from adyela_api.config import AppointmentStatus, AppointmentType
@@ -23,13 +23,13 @@ class Appointment:
     reason: str | None = None
     notes: str | None = None
     video_room_url: str | None = None
-    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
-    updated_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
+    updated_at: datetime = field(default_factory=lambda: datetime.now(UTC))
     metadata: dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         """Validate appointment after initialization."""
-        if self.schedule.start < datetime.now(timezone.utc):
+        if self.schedule.start < datetime.now(UTC):
             raise BusinessRuleViolationError("Cannot create appointment in the past")
 
     def confirm(self) -> None:
@@ -39,14 +39,14 @@ class Appointment:
                 f"Cannot confirm appointment with status {self.status}"
             )
         self.status = AppointmentStatus.CONFIRMED
-        self.updated_at = datetime.now(timezone.utc)
+        self.updated_at = datetime.now(UTC)
 
     def start(self) -> None:
         """Start the appointment."""
         if self.status not in [AppointmentStatus.SCHEDULED, AppointmentStatus.CONFIRMED]:
             raise BusinessRuleViolationError(f"Cannot start appointment with status {self.status}")
         self.status = AppointmentStatus.IN_PROGRESS
-        self.updated_at = datetime.now(timezone.utc)
+        self.updated_at = datetime.now(UTC)
 
     def complete(self, notes: str | None = None) -> None:
         """Complete the appointment."""
@@ -57,14 +57,14 @@ class Appointment:
         self.status = AppointmentStatus.COMPLETED
         if notes:
             self.notes = notes
-        self.updated_at = datetime.now(timezone.utc)
+        self.updated_at = datetime.now(UTC)
 
     def cancel(self) -> None:
         """Cancel the appointment."""
         if self.status in [AppointmentStatus.COMPLETED, AppointmentStatus.CANCELLED]:
             raise BusinessRuleViolationError(f"Cannot cancel appointment with status {self.status}")
         self.status = AppointmentStatus.CANCELLED
-        self.updated_at = datetime.now(timezone.utc)
+        self.updated_at = datetime.now(UTC)
 
     def mark_no_show(self) -> None:
         """Mark appointment as no-show."""
@@ -73,14 +73,14 @@ class Appointment:
                 f"Cannot mark as no-show appointment with status {self.status}"
             )
         self.status = AppointmentStatus.NO_SHOW
-        self.updated_at = datetime.now(timezone.utc)
+        self.updated_at = datetime.now(UTC)
 
     def set_video_room(self, room_url: str) -> None:
         """Set video room URL."""
         if self.appointment_type != AppointmentType.VIDEO_CALL:
             raise BusinessRuleViolationError("Can only set video room for video call appointments")
         self.video_room_url = room_url
-        self.updated_at = datetime.now(timezone.utc)
+        self.updated_at = datetime.now(UTC)
 
     @property
     def duration_minutes(self) -> int:
