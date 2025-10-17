@@ -43,7 +43,34 @@ resource "google_compute_region_network_endpoint_group" "api_neg" {
   }
 }
 
-# Cloud Storage Bucket for Static Assets
+# Bucket for access logs
+resource "google_storage_bucket" "logs" {
+  name          = "${var.project_name}-${var.environment}-logs"
+  location      = var.region
+  force_destroy = false
+
+  uniform_bucket_level_access = true
+  public_access_prevention    = "enforced" # Logs should not be public
+
+  lifecycle_rule {
+    condition {
+      age = 90 # Retain logs for 90 days
+    }
+    action {
+      type = "Delete"
+    }
+  }
+
+  labels = var.labels
+}
+
+# Static assets (JS, CSS, images) must be publicly accessible for web serving
+# These are compiled frontend assets with no sensitive data
+# Security considerations:
+# - Served via CDN with caching
+# - CORS restricted to application domains
+# - Lifecycle rule deletes old versions after 30 days
+# checkov:skip=CKV_GCP_114:Public access required for CDN serving of static web assets
 resource "google_storage_bucket" "static_assets" {
   name          = "${var.project_name}-${var.environment}-static-assets"
   location      = var.region
@@ -68,10 +95,19 @@ resource "google_storage_bucket" "static_assets" {
     }
   }
 
+  logging {
+    log_bucket        = google_storage_bucket.logs.name
+    log_object_prefix = "static-assets-access/"
+  }
+
+  versioning {
+    enabled = true
+  }
+
   labels = var.labels
 }
 
-# Make bucket publicly readable
+# checkov:skip=CKV_GCP_28:allUsers access required for CDN to serve public static assets
 resource "google_storage_bucket_iam_member" "static_assets_public" {
   bucket = google_storage_bucket.static_assets.name
   role   = "roles/storage.objectViewer"
@@ -118,10 +154,10 @@ resource "google_compute_backend_service" "web_backend" {
   # Security settings
   security_policy = null # No Cloud Armor for cost optimization
 
-  # Logging for audit trails
+  # Logging for audit trails - Optimizado para reducir costos
   log_config {
     enable      = true
-    sample_rate = 1.0
+    sample_rate = 0.1  # Solo 10% de requests (suficiente para debugging)
   }
 }
 
@@ -148,10 +184,10 @@ resource "google_compute_backend_service" "api_backend" {
   # Security settings
   security_policy = null # No Cloud Armor for cost optimization
 
-  # Logging for audit trails
+  # Logging for audit trails - Optimizado para reducir costos
   log_config {
     enable      = true
-    sample_rate = 1.0
+    sample_rate = 0.1  # Solo 10% de requests (suficiente para debugging)
   }
 }
 
@@ -203,11 +239,11 @@ resource "google_compute_url_map" "web_url_map" {
     name            = "allpaths"
     default_service = google_compute_backend_service.web_backend.id
 
-    # Route static assets to CDN - TEMPORARILY DISABLED
-    # path_rule {
-    #   paths   = ["/static/*", "/assets/*"]
-    #   service = google_compute_backend_bucket.static_backend.id
-    # }
+    # Route static assets to CDN - Solo assets hasheados de Vite
+    path_rule {
+      paths   = ["/assets/*"]
+      service = google_compute_backend_bucket.static_backend.id
+    }
 
     # Route health checks to API backend
     path_rule {

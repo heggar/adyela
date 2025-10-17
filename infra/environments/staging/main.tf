@@ -42,10 +42,13 @@ module "vpc" {
   subnet_cidr    = "10.0.0.0/24"
   connector_cidr = "10.8.0.0/28"
 
-  # Minimal resources for cost optimization
-  connector_min_instances = 2
-  connector_max_instances = 3
-  connector_machine_type  = "f1-micro"
+  # Deshabilitar VPC Connector en staging para ahorro de $64/mes
+  enable_vpc_connector = false
+
+  # Configuración mínima (solo necesaria si enable_vpc_connector = true)
+  # connector_min_instances = 1  # Comentado - no usado
+  # connector_max_instances = 2  # Comentado - no usado
+  # connector_machine_type  = "f1-micro"  # Comentado - no usado
 
   # Disable Cloud NAT in staging (no external API calls)
   # If needed later, set to true (adds ~$32/month)
@@ -114,7 +117,7 @@ module "cloud_run" {
   region       = var.region
 
   service_account_email = module.service_account.service_account_email
-  vpc_connector_name    = module.vpc.vpc_connector_name
+  vpc_connector_name    = null # Sin VPC Connector en staging
 
   # API URL for frontend (through load balancer)
   api_url = "https://staging.adyela.care"
@@ -122,8 +125,8 @@ module "cloud_run" {
   # Docker images - CI/CD deploys directly, Terraform only for initial setup
   # These values are used ONLY for initial resource creation
   # CI/CD updates images directly via gcloud/Cloud Run API
-  api_image = "us-central1-docker.pkg.dev/${var.project_id}/adyela/adyela-api-staging:terraform-managed"
-  web_image = "us-central1-docker.pkg.dev/${var.project_id}/adyela/adyela-web-staging:terraform-managed"
+  api_image = "us-central1-docker.pkg.dev/${var.project_id}/adyela/adyela-api-staging:latest"
+  web_image = "us-central1-docker.pkg.dev/${var.project_id}/adyela/adyela-web-staging:latest"
 
   # Application version - placeholder for Terraform
   app_version = "terraform-managed"

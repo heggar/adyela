@@ -45,6 +45,7 @@ resource "google_compute_subnetwork" "private_subnet" {
 # Serverless VPC Access Connector for Cloud Run
 # Allows Cloud Run to access resources in the VPC
 resource "google_vpc_access_connector" "connector" {
+  count  = var.enable_vpc_connector ? 1 : 0
   name   = "adyela-staging-connector"
   region = var.region
 

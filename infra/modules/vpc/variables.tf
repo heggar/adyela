@@ -63,6 +63,12 @@ variable "connector_machine_type" {
   }
 }
 
+variable "enable_vpc_connector" {
+  description = "Enable VPC Access Connector for Cloud Run (required for private Cloud SQL)"
+  type        = bool
+  default     = true
+}
+
 variable "enable_cloud_nat" {
   description = "Enable Cloud NAT for egress to internet (adds ~$32/month cost)"
   type        = bool

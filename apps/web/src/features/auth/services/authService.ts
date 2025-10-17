@@ -1,5 +1,7 @@
 import {
   signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   GoogleAuthProvider,
   FacebookAuthProvider,
   OAuthProvider,
@@ -24,28 +26,89 @@ export const authService = {
     const provider = new GoogleAuthProvider();
     provider.addScope("email");
     provider.addScope("profile");
-    return await signInWithPopup(auth, provider);
+
+    try {
+      // Try popup first, fallback to redirect if blocked
+      return await signInWithPopup(auth, provider);
+    } catch (error: any) {
+      if (
+        error.code === "auth/popup-blocked" ||
+        error.code === "auth/popup-closed-by-user"
+      ) {
+        // Fallback to redirect if popup is blocked
+        await signInWithRedirect(auth, provider);
+        // This will redirect the page, so we won't reach here
+        throw new Error("Redirecting to authentication...");
+      }
+      throw error;
+    }
   },
 
   signInWithFacebook: async (): Promise<UserCredential> => {
     const provider = new FacebookAuthProvider();
     provider.addScope("email");
     provider.addScope("public_profile");
-    return await signInWithPopup(auth, provider);
+
+    try {
+      return await signInWithPopup(auth, provider);
+    } catch (error: any) {
+      if (
+        error.code === "auth/popup-blocked" ||
+        error.code === "auth/popup-closed-by-user"
+      ) {
+        await signInWithRedirect(auth, provider);
+        throw new Error("Redirecting to authentication...");
+      }
+      throw error;
+    }
   },
 
   signInWithApple: async (): Promise<UserCredential> => {
     const provider = new OAuthProvider("apple.com");
     provider.addScope("email");
     provider.addScope("name");
-    return await signInWithPopup(auth, provider);
+
+    try {
+      return await signInWithPopup(auth, provider);
+    } catch (error: any) {
+      if (
+        error.code === "auth/popup-blocked" ||
+        error.code === "auth/popup-closed-by-user"
+      ) {
+        await signInWithRedirect(auth, provider);
+        throw new Error("Redirecting to authentication...");
+      }
+      throw error;
+    }
   },
 
   signInWithMicrosoft: async (): Promise<UserCredential> => {
     const provider = new OAuthProvider("microsoft.com");
     provider.addScope("email");
     provider.addScope("profile");
-    return await signInWithPopup(auth, provider);
+
+    try {
+      return await signInWithPopup(auth, provider);
+    } catch (error: any) {
+      if (
+        error.code === "auth/popup-blocked" ||
+        error.code === "auth/popup-closed-by-user"
+      ) {
+        await signInWithRedirect(auth, provider);
+        throw new Error("Redirecting to authentication...");
+      }
+      throw error;
+    }
+  },
+
+  // Handle redirect result when user returns from OAuth
+  handleRedirectResult: async (): Promise<UserCredential | null> => {
+    try {
+      return await getRedirectResult(auth);
+    } catch (error) {
+      console.error("Error handling redirect result:", error);
+      return null;
+    }
   },
 
   extractUserData: (user: User, provider: OAuthProviderType): OAuthUserData => {

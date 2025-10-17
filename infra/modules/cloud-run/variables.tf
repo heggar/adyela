@@ -35,8 +35,9 @@ variable "service_account_email" {
 }
 
 variable "vpc_connector_name" {
-  description = "VPC Access Connector name"
+  description = "VPC Access Connector name (optional - only needed for private Cloud SQL)"
   type        = string
+  default     = null
 }
 
 variable "api_image" {

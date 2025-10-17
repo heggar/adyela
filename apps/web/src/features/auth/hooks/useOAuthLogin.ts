@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "@/store/authStore";
 import { authService, OAuthProviderType } from "../services/authService";
@@ -8,6 +8,25 @@ export const useOAuthLogin = () => {
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
   const { syncWithBackend } = useAuthStore();
+
+  // Handle redirect result on component mount
+  useEffect(() => {
+    const handleRedirectResult = async () => {
+      try {
+        const result = await authService.handleRedirectResult();
+        if (result) {
+          const token = await authService.getIdToken(result.user);
+          const userData = authService.extractUserData(result.user, "google"); // Default to google, could be improved
+          await syncWithBackend(token, userData);
+          navigate("/dashboard");
+        }
+      } catch (err) {
+        console.error("Error handling redirect result:", err);
+      }
+    };
+
+    handleRedirectResult();
+  }, [navigate, syncWithBackend]);
 
   const loginWithProvider = async (provider: OAuthProviderType) => {
     setLoading(true);

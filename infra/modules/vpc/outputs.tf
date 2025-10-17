@@ -32,17 +32,17 @@ output "subnet_self_link" {
 
 output "vpc_connector_name" {
   description = "The name of the VPC Access Connector"
-  value       = google_vpc_access_connector.connector.name
+  value       = var.enable_vpc_connector ? google_vpc_access_connector.connector[0].name : null
 }
 
 output "vpc_connector_id" {
   description = "The ID of the VPC Access Connector"
-  value       = google_vpc_access_connector.connector.id
+  value       = var.enable_vpc_connector ? google_vpc_access_connector.connector[0].id : null
 }
 
 output "vpc_connector_self_link" {
   description = "The URI of the VPC Access Connector"
-  value       = google_vpc_access_connector.connector.self_link
+  value       = var.enable_vpc_connector ? google_vpc_access_connector.connector[0].self_link : null
 }
 
 output "cloud_nat_enabled" {

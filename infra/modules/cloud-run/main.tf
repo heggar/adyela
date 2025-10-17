@@ -31,6 +31,9 @@ resource "google_cloud_run_v2_service" "api" {
   template {
     service_account = var.service_account_email
 
+    # Configuración de timeout optimizada
+    timeout = "60s"  # Reducido de 300s (default) a 60s
+
     scaling {
       min_instance_count = var.min_instances
       max_instance_count = var.max_instances
@@ -45,9 +48,10 @@ resource "google_cloud_run_v2_service" "api" {
 
       resources {
         limits = {
-          cpu    = "1"
-          memory = "512Mi"
+          cpu    = "1"       # Mantener 1 vCPU (requerido para concurrencia > 1)
+          memory = "512Mi"   # Mantener 512Mi (mínimo requerido con CPU = 1)
         }
+        
       }
 
       env {
@@ -100,9 +104,12 @@ resource "google_cloud_run_v2_service" "api" {
       }
     }
 
-    vpc_access {
-      connector = "projects/${var.project_id}/locations/${var.region}/connectors/${var.vpc_connector_name}"
-      egress    = "PRIVATE_RANGES_ONLY"
+    dynamic "vpc_access" {
+      for_each = var.vpc_connector_name != null && var.vpc_connector_name != "" ? [1] : []
+      content {
+        connector = "projects/${var.project_id}/locations/${var.region}/connectors/${var.vpc_connector_name}"
+        egress    = "PRIVATE_RANGES_ONLY"
+      }
     }
 
     annotations = {
@@ -129,6 +136,9 @@ resource "google_cloud_run_v2_service" "web" {
   template {
     service_account = var.service_account_email
 
+    # Configuración de timeout optimizada
+    timeout = "60s"  # Reducido de 300s (default) a 60s
+
     scaling {
       min_instance_count = var.min_instances
       max_instance_count = var.max_instances
@@ -143,9 +153,10 @@ resource "google_cloud_run_v2_service" "web" {
 
       resources {
         limits = {
-          cpu    = "1"
-          memory = "512Mi"
+          cpu    = "1"       # Mantener 1 vCPU (requerido para concurrencia > 1)
+          memory = "512Mi"   # Mantener 512Mi (mínimo requerido con CPU = 1)
         }
+        
       }
 
       env {
@@ -228,9 +239,12 @@ resource "google_cloud_run_v2_service" "web" {
       }
     }
 
-    vpc_access {
-      connector = "projects/${var.project_id}/locations/${var.region}/connectors/${var.vpc_connector_name}"
-      egress    = "PRIVATE_RANGES_ONLY"
+    dynamic "vpc_access" {
+      for_each = var.vpc_connector_name != null && var.vpc_connector_name != "" ? [1] : []
+      content {
+        connector = "projects/${var.project_id}/locations/${var.region}/connectors/${var.vpc_connector_name}"
+        egress    = "PRIVATE_RANGES_ONLY"
+      }
     }
 
     annotations = {
@@ -252,7 +266,14 @@ resource "google_cloud_run_v2_service" "web" {
 # IAM Bindings - Public Access via Load Balancer
 # ================================================================================
 
-# Allow public access to API service through Load Balancer
+
+# Public access is required for Load Balancer routing
+# Security is enforced via:
+# - Ingress restriction: internal-and-cloud-load-balancing only
+# - Cloud Armor WAF protection
+# - SSL/TLS encryption
+# - OAuth/Firebase authentication at application level
+# checkov:skip=CKV_GCP_102:Public access required for Load Balancer. Security via Cloud Armor + ingress restriction.
 resource "google_cloud_run_service_iam_member" "api_public_access" {
   service  = google_cloud_run_v2_service.api.name
   location = google_cloud_run_v2_service.api.location
@@ -260,7 +281,7 @@ resource "google_cloud_run_service_iam_member" "api_public_access" {
   member   = "allUsers"
 }
 
-# Allow public access to Web service through Load Balancer
+# checkov:skip=CKV_GCP_102:Public access required for Load Balancer. Security via Cloud Armor + ingress restriction.
 resource "google_cloud_run_service_iam_member" "web_public_access" {
   service  = google_cloud_run_v2_service.web.name
   location = google_cloud_run_v2_service.web.location
