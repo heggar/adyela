@@ -56,7 +56,30 @@ async def lifespan(app: FastAPI):
         environment=settings.environment,
     )
 
-    # Initialize Firebase (placeholder - add actual initialization)
+    # Initialize Firebase Admin SDK
+    try:
+        import firebase_admin
+        from firebase_admin import credentials
+        
+        # Check if Firebase is already initialized
+        if not firebase_admin._apps:
+            if settings.firebase_credentials_path:
+                # Use service account key file
+                cred = credentials.Certificate(settings.firebase_credentials_path)
+            else:
+                # Use default credentials (GCP service account)
+                cred = credentials.ApplicationDefault()
+            
+            firebase_admin.initialize_app(cred, {
+                'projectId': settings.firebase_project_id,
+            })
+            logger.info("firebase_admin_initialized", project_id=settings.firebase_project_id)
+        else:
+            logger.info("firebase_admin_already_initialized")
+    except Exception as e:
+        logger.error("firebase_admin_initialization_failed", error=str(e))
+        raise
+
     # Initialize database connections
     # Initialize cache connections
 
