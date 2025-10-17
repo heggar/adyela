@@ -36,7 +36,7 @@ resource "google_monitoring_uptime_check_config" "api_health" {
     type = "uptime_url"
     labels = {
       project_id = var.project_id
-      host       = "api.${var.domain}"
+      host       = var.domain  # Changed from "api.${var.domain}" - Load Balancer routes /health to API backend
     }
   }
 
@@ -128,7 +128,7 @@ resource "google_monitoring_alert_policy" "api_downtime" {
     display_name = "API Health Check Failure"
 
     condition_threshold {
-      filter          = "resource.type=\"uptime_url\" AND metric.type=\"monitoring.googleapis.com/uptime_check/check_passed\" AND resource.labels.host=\"api.${var.domain}\""
+      filter          = "resource.type=\"uptime_url\" AND metric.type=\"monitoring.googleapis.com/uptime_check/check_passed\" AND resource.labels.host=\"${var.domain}\""
       duration        = "60s" # Alert after 1 minute of failures
       comparison      = "COMPARISON_LT"
       threshold_value = 1
@@ -154,7 +154,7 @@ resource "google_monitoring_alert_policy" "api_downtime" {
       ## API Health Check Failure
 
       **Service**: ${var.project_name} API (${var.environment})
-      **Endpoint**: https://api.${var.domain}/health
+      **Endpoint**: https://${var.domain}/health (Load Balancer routes to API backend)
 
       ### Immediate Actions:
       1. Check API logs: `gcloud logging read "resource.labels.service_name=adyela-api-${var.environment}" --limit=50`
