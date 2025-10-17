@@ -120,8 +120,11 @@ module "cloud_run" {
   api_url = "https://staging.adyela.care"
 
   # Docker images - these will be updated by CI/CD
-  api_image = "us-central1-docker.pkg.dev/${var.project_id}/adyela/adyela-api-staging:latest"
-  web_image = "us-central1-docker.pkg.dev/${var.project_id}/adyela/adyela-web-staging:latest"
+  api_image = "us-central1-docker.pkg.dev/${var.project_id}/adyela/adyela-api-staging:v1.0.1-oauth-fix"
+  web_image = "us-central1-docker.pkg.dev/${var.project_id}/adyela/adyela-web-staging:v1.0.1-oauth-fix"
+  
+  # Application version
+  app_version = "v1.0.1-oauth-fix"
 
   # Scaling configuration - Staging: scale-to-zero for cost savings
   min_instances = 0
@@ -129,14 +132,22 @@ module "cloud_run" {
 
   # HIPAA Secrets
   hipaa_secrets = {
-    SECRET_KEY          = "api-secret-key"
-    FIREBASE_PROJECT_ID = "firebase-project-id"
-    FIREBASE_ADMIN_KEY  = "firebase-admin-key"
-    JWT_SECRET          = "jwt-secret-key"
-    ENCRYPTION_KEY      = "encryption-key"
-    DATABASE_URL        = "database-connection-string"
-    SMTP_CREDENTIALS    = "smtp-credentials"
-    EXTERNAL_API_KEYS   = "external-api-keys"
+    SECRET_KEY                    = "api-secret-key"
+    FIREBASE_PROJECT_ID           = "firebase-project-id"
+    FIREBASE_ADMIN_KEY            = "firebase-admin-key"
+    JWT_SECRET                    = "jwt-secret-key"
+    ENCRYPTION_KEY                = "encryption-key"
+    DATABASE_URL                  = "database-connection-string"
+    SMTP_CREDENTIALS              = "smtp-credentials"
+    EXTERNAL_API_KEYS             = "external-api-keys"
+    OAUTH_GOOGLE_CLIENT_ID        = "oauth-google-client-id"
+    OAUTH_GOOGLE_CLIENT_SECRET    = "oauth-google-client-secret"
+    OAUTH_MICROSOFT_CLIENT_ID     = "oauth-microsoft-client-id"
+    OAUTH_MICROSOFT_CLIENT_SECRET = "oauth-microsoft-client-secret"
+    OAUTH_APPLE_CLIENT_ID         = "oauth-apple-client-id"
+    OAUTH_APPLE_CLIENT_SECRET     = "oauth-apple-client-secret"
+    OAUTH_FACEBOOK_APP_ID         = "oauth-facebook-app-id"
+    OAUTH_FACEBOOK_APP_SECRET     = "oauth-facebook-app-secret"
   }
 
   labels = local.labels

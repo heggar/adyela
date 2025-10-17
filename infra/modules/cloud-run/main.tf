@@ -73,7 +73,7 @@ resource "google_cloud_run_v2_service" "api" {
           value_source {
             secret_key_ref {
               secret  = env.value
-              version = "1"
+              version = "latest"
             }
           }
         }
@@ -88,6 +88,8 @@ resource "google_cloud_run_v2_service" "api" {
     annotations = {
       "run.googleapis.com/ingress" = "internal-and-cloud-load-balancing"
     }
+
+    labels = var.labels
   }
 
   traffic {
@@ -214,6 +216,8 @@ resource "google_cloud_run_v2_service" "web" {
     annotations = {
       "run.googleapis.com/ingress" = "internal-and-cloud-load-balancing"
     }
+
+    labels = var.labels
   }
 
   traffic {
