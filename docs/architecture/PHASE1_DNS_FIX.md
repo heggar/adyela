@@ -2,9 +2,12 @@
 
 ## 📋 Resumen
 
-**Problema Identificado**: El DNS apunta a Cloudflare que está bloqueando las solicitudes (403 Forbidden), en lugar de apuntar al Load Balancer de GCP que está funcionando correctamente.
+**Problema Identificado**: El DNS apunta a Cloudflare que está bloqueando las
+solicitudes (403 Forbidden), en lugar de apuntar al Load Balancer de GCP que
+está funcionando correctamente.
 
-**Solución**: Cambiar temporalmente los registros DNS para apuntar directamente al Load Balancer de GCP, bypasseando Cloudflare.
+**Solución**: Cambiar temporalmente los registros DNS para apuntar directamente
+al Load Balancer de GCP, bypasseando Cloudflare.
 
 ---
 
@@ -284,7 +287,8 @@ gcloud compute security-policies list
 
 **Causa:**
 
-- El certificado SSL de GCP está configurado para el dominio pero puede tomar tiempo
+- El certificado SSL de GCP está configurado para el dominio pero puede tomar
+  tiempo
 
 **Solución:**
 
@@ -325,9 +329,11 @@ curl --insecure https://staging.adyela.care
 
 ### ⚠️ Importante sobre Cloudflare
 
-Si estás usando Cloudflare, **debes desactivar el proxy (nube naranja)** para bypasearlo temporalmente:
+Si estás usando Cloudflare, **debes desactivar el proxy (nube naranja)** para
+bypasearlo temporalmente:
 
-- **Proxy ACTIVADO** (nube naranja) = Tráfico pasa por Cloudflare → ❌ No funciona
+- **Proxy ACTIVADO** (nube naranja) = Tráfico pasa por Cloudflare → ❌ No
+  funciona
 - **DNS only** (nube gris) = Tráfico va directo a GCP → ✅ Funciona
 
 **Imagen de referencia:**
@@ -342,7 +348,8 @@ Content: 34.96.108.162
 
 ### 🎯 Fase 2: Reintegrar Cloudflare (Opcional)
 
-Una vez que el sistema esté funcionando directamente con GCP, en la **Fase 2** podemos:
+Una vez que el sistema esté funcionando directamente con GCP, en la **Fase 2**
+podemos:
 
 1. Reactivar el proxy de Cloudflare (nube naranja)
 2. Configurar correctamente:
@@ -373,7 +380,6 @@ Una vez completada esta corrección DNS:
 
 ---
 
-**Estado**: 🚀 Listo para aplicar
-**Prioridad**: 🔴 CRÍTICA
-**Tiempo Estimado**: 20-100 minutos (dependiendo de propagación DNS)
-**Última actualización**: 2025-10-12
+**Estado**: 🚀 Listo para aplicar **Prioridad**: 🔴 CRÍTICA **Tiempo Estimado**:
+20-100 minutos (dependiendo de propagación DNS) **Última actualización**:
+2025-10-12

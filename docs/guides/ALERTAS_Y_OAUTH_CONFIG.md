@@ -1,8 +1,6 @@
 # 🔔 Guía: Configuración de Alertas y Google OAuth
 
-**Fecha**: 2025-10-16
-**Proyecto**: adyela-staging
-**Autor**: Claude Code
+**Fecha**: 2025-10-16 **Proyecto**: adyela-staging **Autor**: Claude Code
 
 ---
 
@@ -66,7 +64,8 @@ gcloud alpha monitoring policies describe POLICY_ID --project=adyela-staging
 #### Paso 2: Probar Alerta de Downtime
 
 1. Click en **"adyela-staging-api-downtime"**
-2. En la parte superior derecha, click en **"SEND TEST NOTIFICATION"** (Enviar notificación de prueba)
+2. En la parte superior derecha, click en **"SEND TEST NOTIFICATION"** (Enviar
+   notificación de prueba)
 3. Se enviará un email de prueba a `hever_gonzalezg@adyela.care`
 
 **Email esperado**:
@@ -116,7 +115,8 @@ gcloud run services update adyela-api-staging \
   --project=adyela-staging
 ```
 
-**⚠️ ADVERTENCIA**: Esta opción interrumpe el servicio temporalmente. Solo usar en staging cuando no hay usuarios activos.
+**⚠️ ADVERTENCIA**: Esta opción interrumpe el servicio temporalmente. Solo usar
+en staging cuando no hay usuarios activos.
 
 ### Opción 3: Verificar Historial de Alertas
 
@@ -266,7 +266,8 @@ Agregar tu email como test user:
 hever_gonzalezg@adyela.care
 ```
 
-**⚠️ IMPORTANTE**: Mientras la app esté en modo "Testing", solo los test users pueden hacer login con Google OAuth.
+**⚠️ IMPORTANTE**: Mientras la app esté en modo "Testing", solo los test users
+pueden hacer login con Google OAuth.
 
 ---
 
@@ -313,7 +314,8 @@ http://localhost:9099/__/auth/handler (para desarrollo local)
 
 #### 4.1 Verificar Firebase Config en Web App
 
-El frontend (`apps/web`) necesita la configuración de Firebase. Verifica que exista en el archivo de environment:
+El frontend (`apps/web`) necesita la configuración de Firebase. Verifica que
+exista en el archivo de environment:
 
 ```typescript
 // apps/web/src/config/firebase.ts
@@ -348,7 +350,8 @@ gcloud run services describe adyela-web-staging \
 - `VITE_FIREBASE_APP_ID` (desde Secret Manager)
 - `VITE_FIREBASE_AUTH_DOMAIN=adyela-staging.firebaseapp.com`
 
-Estas ya están configuradas en Terraform ✅ (ver `infra/modules/cloud-run/main.tf` líneas 188-216)
+Estas ya están configuradas en Terraform ✅ (ver
+`infra/modules/cloud-run/main.tf` líneas 188-216)
 
 ---
 
@@ -412,12 +415,12 @@ Si quieres probar localmente antes de desplegar:
     <script>
       // Firebase configuration
       const firebaseConfig = {
-        apiKey: "AIzaSyDl3w...", // Obtener de Secret Manager
-        authDomain: "adyela-staging.firebaseapp.com",
-        projectId: "adyela-staging",
-        storageBucket: "adyela-staging.appspot.com",
-        messagingSenderId: "...", // Obtener de Secret Manager
-        appId: "...", // Obtener de Secret Manager
+        apiKey: 'AIzaSyDl3w...', // Obtener de Secret Manager
+        authDomain: 'adyela-staging.firebaseapp.com',
+        projectId: 'adyela-staging',
+        storageBucket: 'adyela-staging.appspot.com',
+        messagingSenderId: '...', // Obtener de Secret Manager
+        appId: '...', // Obtener de Secret Manager
       };
 
       // Initialize Firebase
@@ -426,19 +429,19 @@ Si quieres probar localmente antes de desplegar:
 
       // Google OAuth Provider
       const provider = new firebase.auth.GoogleAuthProvider();
-      provider.addScope("email");
-      provider.addScope("profile");
+      provider.addScope('email');
+      provider.addScope('profile');
 
       // Login button
-      document.getElementById("loginBtn").addEventListener("click", () => {
-        document.getElementById("status").textContent = "Logging in...";
+      document.getElementById('loginBtn').addEventListener('click', () => {
+        document.getElementById('status').textContent = 'Logging in...';
 
         auth
           .signInWithPopup(provider)
-          .then((result) => {
+          .then(result => {
             const user = result.user;
-            document.getElementById("status").textContent = "Login successful!";
-            document.getElementById("userInfo").innerHTML = `
+            document.getElementById('status').textContent = 'Login successful!';
+            document.getElementById('userInfo').innerHTML = `
             <h2>User Info:</h2>
             <p>Name: ${user.displayName}</p>
             <p>Email: ${user.email}</p>
@@ -446,10 +449,10 @@ Si quieres probar localmente antes de desplegar:
             <img src="${user.photoURL}" alt="Profile photo" width="100">
           `;
           })
-          .catch((error) => {
-            document.getElementById("status").textContent = "Login failed!";
-            console.error("Error:", error);
-            document.getElementById("userInfo").innerHTML = `
+          .catch(error => {
+            document.getElementById('status').textContent = 'Login failed!';
+            console.error('Error:', error);
+            document.getElementById('userInfo').innerHTML = `
             <h2>Error:</h2>
             <p>${error.code}: ${error.message}</p>
           `;
@@ -457,11 +460,11 @@ Si quieres probar localmente antes de desplegar:
       });
 
       // Auth state observer
-      auth.onAuthStateChanged((user) => {
+      auth.onAuthStateChanged(user => {
         if (user) {
-          console.log("User is signed in:", user);
+          console.log('User is signed in:', user);
         } else {
-          console.log("User is signed out");
+          console.log('User is signed out');
         }
       });
     </script>
@@ -482,7 +485,8 @@ npx http-server -p 8080
 # http://localhost:8080/test-google-oauth.html
 ```
 
-**⚠️ IMPORTANTE**: Agrega `http://localhost:8080` a los dominios autorizados en Firebase Console para testing local.
+**⚠️ IMPORTANTE**: Agrega `http://localhost:8080` a los dominios autorizados en
+Firebase Console para testing local.
 
 ---
 
@@ -534,7 +538,8 @@ gcloud logging read \
 
 **Solución**:
 
-1. Ve a [OAuth Credentials](https://console.cloud.google.com/apis/credentials?project=adyela-staging)
+1. Ve a
+   [OAuth Credentials](https://console.cloud.google.com/apis/credentials?project=adyela-staging)
 2. Click en el OAuth 2.0 Client ID
 3. Agregar URI faltante en "Authorized redirect URIs":
    ```
@@ -718,17 +723,14 @@ gcloud logging read \
 
 Este documento proporciona una guía completa para:
 
-✅ Validar configuración de alertas
-✅ Probar notificaciones de email
-✅ Configurar Google OAuth en Identity Platform
-✅ Verificar flujo de autenticación
+✅ Validar configuración de alertas ✅ Probar notificaciones de email ✅
+Configurar Google OAuth en Identity Platform ✅ Verificar flujo de autenticación
 ✅ Solucionar problemas comunes
 
-**Siguiente paso**: Ejecutar las pruebas descritas y verificar que todo funciona correctamente.
+**Siguiente paso**: Ejecutar las pruebas descritas y verificar que todo funciona
+correctamente.
 
 ---
 
-**Generado**: 2025-10-16
-**Proyecto**: adyela-staging
-**Autor**: Claude Code
+**Generado**: 2025-10-16 **Proyecto**: adyela-staging **Autor**: Claude Code
 **Contacto**: hever_gonzalezg@adyela.care

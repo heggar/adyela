@@ -2,12 +2,14 @@
 
 ## Prerequisites
 
-Before running the Cloudflare Terraform configuration, you need to set up the following:
+Before running the Cloudflare Terraform configuration, you need to set up the
+following:
 
 ### 1. Cloudflare Account Setup
 
 1. **Create Cloudflare Account** (if you don't have one):
-   - Go to [https://dash.cloudflare.com/sign-up](https://dash.cloudflare.com/sign-up)
+   - Go to
+     [https://dash.cloudflare.com/sign-up](https://dash.cloudflare.com/sign-up)
    - Sign up for a free account
 
 2. **Add Domain to Cloudflare**:
@@ -20,7 +22,8 @@ Before running the Cloudflare Terraform configuration, you need to set up the fo
 ### 2. Create API Token
 
 1. **Go to API Tokens**:
-   - Navigate to [https://dash.cloudflare.com/profile/api-tokens](https://dash.cloudflare.com/profile/api-tokens)
+   - Navigate to
+     [https://dash.cloudflare.com/profile/api-tokens](https://dash.cloudflare.com/profile/api-tokens)
 
 2. **Create Custom Token**:
    - Click "Create Token"

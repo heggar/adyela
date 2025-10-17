@@ -55,7 +55,8 @@ Esto creará:
 
 **Si NO tienes una app web en Firebase:**
 
-1. Ve a: https://console.firebase.google.com/project/adyela-staging/settings/general
+1. Ve a:
+   https://console.firebase.google.com/project/adyela-staging/settings/general
 2. Scroll down a **"Your apps"**
 3. Click en el icono web `</>`
 4. Nombra tu app: **"Adyela Web Staging"**
@@ -65,7 +66,8 @@ Esto creará:
 
 **Si YA tienes una app web:**
 
-1. Ve a: https://console.firebase.google.com/project/adyela-staging/settings/general
+1. Ve a:
+   https://console.firebase.google.com/project/adyela-staging/settings/general
 2. Scroll down a **"Your apps"**
 3. Selecciona tu app web
 4. En **"SDK setup and configuration"**, selecciona **"Config"**
@@ -75,12 +77,12 @@ Deberías ver algo como:
 
 ```javascript
 const firebaseConfig = {
-  apiKey: "AIzaSyXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
-  authDomain: "adyela-staging.firebaseapp.com",
-  projectId: "adyela-staging",
-  storageBucket: "adyela-staging.appspot.com",
-  messagingSenderId: "123456789012",
-  appId: "1:123456789012:web:abc123def456",
+  apiKey: 'AIzaSyXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX',
+  authDomain: 'adyela-staging.firebaseapp.com',
+  projectId: 'adyela-staging',
+  storageBucket: 'adyela-staging.appspot.com',
+  messagingSenderId: '123456789012',
+  appId: '1:123456789012:web:abc123def456',
 };
 ```
 
@@ -109,7 +111,8 @@ gh secret set VITE_API_URL_STAGING -b "https://adyela-api-staging-xxx.a.run.app"
 
 ### Primera vez (sin API URL)
 
-En el primer deployment, el frontend fallará porque no tenemos la API URL todavía:
+En el primer deployment, el frontend fallará porque no tenemos la API URL
+todavía:
 
 ```bash
 gh workflow run cd-staging.yml \
@@ -248,5 +251,4 @@ Después de un deployment exitoso:
 
 ---
 
-**Status**: En desarrollo
-**Última actualización**: 2025-10-06
+**Status**: En desarrollo **Última actualización**: 2025-10-06

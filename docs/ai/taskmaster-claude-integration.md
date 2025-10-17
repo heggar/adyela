@@ -2,7 +2,8 @@
 
 ## 📋 Descripción
 
-Esta guía te muestra cómo usar Task Master AI con Claude Code para **desarrollo asistido por IA** con gestión automática de tareas.
+Esta guía te muestra cómo usar Task Master AI con Claude Code para **desarrollo
+asistido por IA** con gestión automática de tareas.
 
 ---
 
@@ -33,8 +34,8 @@ Tu proyecto ya tiene Task Master AI configurado correctamente:
 mcp_task -
   master -
   ai_get_tasks({
-    projectRoot: "/path/to/adyela",
-    status: "pending",
+    projectRoot: '/path/to/adyela',
+    status: 'pending',
   });
 ```
 
@@ -61,7 +62,7 @@ mcp_task -
 mcp_task -
   master -
   ai_next_task({
-    projectRoot: "/path/to/adyela",
+    projectRoot: '/path/to/adyela',
   });
 ```
 
@@ -88,8 +89,8 @@ Muéstrame los detalles de la tarea 5
 mcp_task -
   master -
   ai_get_task({
-    id: "5",
-    projectRoot: "/path/to/adyela",
+    id: '5',
+    projectRoot: '/path/to/adyela',
   });
 ```
 
@@ -117,8 +118,8 @@ Expande la tarea 5 en subtareas detalladas
 mcp_task -
   master -
   ai_expand_task({
-    id: "5",
-    projectRoot: "/path/to/adyela",
+    id: '5',
+    projectRoot: '/path/to/adyela',
     research: true, // Usa Perplexity para mejor contexto
   });
 ```
@@ -186,10 +187,10 @@ Actualiza la subtarea 5.1 con: "Identity Platform configurado con MFA, JWT token
 mcp_task -
   master -
   ai_update_subtask({
-    id: "5.1",
+    id: '5.1',
     prompt:
-      "Identity Platform configurado con MFA, JWT tokens funcionando correctamente",
-    projectRoot: "/path/to/adyela",
+      'Identity Platform configurado con MFA, JWT tokens funcionando correctamente',
+    projectRoot: '/path/to/adyela',
   });
 ```
 
@@ -215,9 +216,9 @@ Marca la subtarea 5.1 como completada
 mcp_task -
   master -
   ai_set_task_status({
-    id: "5.1",
-    status: "done",
-    projectRoot: "/path/to/adyela",
+    id: '5.1',
+    status: 'done',
+    projectRoot: '/path/to/adyela',
   });
 ```
 
@@ -281,7 +282,7 @@ Analiza la complejidad de todas las tareas pendientes
 mcp_task -
   master -
   ai_analyze_project_complexity({
-    projectRoot: "/path/to/adyela",
+    projectRoot: '/path/to/adyela',
     research: true,
     threshold: 5,
   });
@@ -309,7 +310,7 @@ Expande todas las tareas pendientes en subtareas
 mcp_task -
   master -
   ai_expand_all({
-    projectRoot: "/path/to/adyela",
+    projectRoot: '/path/to/adyela',
     research: true,
   });
 ```
@@ -336,11 +337,11 @@ Actualiza las tareas desde la 15 en adelante porque cambié a usar React Query e
 mcp_task -
   master -
   ai_update({
-    from: "15",
+    from: '15',
     prompt:
-      "Cambio de Redux a React Query para data fetching. Actualizar todas las tareas relacionadas con estado global.",
+      'Cambio de Redux a React Query para data fetching. Actualizar todas las tareas relacionadas con estado global.',
     research: true,
-    projectRoot: "/path/to/adyela",
+    projectRoot: '/path/to/adyela',
   });
 ```
 
@@ -367,11 +368,11 @@ mcp_task -
   master -
   ai_research({
     query:
-      "Best practices for implementing HIPAA-compliant video calls with Jitsi Meet in React",
-    taskIds: "8",
+      'Best practices for implementing HIPAA-compliant video calls with Jitsi Meet in React',
+    taskIds: '8',
     research: true,
-    saveTo: "8",
-    projectRoot: "/path/to/adyela",
+    saveTo: '8',
+    projectRoot: '/path/to/adyela',
   });
 ```
 
@@ -398,10 +399,10 @@ Crea un tag "feature-video-calls" para trabajar en las videollamadas
 mcp_task -
   master -
   ai_add_tag({
-    name: "feature-video-calls",
-    description: "Implementación completa de videollamadas con Jitsi",
+    name: 'feature-video-calls',
+    description: 'Implementación completa de videollamadas con Jitsi',
     copyFromCurrent: false,
-    projectRoot: "/path/to/adyela",
+    projectRoot: '/path/to/adyela',
   });
 ```
 
@@ -415,8 +416,8 @@ Cambia al tag "feature-video-calls"
 mcp_task -
   master -
   ai_use_tag({
-    name: "feature-video-calls",
-    projectRoot: "/path/to/adyela",
+    name: 'feature-video-calls',
+    projectRoot: '/path/to/adyela',
   });
 ```
 
@@ -530,7 +531,8 @@ Claude, quiero implementar autenticación de usuarios. ¿Cómo empiezo?
 
 1. Busca la tarea relacionada: `get_tasks` con filtro
 2. Muestra la tarea encontrada (ej: Tarea 5)
-3. Propone: "Veo la tarea 5: 'Implementar Autenticación'. ¿Quieres que la expanda en subtareas?"
+3. Propone: "Veo la tarea 5: 'Implementar Autenticación'. ¿Quieres que la
+   expanda en subtareas?"
 
 **Tú**:
 
@@ -577,10 +579,10 @@ He detectado que necesitamos actualizar las tareas futuras porque cambié el enf
 mcp_task -
   master -
   ai_update({
-    from: "6",
+    from: '6',
     prompt:
-      "Cambio en autenticación: ahora usamos Identity Platform en lugar de custom JWT. Actualizar tareas relacionadas.",
-    projectRoot: "/path/to/adyela",
+      'Cambio en autenticación: ahora usamos Identity Platform en lugar de custom JWT. Actualizar tareas relacionadas.',
+    projectRoot: '/path/to/adyela',
   });
 ```
 
@@ -696,8 +698,8 @@ npx task-master-ai response-language --language "Español"
    Implementa todas las subtareas de la tarea 5 una por una
    ```
 
-2. **Deja que Claude actualice el progreso**:
-   Claude automáticamente actualiza subtareas con:
+2. **Deja que Claude actualice el progreso**: Claude automáticamente actualiza
+   subtareas con:
    - Qué implementó
    - Qué funcionó
    - Qué no funcionó
@@ -709,32 +711,31 @@ npx task-master-ai response-language --language "Español"
    Investiga cómo implementar X antes de codificar
    ```
 
-4. **Confía en el workflow de branches**:
-   Task Master + Claude manejan automáticamente:
+4. **Confía en el workflow de branches**: Task Master + Claude manejan
+   automáticamente:
    - Creación de branches
    - Nombres descriptivos
    - Commits con formato correcto
    - Task IDs en mensajes
 
-5. **Revisa el código de Claude**:
-   Siempre verifica que:
+5. **Revisa el código de Claude**: Siempre verifica que:
    - Tests pasen
    - Linting esté limpio
    - Código siga estándares del proyecto
 
 ### ❌ DON'T
 
-1. **No edites `tasks.json` manualmente**:
-   Usa siempre los comandos de Task Master
+1. **No edites `tasks.json` manualmente**: Usa siempre los comandos de Task
+   Master
 
-2. **No cambies task status manualmente en múltiples lugares**:
-   Usa `set-status` para mantener consistencia
+2. **No cambies task status manualmente en múltiples lugares**: Usa `set-status`
+   para mantener consistencia
 
-3. **No ignores las dependencias**:
-   Task Master previene trabajar en tareas con dependencias incompletas
+3. **No ignores las dependencias**: Task Master previene trabajar en tareas con
+   dependencias incompletas
 
-4. **No hagas commits sin completar la tarea**:
-   Usa el workflow completo: task-start → implement → task-complete
+4. **No hagas commits sin completar la tarea**: Usa el workflow completo:
+   task-start → implement → task-complete
 
 ---
 
@@ -762,11 +763,10 @@ npx task-master-ai response-language --language "Español"
 
 **Problema**: Error `projectRoot not found`
 
-**Solución**:
-Claude debe usar la ruta absoluta:
+**Solución**: Claude debe usar la ruta absoluta:
 
 ```javascript
-projectRoot: "/Users/hevergonzalezgarcia/TFM Agentes IA/CLAUDE/adyela";
+projectRoot: '/Users/hevergonzalezgarcia/TFM Agentes IA/CLAUDE/adyela';
 ```
 
 ---
@@ -874,11 +874,11 @@ Y actualiza las tareas relevantes.
    Claude, implementa esta tarea completamente
    ```
 
-3. **Aprende del progreso**:
-   Revisa cómo Claude actualiza las subtareas para aprender patrones
+3. **Aprende del progreso**: Revisa cómo Claude actualiza las subtareas para
+   aprender patrones
 
-4. **Escala gradualmente**:
-   Empieza con tareas pequeñas, luego deja que Claude maneje features completas
+4. **Escala gradualmente**: Empieza con tareas pequeñas, luego deja que Claude
+   maneje features completas
 
 ---
 

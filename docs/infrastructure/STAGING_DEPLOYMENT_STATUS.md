@@ -1,8 +1,7 @@
 # Staging Deployment - Estado Actual y Análisis
 
-**Fecha**: 2025-10-11
-**Environment**: Staging
-**Dominio**: https://staging.adyela.care
+**Fecha**: 2025-10-11 **Environment**: Staging **Dominio**:
+https://staging.adyela.care
 
 ---
 
@@ -45,13 +44,11 @@
 
 ### Causa Raíz
 
-El servicio **adyela-web-staging** tiene configuradas solo 4 variables de ambiente:
+El servicio **adyela-web-staging** tiene configuradas solo 4 variables de
+ambiente:
 
 ```yaml
-VITE_ENV=staging
-HIPAA_COMPLIANCE=true
-AUDIT_LOGGING=true
-VERSION=latest
+VITE_ENV=staging HIPAA_COMPLIANCE=true AUDIT_LOGGING=true VERSION=latest
 ```
 
 **Faltan variables críticas:**
@@ -67,8 +64,11 @@ VERSION=latest
 
 ### Impacto
 
-1. **OAuth Redirect**: El frontend intenta hacer POST a `http://localhost:8000/api/v1/auth/sync` en lugar de `https://staging.adyela.care/api/v1/auth/sync`
-2. **CORS Error**: Aunque se arreglara el redirect, el backend rechazaría la petición por CORS (ya corregido en código pero no desplegado)
+1. **OAuth Redirect**: El frontend intenta hacer POST a
+   `http://localhost:8000/api/v1/auth/sync` en lugar de
+   `https://staging.adyela.care/api/v1/auth/sync`
+2. **CORS Error**: Aunque se arreglara el redirect, el backend rechazaría la
+   petición por CORS (ya corregido en código pero no desplegado)
 3. **Firebase Init**: El frontend no puede inicializar Firebase correctamente
 
 ---
@@ -343,14 +343,15 @@ Load Balancer → adyela-api-staging
 
 **Pendiente deployment** debido a:
 
-1. ⚠️ Error de permisos: `identityplatform.googleapis.com` requiere permisos elevados
+1. ⚠️ Error de permisos: `identityplatform.googleapis.com` requiere permisos
+   elevados
 2. ⚠️ Error VPC connector format en Cloud Run
 3. ⚠️ Restricción de creación de Service Account Keys
 
-**Alternativa:** Habilitar desde Firebase Console (ver `IDENTITY_PLATFORM_QUICKSTART.md`)
+**Alternativa:** Habilitar desde Firebase Console (ver
+`IDENTITY_PLATFORM_QUICKSTART.md`)
 
 ---
 
-**Última actualización**: 2025-10-11 23:55 UTC
-**Actualizado por**: Claude Code
+**Última actualización**: 2025-10-11 23:55 UTC **Actualizado por**: Claude Code
 **Versión**: 1.0.0

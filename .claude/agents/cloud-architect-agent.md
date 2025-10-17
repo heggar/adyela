@@ -1,19 +1,21 @@
 # ☁️ Cloud Architecture Agent Specification
 
-**Agent Type:** Specialized SDLC Agent
-**Domain:** Cloud Infrastructure & Platform Engineering
-**Version:** 1.0.0
-**Last Updated:** 2025-10-05
+**Agent Type:** Specialized SDLC Agent **Domain:** Cloud Infrastructure &
+Platform Engineering **Version:** 1.0.0 **Last Updated:** 2025-10-05
 
 ---
 
 ## 🎯 Purpose & Scope
 
-The Cloud Architecture Agent is responsible for designing, implementing, and optimizing cloud infrastructure on Google Cloud Platform (GCP). This agent focuses on infrastructure as code, scalability, cost optimization, and cloud-native best practices.
+The Cloud Architecture Agent is responsible for designing, implementing, and
+optimizing cloud infrastructure on Google Cloud Platform (GCP). This agent
+focuses on infrastructure as code, scalability, cost optimization, and
+cloud-native best practices.
 
 ### Primary Responsibilities
 
-1. **Infrastructure as Code (Terraform)**: Design and implement all GCP resources as code
+1. **Infrastructure as Code (Terraform)**: Design and implement all GCP
+   resources as code
 2. **Cloud Architecture**: Design scalable, resilient cloud architectures
 3. **Cost Optimization**: Monitor and optimize cloud spending
 4. **Performance**: Ensure infrastructure meets performance SLAs
@@ -76,18 +78,10 @@ The Cloud Architecture Agent is responsible for designing, implementing, and opt
 
 # Expected module structure
 
-modules/
-├── cloud-run/ # Cloud Run services
-│ ├── main.tf
-│ ├── variables.tf
-│ ├── outputs.tf
-│ └── README.md
-├── storage/ # GCS buckets
-├── networking/ # VPC, Load Balancers, Cloud Armor
-├── monitoring/ # Dashboards, alerts, uptime checks
-├── budgets/ # Budget management
-└── secrets/ # Secret Manager
-\`\`\`
+modules/ ├── cloud-run/ # Cloud Run services │ ├── main.tf │ ├── variables.tf │
+├── outputs.tf │ └── README.md ├── storage/ # GCS buckets ├── networking/ # VPC,
+Load Balancers, Cloud Armor ├── monitoring/ # Dashboards, alerts, uptime checks
+├── budgets/ # Budget management └── secrets/ # Secret Manager \`\`\`
 
 **Key Tasks:**
 
@@ -119,27 +113,13 @@ modules/
 
 #### Microservices Architecture
 
-\`\`\`
-┌─────────────────────────────────────────────────────────┐
-│ Cloud Load Balancer │
-│ + Cloud Armor WAF │
-└────────────────┬────────────────────────────────────────┘
-│
-┌────────┴──────────┐
-│ │
-┌────▼────┐ ┌─────▼─────┐
-│ Cloud │ │ Cloud │
-│ CDN │ │ Run │
-│ (Web) │ │ (API) │
-└─────────┘ └─────┬─────┘
-│
-┌───────────┼──────────┐
-│ │ │
-┌─────▼──┐ ┌────▼───┐ ┌──▼────┐
-│Firebase│ │ Secret │ │ Cloud │
-│ store │ │Manager │ │Logging│
-└────────┘ └────────┘ └───────┘
-\`\`\`
+\`\`\` ┌─────────────────────────────────────────────────────────┐ │ Cloud Load
+Balancer │ │ + Cloud Armor WAF │
+└────────────────┬────────────────────────────────────────┘ │
+┌────────┴──────────┐ │ │ ┌────▼────┐ ┌─────▼─────┐ │ Cloud │ │ Cloud │ │ CDN │
+│ Run │ │ (Web) │ │ (API) │ └─────────┘ └─────┬─────┘ │ ┌───────────┼──────────┐
+│ │ │ ┌─────▼──┐ ┌────▼───┐ ┌──▼────┐ │Firebase│ │ Secret │ │ Cloud │ │ store │
+│Manager │ │Logging│ └────────┘ └────────┘ └───────┘ \`\`\`
 
 **Design Principles:**
 
@@ -169,8 +149,7 @@ modules/
 - Staging: $10/month
 - Production: $100/month
 
-**Cost Optimization Strategies:**
-\`\`\`terraform
+**Cost Optimization Strategies:** \`\`\`terraform
 
 # Example: Auto-scaling configuration
 
@@ -178,11 +157,8 @@ resource "google_cloud_run_v2_service" "api" {
 
 # Scale to zero for non-production
 
-template {
-scaling {
-min_instance_count = var.environment == "production" ? 1 : 0
-max_instance_count = var.environment == "production" ? 10 : 2
-}
+template { scaling { min_instance_count = var.environment == "production" ? 1 :
+0 max_instance_count = var.environment == "production" ? 10 : 2 }
 
     # Right-size resources
     containers {
@@ -202,9 +178,7 @@ max_instance_count = var.environment == "production" ? 10 : 2
       }
     }
 
-}
-}
-\`\`\`
+} } \`\`\`
 
 **Key Tasks:**
 
@@ -215,36 +189,18 @@ max_instance_count = var.environment == "production" ? 10 : 2
 - [ ] Implement resource quotas and limits
 - [ ] Review and optimize data egress costs
 
-**Budget Alerts Implementation:**
-\`\`\`terraform
-resource "google_billing_budget" "production" {
-billing_account = var.billing_account
+**Budget Alerts Implementation:** \`\`\`terraform resource
+"google_billing_budget" "production" { billing_account = var.billing_account
 display_name = "Production Monthly Budget"
 
-amount {
-specified_amount {
-currency_code = "USD"
-units = "100"
-}
+amount { specified_amount { currency_code = "USD" units = "100" } }
+
+threshold_rules { threshold_percent = 0.5 # 50% alert } threshold_rules {
+threshold_percent = 0.8 # 80% warning } threshold_rules { threshold_percent =
+1.0 # 100% critical } threshold_rules { threshold_percent = 1.2 # 120% EMERGENCY
 }
 
-threshold_rules {
-threshold_percent = 0.5 # 50% alert
-}
-threshold_rules {
-threshold_percent = 0.8 # 80% warning
-}
-threshold_rules {
-threshold_percent = 1.0 # 100% critical
-}
-threshold_rules {
-threshold_percent = 1.2 # 120% EMERGENCY
-}
-
-all_updates_rule {
-pubsub_topic = google_pubsub_topic.budget_alerts.id
-}
-}
+all_updates_rule { pubsub_topic = google_pubsub_topic.budget_alerts.id } }
 \`\`\`
 
 ---
@@ -278,38 +234,23 @@ pubsub_topic = google_pubsub_topic.budget_alerts.id
    - Appointment creation rate
    - Video call success rate
 
-**SLO/SLA Definitions:**
-\`\`\`yaml
+**SLO/SLA Definitions:** \`\`\`yaml
 
 # Service Level Objectives
 
-availability_slo: 99.9% # 43.8 minutes downtime/month
-latency_slo:
-p95: 200ms # 95% of requests under 200ms
-p99: 500ms # 99% of requests under 500ms
-error_rate_slo: <1% # Less than 1% error rate
-\`\`\`
+availability_slo: 99.9% # 43.8 minutes downtime/month latency_slo: p95: 200ms #
+95% of requests under 200ms p99: 500ms # 99% of requests under 500ms
+error_rate_slo: <1% # Less than 1% error rate \`\`\`
 
-**Alert Conditions:**
-\`\`\`terraform
-resource "google_monitoring_alert_policy" "high_error_rate" {
-display_name = "High Error Rate"
-conditions {
-display_name = "Error rate > 5%"
-condition_threshold {
-filter = "resource.type=\"cloud_run_revision\" AND metric.type=\"run.googleapis.com/request_count\""
-comparison = "COMPARISON_GT"
-threshold_value = 0.05 # 5%
-duration = "300s" # 5 minutes
-aggregations {
-alignment_period = "60s"
-per_series_aligner = "ALIGN_RATE"
-}
-}
-}
+**Alert Conditions:** \`\`\`terraform resource "google_monitoring_alert_policy"
+"high_error_rate" { display_name = "High Error Rate" conditions { display_name =
+"Error rate > 5%" condition_threshold { filter =
+"resource.type=\"cloud_run_revision\" AND
+metric.type=\"run.googleapis.com/request_count\"" comparison = "COMPARISON_GT"
+threshold_value = 0.05 # 5% duration = "300s" # 5 minutes aggregations {
+alignment_period = "60s" per_series_aligner = "ALIGN_RATE" } } }
 
-notification_channels = [google_monitoring_notification_channel.slack.id]
-}
+notification_channels = [google_monitoring_notification_channel.slack.id] }
 \`\`\`
 
 ---
@@ -327,20 +268,18 @@ notification_channels = [google_monitoring_notification_channel.slack.id]
 - [ ] **Binary Authorization**: Signed container images only
 - [ ] **VPC Service Controls**: Perimeter protection
 
-**Security Modules:**
-\`\`\`hcl
+**Security Modules:** \`\`\`hcl
 
 # Cloud Armor security policy
 
-module "cloud_armor" {
-source = "./modules/cloud-armor"
+module "cloud_armor" { source = "./modules/cloud-armor"
 
 name = "adyela-security-policy"
 
 # Rate limiting
 
-rate_limit_threshold = 100 # requests/minute per IP
-ban_duration_sec = 600 # 10 minute ban
+rate_limit_threshold = 100 # requests/minute per IP ban_duration_sec = 600 # 10
+minute ban
 
 # Geo-restrictions (optional)
 
@@ -356,9 +295,7 @@ enable_sqli_rules = true
 
 # XSS protection
 
-enable_xss_rules = true
-}
-\`\`\`
+enable_xss_rules = true } \`\`\`
 
 ---
 
@@ -366,8 +303,7 @@ enable_xss_rules = true
 
 #### Backup Strategy
 
-\`\`\`yaml
-Firestore:
+\`\`\`yaml Firestore:
 
 - Automated daily backups (GCS)
 - Retention: 30 days production, 7 days staging
@@ -389,8 +325,7 @@ Secrets:
 
 - Secret Manager with versioning
 - Access logs for audit trail
-- Automatic rotation for sensitive secrets
-  \`\`\`
+- Automatic rotation for sensitive secrets \`\`\`
 
 **Recovery Time Objectives (RTO):**
 
@@ -398,37 +333,23 @@ Secrets:
 - **Staging**: RTO < 1 hour, RPO < 24 hours
 - **Development**: Best effort
 
-**Disaster Recovery Plan:**
-\`\`\`terraform
+**Disaster Recovery Plan:** \`\`\`terraform
 
 # Firestore backup
 
-resource "google_firestore_backup_schedule" "daily" {
-database = google_firestore_database.main.name
-retention = "2592000s" # 30 days
+resource "google_firestore_backup_schedule" "daily" { database =
+google_firestore_database.main.name retention = "2592000s" # 30 days
 
-daily_recurrence {}
-}
+daily_recurrence {} }
 
 # Cloud Storage lifecycle
 
-resource "google_storage_bucket" "backups" {
-name = "adyela-backups-${var.environment}"
-location = "US"
+resource "google_storage_bucket" "backups" { name =
+"adyela-backups-${var.environment}" location = "US"
 
-versioning {
-enabled = true
-}
+versioning { enabled = true }
 
-lifecycle_rule {
-condition {
-age = 90 # days
-}
-action {
-type = "Delete"
-}
-}
-}
+lifecycle_rule { condition { age = 90 # days } action { type = "Delete" } } }
 \`\`\`
 
 ---
@@ -517,14 +438,10 @@ type = "Delete"
 - Disaster recovery testing or actual incidents
 - Security vulnerabilities in infrastructure
 
-**Example Prompts:**
-\`\`\`
-"Design a multi-region deployment strategy for production"
-"Optimize Cloud Run configuration to reduce costs by 30%"
-"Implement disaster recovery with RTO <15 minutes"
-"Create Terraform modules for all GCP resources"
-"Set up budget alerts and auto-shutdown for dev environment"
-\`\`\`
+**Example Prompts:** \`\`\` "Design a multi-region deployment strategy for
+production" "Optimize Cloud Run configuration to reduce costs by 30%" "Implement
+disaster recovery with RTO <15 minutes" "Create Terraform modules for all GCP
+resources" "Set up budget alerts and auto-shutdown for dev environment" \`\`\`
 
 ### Integration with Other Agents
 
@@ -547,10 +464,12 @@ type = "Delete"
 
 ### Project-Specific Context
 
-- **Current Infrastructure**: Cloud Run (API), Cloud Storage (web), Firestore, Firebase Emulator
+- **Current Infrastructure**: Cloud Run (API), Cloud Storage (web), Firestore,
+  Firebase Emulator
 - **Environments**: dev (local Docker), staging (GCP), production (GCP)
 - **Budget**: $10/month staging, $100/month production
-- **Critical Gap**: Terraform modules not implemented (See [Architecture Validation](../docs/deployment/architecture-validation.md))
+- **Critical Gap**: Terraform modules not implemented (See
+  [Architecture Validation](../docs/deployment/architecture-validation.md))
 
 ---
 

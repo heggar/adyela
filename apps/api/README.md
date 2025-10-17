@@ -1,6 +1,7 @@
 # Adyela API
 
-FastAPI backend for medical appointments with video calls using hexagonal architecture.
+FastAPI backend for medical appointments with video calls using hexagonal
+architecture.
 
 ## 🏗️ Architecture
 

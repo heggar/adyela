@@ -1,16 +1,18 @@
 # 🏥 Adyela - Medical Appointments Platform
 
 **Project Type:** Full-Stack Healthcare Application (HIPAA-Compliant)
-**Architecture:** Microservices + PWA
-**Tech Stack:** FastAPI (Python) + React (TypeScript) + Firestore
-**Infrastructure:** Google Cloud Platform
-**Development Environment:** Docker Compose
+**Architecture:** Microservices + PWA **Tech Stack:** FastAPI (Python) + React
+(TypeScript) + Firestore **Infrastructure:** Google Cloud Platform **Development
+Environment:** Docker Compose
 
 ---
 
 ## 🎯 Project Overview
 
-Adyela is a comprehensive medical appointment management platform with integrated video calling capabilities. The system enables healthcare providers to manage appointments, patient records, and conduct telemedicine consultations while maintaining HIPAA compliance.
+Adyela is a comprehensive medical appointment management platform with
+integrated video calling capabilities. The system enables healthcare providers
+to manage appointments, patient records, and conduct telemedicine consultations
+while maintaining HIPAA compliance.
 
 ### Key Features
 
@@ -143,7 +145,8 @@ This project uses 5 MCP (Model Context Protocol) servers:
 
 Configuration: `~/Library/Application Support/Claude/claude_desktop_config.json`
 
-**Setup**: Run `bash scripts/setup-mcp-servers.sh` to configure all MCP servers automatically.
+**Setup**: Run `bash scripts/setup-mcp-servers.sh` to configure all MCP servers
+automatically.
 
 ### Specialized SDLC Agents
 
@@ -151,8 +154,7 @@ The project has 4 specialized agents for different aspects of the SDLC:
 
 #### ☁️ Cloud Architecture Agent
 
-**Location**: `.claude/agents/cloud-architect-agent.md`
-**Responsibilities**:
+**Location**: `.claude/agents/cloud-architect-agent.md` **Responsibilities**:
 
 - Infrastructure as Code (Terraform)
 - GCP resource management
@@ -160,14 +162,14 @@ The project has 4 specialized agents for different aspects of the SDLC:
 - Disaster recovery (RTO <15min)
 - Performance monitoring
 
-**Invoke for**: Infrastructure changes, deployment issues, cost optimization, performance problems
+**Invoke for**: Infrastructure changes, deployment issues, cost optimization,
+performance problems
 
 ---
 
 #### 🔒 Cybersecurity Agent
 
-**Location**: `.claude/agents/cybersecurity-agent.md`
-**Responsibilities**:
+**Location**: `.claude/agents/cybersecurity-agent.md` **Responsibilities**:
 
 - OWASP Top 10 compliance
 - ISO 27001 controls
@@ -175,14 +177,14 @@ The project has 4 specialized agents for different aspects of the SDLC:
 - Security testing (SAST, DAST, SCA)
 - Incident response
 
-**Invoke for**: Security vulnerabilities, compliance questions, security testing, threat modeling
+**Invoke for**: Security vulnerabilities, compliance questions, security
+testing, threat modeling
 
 ---
 
 #### 🧪 QA Automation Agent
 
-**Location**: `.claude/agents/qa-automation-agent.md`
-**Responsibilities**:
+**Location**: `.claude/agents/qa-automation-agent.md` **Responsibilities**:
 
 - Test strategy & coverage (target: 80%+)
 - E2E testing with Playwright
@@ -190,7 +192,8 @@ The project has 4 specialized agents for different aspects of the SDLC:
 - Accessibility testing (WCAG 2.1 AA)
 - Quality gates in CI/CD
 
-**Invoke for**: Test creation, test failures, performance issues, accessibility problems
+**Invoke for**: Test creation, test failures, performance issues, accessibility
+problems
 
 ---
 
@@ -205,7 +208,8 @@ The project has 4 specialized agents for different aspects of the SDLC:
 - Patient rights implementation
 - Audit logging & breach notification
 
-**Invoke for**: Compliance questions, PHI handling, audit requirements, patient data access
+**Invoke for**: Compliance questions, PHI handling, audit requirements, patient
+data access
 
 ---
 
@@ -291,24 +295,35 @@ Bash("cd infra/environments/staging && terraform plan")
 
 ### Primary Guides
 
-- **[Project Structure Analysis](docs/PROJECT_STRUCTURE_ANALYSIS.md)** - Folder organization, architecture validation
-- **[Project Commands Reference](docs/PROJECT_COMMANDS_REFERENCE.md)** - All CLI commands
-- **[Token Optimization Strategy](docs/TOKEN_OPTIMIZATION_STRATEGY.md)** - Efficient Claude Code usage
-- **[MCP Integration Matrix](docs/MCP_INTEGRATION_MATRIX.md)** - MCP server workflows
-- **[Taskmaster AI Guide](docs/TASKMASTER_AI_GUIDE.md)** - Intelligent task management & sprint planning
-- **[Comprehensive Optimization Plan](docs/COMPREHENSIVE_OPTIMIZATION_PLAN.md)** - Implementation roadmap
+- **[Project Structure Analysis](docs/PROJECT_STRUCTURE_ANALYSIS.md)** - Folder
+  organization, architecture validation
+- **[Project Commands Reference](docs/PROJECT_COMMANDS_REFERENCE.md)** - All CLI
+  commands
+- **[Token Optimization Strategy](docs/TOKEN_OPTIMIZATION_STRATEGY.md)** -
+  Efficient Claude Code usage
+- **[MCP Integration Matrix](docs/MCP_INTEGRATION_MATRIX.md)** - MCP server
+  workflows
+- **[Taskmaster AI Guide](docs/TASKMASTER_AI_GUIDE.md)** - Intelligent task
+  management & sprint planning
+- **[Comprehensive Optimization Plan](docs/COMPREHENSIVE_OPTIMIZATION_PLAN.md)** -
+  Implementation roadmap
 
 ### Quality & Testing
 
-- **[Quality Automation Guide](docs/QUALITY_AUTOMATION.md)** - Quality tools setup
+- **[Quality Automation Guide](docs/QUALITY_AUTOMATION.md)** - Quality tools
+  setup
 - **[MCP Servers Guide](docs/MCP_SERVERS_GUIDE.md)** - MCP configuration
-- **[Final Quality Report](FINAL_QUALITY_REPORT.md)** - Current quality status (A: 93/100)
-- **[Cross-Browser Testing Report](CROSS_BROWSER_TESTING_REPORT.md)** - E2E testing guide
+- **[Final Quality Report](FINAL_QUALITY_REPORT.md)** - Current quality status
+  (A: 93/100)
+- **[Cross-Browser Testing Report](CROSS_BROWSER_TESTING_REPORT.md)** - E2E
+  testing guide
 
 ### Deployment & Infrastructure
 
-- **[GCP Setup Guide](docs/deployment/gcp-setup.md)** - Complete GCP configuration
-- **[Architecture Validation](docs/deployment/architecture-validation.md)** - Infrastructure gaps analysis
+- **[GCP Setup Guide](docs/deployment/gcp-setup.md)** - Complete GCP
+  configuration
+- **[Architecture Validation](docs/deployment/architecture-validation.md)** -
+  Infrastructure gaps analysis
 - **[Deployment Strategy](DEPLOYMENT_STRATEGY.md)** - Environment strategy
 
 ---
@@ -739,13 +754,18 @@ This is a **production-ready, HIPAA-compliant healthcare platform** with:
 - ✅ 100% accessibility score
 - ⚠️ Infrastructure as Code needs implementation (critical priority)
 
-**The codebase is clean, well-tested, and ready for scaling** once infrastructure gaps are addressed.
+**The codebase is clean, well-tested, and ready for scaling** once
+infrastructure gaps are addressed.
 
-**For Claude Code users:** This project is optimized for AI-assisted development with specialized agents, MCP integration, and comprehensive documentation. Follow the token optimization strategies and invoke the appropriate agents for best results.
+**For Claude Code users:** This project is optimized for AI-assisted development
+with specialized agents, MCP integration, and comprehensive documentation.
+Follow the token optimization strategies and invoke the appropriate agents for
+best results.
 
 ---
 
-**Status**: 🟢 **Active Development** | Ready for Production (after infrastructure implementation)
+**Status**: 🟢 **Active Development** | Ready for Production (after
+infrastructure implementation)
 
 **Contact**: dev@adyela.com (if applicable)
 
@@ -753,4 +773,5 @@ This is a **production-ready, HIPAA-compliant healthcare platform** with:
 
 ---
 
-_This document is maintained by the Adyela development team and should be updated when significant project changes occur._
+_This document is maintained by the Adyela development team and should be
+updated when significant project changes occur._

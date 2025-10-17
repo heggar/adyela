@@ -1,14 +1,16 @@
 # 🔌 MCP Integration Matrix
 
-**Project:** Adyela Medical Appointments Platform
-**Date:** October 5, 2025
+**Project:** Adyela Medical Appointments Platform **Date:** October 5, 2025
 **Version:** 1.0.0
 
 ---
 
 ## 🎯 Purpose
 
-This document maps Model Context Protocol (MCP) servers to SDLC phases, specialized agents, and specific workflows in the Adyela project. It provides a comprehensive integration strategy for leveraging MCP capabilities throughout the development lifecycle.
+This document maps Model Context Protocol (MCP) servers to SDLC phases,
+specialized agents, and specific workflows in the Adyela project. It provides a
+comprehensive integration strategy for leveraging MCP capabilities throughout
+the development lifecycle.
 
 ---
 
@@ -63,9 +65,7 @@ _\*Recommended additions_
 - UX flow visualization
 - Accessibility early validation
 
-**Integration:**
-\`\`\`typescript
-// Design validation workflow
+**Integration:** \`\`\`typescript // Design validation workflow
 playwright.navigate("https://figma.com/design-mockup")
 playwright.screenshot("mockup-login.png")
 
@@ -73,8 +73,7 @@ playwright.screenshot("mockup-login.png")
 playwright.navigate("http://localhost:3000/login")
 playwright.screenshot("actual-login.png")
 
-// Visual diff to identify deviations
-\`\`\`
+// Visual diff to identify deviations \`\`\`
 
 #### Sequential Thinking MCP
 
@@ -84,9 +83,7 @@ playwright.screenshot("actual-login.png")
 - Feature complexity analysis
 - Risk assessment
 
-**Integration:**
-\`\`\`
-Task: "Design multi-tenant appointment system"
+**Integration:** \`\`\` Task: "Design multi-tenant appointment system"
 
 Sequential Thinking:
 
@@ -95,8 +92,7 @@ Sequential Thinking:
 3. Plan authentication/authorization
 4. Identify security considerations
 5. Design scalability strategy
-6. Create implementation roadmap
-   \`\`\`
+6. Create implementation roadmap \`\`\`
 
 ---
 
@@ -110,25 +106,18 @@ Sequential Thinking:
 - Bulk refactoring operations
 - File structure organization
 
-**Integration:**
-\`\`\`bash
+**Integration:** \`\`\`bash
 
 # Generate new feature structure
 
 filesystem.create_directory("apps/web/src/features/prescriptions")
-filesystem.create_from_template(
-template="feature-template",
-destination="apps/web/src/features/prescriptions"
-)
+filesystem.create_from_template( template="feature-template",
+destination="apps/web/src/features/prescriptions" )
 
 # Bulk rename
 
-filesystem.batch_rename(
-pattern="\**/*Component.tsx",
-find="Component",
-replace="Container"
-)
-\`\`\`
+filesystem.batch_rename( pattern="\**/*Component.tsx", find="Component",
+replace="Container" ) \`\`\`
 
 #### GitHub MCP
 
@@ -138,8 +127,7 @@ replace="Container"
 - Automated PR creation
 - Code review workflows
 
-**Integration:**
-\`\`\`bash
+**Integration:** \`\`\`bash
 
 # Create feature branch
 
@@ -147,13 +135,9 @@ github.create_branch("feature/prescription-management")
 
 # Create PR with comprehensive description
 
-github.create_pr(
-title="feat: Add prescription management",
-body=generate_pr_description(),
-base="main",
-labels=["feature", "needs-review"]
-)
-\`\`\`
+github.create_pr( title="feat: Add prescription management",
+body=generate_pr_description(), base="main", labels=["feature", "needs-review"]
+) \`\`\`
 
 ---
 
@@ -168,33 +152,21 @@ labels=["feature", "needs-review"]
 - Accessibility testing
 - Cross-browser testing
 
-**Integration:**
-\`\`\`typescript
-// QA Automation Agent workflow
-async function runComprehensiveTests() {
-// E2E tests
-await playwright.test("tests/e2e/\*_/_.spec.ts")
+**Integration:** \`\`\`typescript // QA Automation Agent workflow async function
+runComprehensiveTests() { // E2E tests await
+playwright.test("tests/e2e/\*_/_.spec.ts")
 
-// Visual regression
-await playwright.snapshot("dashboard", { fullPage: true })
+// Visual regression await playwright.snapshot("dashboard", { fullPage: true })
 
-// Accessibility scan
-const a11yResults = await playwright.evaluate(`     const axe = require('axe-core');
-    return axe.run();
-  `)
+// Accessibility scan const a11yResults = await
+playwright.evaluate(`     const axe = require('axe-core');     return axe.run();   `)
 
-// Performance audit
-await playwright.navigate("http://localhost:3000")
-const metrics = await playwright.evaluate(\`
-return {
-fcp: performance.timing.firstContentfulPaint,
-lcp: performance.timing.largestContentfulPaint
-}
-\`)
+// Performance audit await playwright.navigate("http://localhost:3000") const
+metrics = await playwright.evaluate(\` return { fcp:
+performance.timing.firstContentfulPaint, lcp:
+performance.timing.largestContentfulPaint } \`)
 
-return { e2e, visual, a11y: a11yResults, performance: metrics }
-}
-\`\`\`
+return { e2e, visual, a11y: a11yResults, performance: metrics } } \`\`\`
 
 #### Filesystem MCP
 
@@ -204,14 +176,12 @@ return { e2e, visual, a11y: a11yResults, performance: metrics }
 - Test data management
 - Coverage report parsing
 
-**Integration:**
-\`\`\`bash
+**Integration:** \`\`\`bash
 
 # Generate test files for untested code
 
-filesystem.search("**/\*.tsx", exclude="**/\*.test.tsx")
-→ Identify files without tests
-→ Generate test templates
+filesystem.search("**/\*.tsx", exclude="**/\*.test.tsx") → Identify files
+without tests → Generate test templates
 
 # Manage test data
 
@@ -231,17 +201,12 @@ filesystem.write("tests/fixtures/appointments.json", generate_test_data())
 - SAST/DAST execution
 - Dependency analysis
 
-**Integration:**
-\`\`\`python
+**Integration:** \`\`\`python
 
 # Cybersecurity Agent workflow
 
-async def run_security_scan(): # SAST with Semgrep
-sast_results = await security_mcp.run_sast(
-tool="semgrep",
-config="p/owasp-top-ten",
-path="apps/"
-)
+async def run_security_scan(): # SAST with Semgrep sast_results = await
+security_mcp.run_sast( tool="semgrep", config="p/owasp-top-ten", path="apps/" )
 
     # Dependency scanning
     deps_results = await security_mcp.scan_dependencies(
@@ -267,17 +232,13 @@ path="apps/"
 - Authentication flow testing
 - Authorization validation
 
-**Integration:**
-\`\`\`typescript
-// Test for XSS vulnerabilities
-await playwright.navigate("/appointments/new")
-await playwright.type("reason-input", "<script>alert('XSS')</script>")
-await playwright.click("submit-button")
+**Integration:** \`\`\`typescript // Test for XSS vulnerabilities await
+playwright.navigate("/appointments/new") await playwright.type("reason-input",
+"<script>alert('XSS')</script>") await playwright.click("submit-button")
 
-// Verify input is sanitized
-const html = await playwright.evaluate("document.body.innerHTML")
-assert(!html.includes("<script>"), "XSS vulnerability detected")
-\`\`\`
+// Verify input is sanitized const html = await
+playwright.evaluate("document.body.innerHTML")
+assert(!html.includes("<script>"), "XSS vulnerability detected") \`\`\`
 
 ---
 
@@ -291,21 +252,16 @@ assert(!html.includes("<script>"), "XSS vulnerability detected")
 - Resource monitoring
 - Cost optimization
 
-**Integration:**
-\`\`\`python
+**Integration:** \`\`\`python
 
 # Cloud Architect Agent workflow
 
 async def deploy_infrastructure(environment: str): # Provision Cloud Run service
-service = await cloud_mcp.deploy_cloud_run(
-name=f"adyela-api-{environment}",
-image=f"gcr.io/adyela/api:latest",
-region="us-central1",
-min_instances=0 if environment == "staging" else 1,
-max_instances=2 if environment == "staging" else 10,
-memory="256Mi" if environment == "staging" else "2Gi",
-cpu="0.5" if environment == "staging" else "2"
-)
+service = await cloud_mcp.deploy_cloud_run( name=f"adyela-api-{environment}",
+image=f"gcr.io/adyela/api:latest", region="us-central1", min_instances=0 if
+environment == "staging" else 1, max_instances=2 if environment == "staging"
+else 10, memory="256Mi" if environment == "staging" else "2Gi", cpu="0.5" if
+environment == "staging" else "2" )
 
     # Setup Cloud Storage
     bucket = await cloud_mcp.create_bucket(
@@ -332,26 +288,17 @@ cpu="0.5" if environment == "staging" else "2"
 - Deployment tracking
 - Rollback management
 
-**Integration:**
-\`\`\`bash
+**Integration:** \`\`\`bash
 
 # Create release
 
-github.create_release(
-tag="v1.2.0",
-name="Release 1.2.0 - Prescription Management",
-body=generate_changelog(),
-draft=false
-)
+github.create_release( tag="v1.2.0", name="Release 1.2.0 - Prescription
+Management", body=generate_changelog(), draft=false )
 
 # Track deployment
 
-github.create_deployment(
-ref="v1.2.0",
-environment="production",
-description="Deploying prescription management feature"
-)
-\`\`\`
+github.create_deployment( ref="v1.2.0", environment="production",
+description="Deploying prescription management feature" ) \`\`\`
 
 ---
 
@@ -359,8 +306,7 @@ description="Deploying prescription management feature"
 
 ### Pattern 1: Automated Quality Pipeline
 
-\`\`\`yaml
-Trigger: Pull Request Created
+\`\`\`yaml Trigger: Pull Request Created
 
 Workflow:
 
@@ -380,13 +326,11 @@ Workflow:
    - Analyze test results
    - Generate quality report
 
-5. GitHub MCP: - Post quality report as PR comment - Update PR status
-   \`\`\`
+5. GitHub MCP: - Post quality report as PR comment - Update PR status \`\`\`
 
 ### Pattern 2: Infrastructure Deployment
 
-\`\`\`yaml
-Trigger: Tag Created (v*.*.\*)
+\`\`\`yaml Trigger: Tag Created (v*.*.\*)
 
 Workflow:
 
@@ -407,13 +351,11 @@ Workflow:
    - If tests pass, deploy to production
    - Configure traffic splitting (canary)
 
-5. GitHub MCP: - Create release notes - Close related issues
-   \`\`\`
+5. GitHub MCP: - Create release notes - Close related issues \`\`\`
 
 ### Pattern 3: Security Audit
 
-\`\`\`yaml
-Trigger: Weekly Schedule / On-Demand
+\`\`\`yaml Trigger: Weekly Schedule / On-Demand
 
 Workflow:
 
@@ -440,8 +382,7 @@ Workflow:
 
 ### Pattern 4: Compliance Reporting
 
-\`\`\`yaml
-Trigger: Monthly / Audit Request
+\`\`\`yaml Trigger: Monthly / Audit Request
 
 Workflow:
 
@@ -461,8 +402,7 @@ Workflow:
    - Analyze compliance status
    - Identify gaps
 
-5. Filesystem MCP: - Generate comprehensive report - Create action items
-   \`\`\`
+5. Filesystem MCP: - Generate comprehensive report - Create action items \`\`\`
 
 ---
 
@@ -470,20 +410,9 @@ Workflow:
 
 ### 1. Playwright MCP (Implemented ✅)
 
-**Configuration:**
-\`\`\`json
-{
-"mcpServers": {
-"playwright": {
-"command": "npx",
-"args": ["@playwright/mcp-server"],
-"env": {
-"PLAYWRIGHT_BROWSERS_PATH": "~/.cache/ms-playwright"
-}
-}
-}
-}
-\`\`\`
+**Configuration:** \`\`\`json { "mcpServers": { "playwright": { "command":
+"npx", "args": ["@playwright/mcp-server"], "env": { "PLAYWRIGHT_BROWSERS_PATH":
+"~/.cache/ms-playwright" } } } } \`\`\`
 
 **Capabilities:**
 
@@ -506,22 +435,10 @@ Workflow:
 
 ### 2. Filesystem MCP (Implemented ✅)
 
-**Configuration:**
-\`\`\`json
-{
-"mcpServers": {
-"filesystem": {
-"command": "npx",
-"args": ["@modelcontextprotocol/server-filesystem"],
-"env": {
-"ALLOWED_DIRECTORIES": [
-"/Users/hevergonzalezgarcia/TFM Agentes IA/CLAUDE/adyela"
-]
-}
-}
-}
-}
-\`\`\`
+**Configuration:** \`\`\`json { "mcpServers": { "filesystem": { "command":
+"npx", "args": ["@modelcontextprotocol/server-filesystem"], "env": {
+"ALLOWED_DIRECTORIES": [ "/Users/hevergonzalezgarcia/TFM Agentes
+IA/CLAUDE/adyela" ] } } } } \`\`\`
 
 **Capabilities:**
 
@@ -544,21 +461,9 @@ Workflow:
 
 ### 3. GitHub MCP (Implemented ✅)
 
-**Configuration:**
-\`\`\`json
-{
-"mcpServers": {
-"github": {
-"command": "npx",
-"args": ["@modelcontextprotocol/server-github"],
-"env": {
-"GITHUB_TOKEN": "${GITHUB_TOKEN}",
-"GITHUB_REPOSITORY": "adyela/adyela"
-}
-}
-}
-}
-\`\`\`
+**Configuration:** \`\`\`json { "mcpServers": { "github": { "command": "npx",
+"args": ["@modelcontextprotocol/server-github"], "env": { "GITHUB_TOKEN":
+"${GITHUB_TOKEN}", "GITHUB_REPOSITORY": "adyela/adyela" } } } } \`\`\`
 
 **Capabilities:**
 
@@ -581,17 +486,9 @@ Workflow:
 
 ### 4. Sequential Thinking MCP (Implemented ✅)
 
-**Configuration:**
-\`\`\`json
-{
-"mcpServers": {
-"sequential-thinking": {
-"command": "npx",
-"args": ["@modelcontextprotocol/server-sequential-thinking"]
-}
-}
-}
-\`\`\`
+**Configuration:** \`\`\`json { "mcpServers": { "sequential-thinking": {
+"command": "npx", "args": ["@modelcontextprotocol/server-sequential-thinking"] }
+} } \`\`\`
 
 **Capabilities:**
 
@@ -613,21 +510,10 @@ Workflow:
 
 ### 5. Database MCP (Recommended 🔄)
 
-**Proposed Configuration:**
-\`\`\`json
-{
-"mcpServers": {
-"firestore": {
-"command": "npx",
-"args": ["@modelcontextprotocol/server-firestore"],
-"env": {
+**Proposed Configuration:** \`\`\`json { "mcpServers": { "firestore": {
+"command": "npx", "args": ["@modelcontextprotocol/server-firestore"], "env": {
 "GOOGLE_APPLICATION_CREDENTIALS": "${GOOGLE_APPLICATION_CREDENTIALS}",
-"FIRESTORE_PROJECT_ID": "adyela-dev"
-}
-}
-}
-}
-\`\`\`
+"FIRESTORE_PROJECT_ID": "adyela-dev" } } } } \`\`\`
 
 **Proposed Capabilities:**
 
@@ -650,21 +536,10 @@ Workflow:
 
 ### 6. Cloud MCP (Recommended 🔄)
 
-**Proposed Configuration:**
-\`\`\`json
-{
-"mcpServers": {
-"gcp": {
-"command": "npx",
-"args": ["@modelcontextprotocol/server-gcp"],
-"env": {
+**Proposed Configuration:** \`\`\`json { "mcpServers": { "gcp": { "command":
+"npx", "args": ["@modelcontextprotocol/server-gcp"], "env": {
 "GOOGLE_APPLICATION_CREDENTIALS": "${GOOGLE_APPLICATION_CREDENTIALS}",
-"GCP_PROJECT_ID": "adyela-production"
-}
-}
-}
-}
-\`\`\`
+"GCP_PROJECT_ID": "adyela-production" } } } } \`\`\`
 
 **Proposed Capabilities:**
 
@@ -687,21 +562,11 @@ Workflow:
 
 ### 7. Security MCP (Recommended 🔄)
 
-**Proposed Configuration:**
-\`\`\`json
-{
-"mcpServers": {
-"security": {
-"command": "npx",
-"args": ["@modelcontextprotocol/server-security"],
-"env": {
-"SEMGREP_API_KEY": "${SEMGREP_API_KEY}",
-        "SNYK_API_KEY": "${SNYK_API_KEY}"
-}
-}
-}
-}
-\`\`\`
+**Proposed Configuration:** \`\`\`json { "mcpServers": { "security": {
+"command": "npx", "args": ["@modelcontextprotocol/server-security"], "env": {
+"SEMGREP_API_KEY":
+"${SEMGREP_API_KEY}",
+        "SNYK_API_KEY": "${SNYK_API_KEY}" } } } } \`\`\`
 
 **Proposed Capabilities:**
 
@@ -726,8 +591,7 @@ Workflow:
 
 ### Recommended Metrics
 
-\`\`\`yaml
-Playwright_MCP:
+\`\`\`yaml Playwright_MCP:
 
 - Tests executed per day
 - Test success rate
@@ -752,8 +616,7 @@ Sequential_Thinking_MCP:
 
 - Problems decomposed
 - Decision trees created
-- Average complexity score
-  \`\`\`
+- Average complexity score \`\`\`
 
 ---
 

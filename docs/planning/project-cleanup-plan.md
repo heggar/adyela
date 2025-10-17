@@ -2,19 +2,24 @@
 
 **Date:** October 11, 2025  
 **Project:** Adyela Health System  
-**Purpose:** Comprehensive audit and reorganization plan based on PRD requirements
+**Purpose:** Comprehensive audit and reorganization plan based on PRD
+requirements
 
 ---
 
 ## 📊 Executive Summary
 
-This document presents a complete audit of the Adyela project structure, identifying organizational issues, redundancies, and misplaced files. The plan prioritizes cleanup actions based on PRD requirements, development impact, and HIPAA compliance needs.
+This document presents a complete audit of the Adyela project structure,
+identifying organizational issues, redundancies, and misplaced files. The plan
+prioritizes cleanup actions based on PRD requirements, development impact, and
+HIPAA compliance needs.
 
 **Key Findings:**
 
 - 36+ markdown documentation files scattered across root and `/docs`
 - 34 shell scripts in `/scripts` needing organization
-- Empty placeholder directories (`packages/*`, `apps/ops`, `infra/envs/*`, `infra/modules`)
+- Empty placeholder directories (`packages/*`, `apps/ops`, `infra/envs/*`,
+  `infra/modules`)
 - Duplicate infrastructure configurations (`infra/environments` vs `infra/envs`)
 - Build artifacts in source control (`apps/web/dist`, `apps/web/dev-dist`)
 - Test reports in root (`lighthouse-reports/`, `schemathesis-reports/`)
@@ -85,7 +90,8 @@ adyela/
 
 **Impact:** Confusing documentation structure, hard to find information
 
-**PRD Requirement:** Clear documentation structure for compliance and maintenance
+**PRD Requirement:** Clear documentation structure for compliance and
+maintenance
 
 ### 2. **Empty Placeholder Directories** (Priority: HIGH)
 
@@ -284,7 +290,8 @@ apps/web/tests/         - Web unit/integration tests
 
 **Recommendation:** Move to `infra/firebase/` when fully migrated
 
-**PRD Note:** PRD uses Firestore (GCP native) + Identity Platform, not Firebase SDK
+**PRD Note:** PRD uses Firestore (GCP native) + Identity Platform, not Firebase
+SDK
 
 ### 8. **Missing .gitignore Entries** (Priority: HIGH)
 
@@ -572,11 +579,7 @@ adyela/
    ## Future Structure
    ```
 
-   packages/config/
-   ├── eslint/
-   ├── prettier/
-   ├── typescript/
-   └── package.json
+   packages/config/ ├── eslint/ ├── prettier/ ├── typescript/ └── package.json
 
    ```
    EOF

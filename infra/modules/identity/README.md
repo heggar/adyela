@@ -1,10 +1,14 @@
 # Identity Platform Terraform Module
 
-This Terraform module configures Google Identity Platform for the Adyela healthcare platform with support for OAuth providers, Multi-Factor Authentication (MFA), JWT tokens with custom claims, and HIPAA-compliant audit logging.
+This Terraform module configures Google Identity Platform for the Adyela
+healthcare platform with support for OAuth providers, Multi-Factor
+Authentication (MFA), JWT tokens with custom claims, and HIPAA-compliant audit
+logging.
 
 ## Features
 
-- ✅ **Multi-Provider Authentication**: Email/password, Google OAuth, Facebook, Microsoft
+- ✅ **Multi-Provider Authentication**: Email/password, Google OAuth, Facebook,
+  Microsoft
 - ✅ **Multi-Factor Authentication (MFA)**: TOTP and SMS verification
 - ✅ **JWT Custom Claims**: tenant_id, role, permissions for multi-tenancy
 - ✅ **Password Policies**: Configurable complexity requirements
@@ -119,8 +123,10 @@ module "identity_platform" {
 - `google_project_service.identity_platform` - Enables Identity Platform API
 - `google_identity_platform_config` - Main Identity Platform configuration
 - `google_identity_platform_tenant` - Multi-tenancy tenant (optional)
-- `google_identity_platform_default_supported_idp_config` - OAuth providers (Google, Facebook, Microsoft)
-- `google_service_account.identity_platform_api` - Service account for API authentication
+- `google_identity_platform_default_supported_idp_config` - OAuth providers
+  (Google, Facebook, Microsoft)
+- `google_service_account.identity_platform_api` - Service account for API
+  authentication
 - `google_service_account_key.identity_platform_api` - Service account key
 - `google_project_iam_member` - IAM roles for service account
 - `google_project_iam_audit_config` - Audit logging configuration
@@ -202,10 +208,12 @@ Default password policy:
 
 ### HIPAA Compliance
 
-1. **Audit Logging**: All authentication events are logged for 7 years (2555 days)
+1. **Audit Logging**: All authentication events are logged for 7 years (2555
+   days)
 2. **MFA**: Multi-factor authentication is strongly recommended for production
 3. **Password Policy**: Strong password requirements by default
-4. **Encryption**: All tokens and credentials are encrypted at rest and in transit
+4. **Encryption**: All tokens and credentials are encrypted at rest and in
+   transit
 5. **Access Control**: Least-privilege IAM roles for service accounts
 
 ### Best Practices
@@ -267,7 +275,8 @@ If upgrading from Firebase Auth to Identity Platform:
 
 ### Common Issues
 
-1. **"API not enabled" error**: Run `terraform apply` again after APIs are enabled
+1. **"API not enabled" error**: Run `terraform apply` again after APIs are
+   enabled
 2. **OAuth redirect mismatch**: Verify authorized redirect URIs match exactly
 3. **MFA not working**: Ensure phone numbers are verified for SMS MFA
 
@@ -305,6 +314,5 @@ UNLICENSED - Private healthcare application
 
 ---
 
-**Version**: 1.0.0
-**Last Updated**: 2025-10-11
-**Maintained By**: Adyela Infrastructure Team
+**Version**: 1.0.0 **Last Updated**: 2025-10-11 **Maintained By**: Adyela
+Infrastructure Team

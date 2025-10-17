@@ -1,21 +1,23 @@
 # 🎯 Taskmaster AI Integration Guide
 
-**Project:** Adyela Medical Appointments Platform
-**MCP Server:** Taskmaster AI
-**Version:** 1.0.0
-**Date:** 2025-10-05
+**Project:** Adyela Medical Appointments Platform **MCP Server:** Taskmaster AI
+**Version:** 1.0.0 **Date:** 2025-10-05
 
 ---
 
 ## 🌟 Overview
 
-Taskmaster AI is an intelligent project and task management MCP server that helps track, organize, and manage development tasks within the Adyela project. It integrates seamlessly with Claude Code and the specialized SDLC agents.
+Taskmaster AI is an intelligent project and task management MCP server that
+helps track, organize, and manage development tasks within the Adyela project.
+It integrates seamlessly with Claude Code and the specialized SDLC agents.
 
 ### Key Capabilities
 
 - ✅ **Task Creation & Management** - Create, update, and track tasks
-- 📊 **Project Organization** - Organize tasks by projects, milestones, and sprints
-- 🤖 **AI-Powered Insights** - Get intelligent task prioritization and suggestions
+- 📊 **Project Organization** - Organize tasks by projects, milestones, and
+  sprints
+- 🤖 **AI-Powered Insights** - Get intelligent task prioritization and
+  suggestions
 - 🔗 **Integration with Git** - Link tasks to commits, branches, and PRs
 - 📈 **Progress Tracking** - Visual progress tracking and reporting
 - 🎯 **Sprint Planning** - Plan and manage agile sprints
@@ -47,8 +49,8 @@ If you prefer manual setup:
    npm install -g @taskmaster/mcp-server
    ```
 
-2. **Configure Claude Desktop:**
-   Edit `~/Library/Application Support/Claude/claude_desktop_config.json`:
+2. **Configure Claude Desktop:** Edit
+   `~/Library/Application Support/Claude/claude_desktop_config.json`:
 
    ```json
    {
@@ -940,4 +942,5 @@ Taskmaster AI tracks:
 
 **Status:** ✅ Ready to Use
 
-**Support:** For issues with Taskmaster AI, consult the [official documentation](https://taskmaster.ai/docs) or create a GitHub issue.
+**Support:** For issues with Taskmaster AI, consult the
+[official documentation](https://taskmaster.ai/docs) or create a GitHub issue.

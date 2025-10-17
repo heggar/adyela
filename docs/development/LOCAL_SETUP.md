@@ -1,6 +1,7 @@
 # 🏠 Local Development Setup - Adyela
 
-Complete guide to set up and run Adyela locally with Docker Compose and Firebase Emulators.
+Complete guide to set up and run Adyela locally with Docker Compose and Firebase
+Emulators.
 
 ---
 
@@ -44,7 +45,8 @@ cp apps/api/.env.example apps/api/.env
 cp apps/web/.env.example apps/web/.env
 ```
 
-**Note:** The `.env.example` files are already configured for local development with emulators. No changes needed!
+**Note:** The `.env.example` files are already configured for local development
+with emulators. No changes needed!
 
 ### 3. Start all services
 
@@ -417,7 +419,8 @@ docker-compose -f docker-compose.dev.yml restart web
 
 **Issue**: API/Web running but cannot access from browser
 
-**Solution**: Make sure Docker Desktop is running and ports are mapped correctly:
+**Solution**: Make sure Docker Desktop is running and ports are mapped
+correctly:
 
 ```bash
 docker-compose -f docker-compose.dev.yml ps

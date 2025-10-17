@@ -2,7 +2,8 @@
 
 ## 🔒 Reportar una Vulnerabilidad
 
-La seguridad de Adyela es una prioridad. Agradecemos los esfuerzos de la comunidad de seguridad para divulgar responsablemente las vulnerabilidades.
+La seguridad de Adyela es una prioridad. Agradecemos los esfuerzos de la
+comunidad de seguridad para divulgar responsablemente las vulnerabilidades.
 
 ### 📧 Cómo Reportar
 
@@ -61,7 +62,9 @@ _Nota: Una vez en producción, se soportarán las últimas 2 versiones major._
 
 ## 🏆 Programa de Reconocimiento
 
-Actualmente no tenemos un programa de bug bounty formal, pero reconocemos públicamente (con permiso) a los investigadores que reportan vulnerabilidades válidas.
+Actualmente no tenemos un programa de bug bounty formal, pero reconocemos
+públicamente (con permiso) a los investigadores que reportan vulnerabilidades
+válidas.
 
 ### Hall of Fame
 
@@ -79,7 +82,7 @@ async function getPatientData(userId: string, patientId: string) {
   const patient = await db.patient.findUnique({ id: patientId });
 
   if (!canAccessPatient(userId, patient)) {
-    throw new ForbiddenError("Access denied");
+    throw new ForbiddenError('Access denied');
   }
 
   return patient;
@@ -121,7 +124,7 @@ def create_appointment(data: dict):
 const apiKey = process.env.SENDGRID_API_KEY;
 
 // ❌ Mal - Hardcodear secrets
-const apiKey = "SG.abc123xyz";
+const apiKey = 'SG.abc123xyz';
 ```
 
 #### 4. SQL Injection Prevention
@@ -138,7 +141,7 @@ query = f"SELECT * FROM patients WHERE id = '{patient_id}'"
 
 ```typescript
 // ✅ Bien - Sanitizar y escapar
-import DOMPurify from "dompurify";
+import DOMPurify from 'dompurify';
 
 const clean = DOMPurify.sanitize(userInput);
 element.innerHTML = clean;
@@ -256,8 +259,7 @@ Esta política se revisa y actualiza:
 - Después de incidentes significativos
 - Cuando hay cambios regulatorios
 
-**Última actualización**: 2025-10-04
-**Próxima revisión**: 2026-04-04
+**Última actualización**: 2025-10-04 **Próxima revisión**: 2026-04-04
 
 ## 📞 Contacto
 

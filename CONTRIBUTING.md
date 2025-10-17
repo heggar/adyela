@@ -15,7 +15,9 @@
 
 ## 📜 Código de Conducta
 
-Este proyecto sigue un código de conducta. Al participar, se espera que mantengas este código. Por favor reporta comportamientos inaceptables al equipo del proyecto.
+Este proyecto sigue un código de conducta. Al participar, se espera que
+mantengas este código. Por favor reporta comportamientos inaceptables al equipo
+del proyecto.
 
 ### Nuestros Estándares
 
@@ -296,8 +298,8 @@ pnpm test:e2e
 ### Ejemplos
 
 ```typescript
-describe("AppointmentService", () => {
-  it("should create appointment with valid data", async () => {
+describe('AppointmentService', () => {
+  it('should create appointment with valid data', async () => {
     // Arrange
     const data = createMockAppointmentData();
 
@@ -391,7 +393,8 @@ Para propuestas grandes:
 
 ## 📄 Licencia
 
-Al contribuir, aceptas que tus contribuciones se licenciarán bajo la misma licencia del proyecto.
+Al contribuir, aceptas que tus contribuciones se licenciarán bajo la misma
+licencia del proyecto.
 
 ---
 

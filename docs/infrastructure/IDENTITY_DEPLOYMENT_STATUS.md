@@ -1,14 +1,15 @@
 # Identity Platform Deployment Status
 
-**Date**: 2025-10-11
-**Environment**: Staging
-**Status**: ⚠️ Blocked - Authentication Required
+**Date**: 2025-10-11 **Environment**: Staging **Status**: ⚠️ Blocked -
+Authentication Required
 
 ---
 
 ## Summary
 
-El módulo de Terraform para Identity Platform está **completo y validado**, pero el deployment está bloqueado por problemas de autenticación de gcloud que requieren intervención manual.
+El módulo de Terraform para Identity Platform está **completo y validado**, pero
+el deployment está bloqueado por problemas de autenticación de gcloud que
+requieren intervención manual.
 
 ---
 
@@ -185,14 +186,16 @@ Service identityplatform.googleapis.com is not available to this consumer.
 
 ### Opción B: Deployment Híbrido Firebase Console + Terraform (Disponible ahora)
 
-Esta opción evita los bloqueadores actuales usando Firebase Console para el setup inicial.
+Esta opción evita los bloqueadores actuales usando Firebase Console para el
+setup inicial.
 
 **Guía completa:** `docs/infrastructure/IDENTITY_PLATFORM_QUICKSTART.md`
 
 **Pasos resumidos:**
 
 1. **Habilitar Identity Platform desde Firebase Console:**
-   - Ir a https://console.firebase.google.com/project/adyela-staging/authentication
+   - Ir a
+     https://console.firebase.google.com/project/adyela-staging/authentication
    - Click "Get Started"
 
 2. **Configurar Google OAuth desde Firebase Console:**
@@ -220,7 +223,8 @@ Esta opción evita los bloqueadores actuales usando Firebase Console para el set
 ### Service Account
 
 - **Name**: identity-platform-api-staging
-- **Email**: identity-platform-api-staging@adyela-staging.iam.gserviceaccount.com
+- **Email**:
+  identity-platform-api-staging@adyela-staging.iam.gserviceaccount.com
 - **Roles**:
   - roles/firebaseauth.admin
   - roles/firebaseauth.viewer
@@ -284,11 +288,13 @@ npm run dev
 ### Error: "Invalid OAuth client"
 
 - Verificar que el Client ID en Secret Manager es correcto
-- Verificar redirect URIs en Google Cloud Console > APIs & Services > Credentials
+- Verificar redirect URIs en Google Cloud Console > APIs & Services >
+  Credentials
 
 ### Error: "Unauthorized domain"
 
-- Agregar dominio en Firebase Console > Authentication > Settings > Authorized domains
+- Agregar dominio en Firebase Console > Authentication > Settings > Authorized
+  domains
 
 ### Error: "reauth related error"
 
@@ -298,9 +304,8 @@ npm run dev
 
 ## 📊 Estado del Task #11
 
-**Task ID**: 11
-**Título**: Identity Platform Configuration with MFA
-**Status**: In Progress (85% completo)
+**Task ID**: 11 **Título**: Identity Platform Configuration with MFA **Status**:
+In Progress (85% completo)
 
 **Subtareas completadas:**
 
@@ -315,6 +320,5 @@ npm run dev
 
 ---
 
-**Última actualización**: 2025-10-11 23:30 UTC
-**Actualizado por**: Claude Code
+**Última actualización**: 2025-10-11 23:30 UTC **Actualizado por**: Claude Code
 **Versión**: 1.0.0

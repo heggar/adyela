@@ -1,8 +1,6 @@
 # 🎉 Deployment Exitoso - Staging Environment
 
-**Fecha**: 2025-10-07
-**Branch**: `feat/api-backend`
-**Versión**: `v1.0.0`
+**Fecha**: 2025-10-07 **Branch**: `feat/api-backend` **Versión**: `v1.0.0`
 **Status**: ✅ **COMPLETADO**
 
 ---
@@ -91,53 +89,54 @@ Durante el deployment se resolvieron los siguientes problemas:
 
 ### 1. Error de versión de pnpm
 
-**Error**: `Multiple versions of pnpm specified`
-**Solución**: Actualizar workflows de `version: 9` → `version: 9.15.0`
+**Error**: `Multiple versions of pnpm specified` **Solución**: Actualizar
+workflows de `version: 9` → `version: 9.15.0`
 
 ### 2. Repositorio Artifact Registry no existe
 
-**Error**: `Repository "adyela" not found`
-**Solución**: Crear repositorio con `gcloud artifacts repositories create`
+**Error**: `Repository "adyela" not found` **Solución**: Crear repositorio con
+`gcloud artifacts repositories create`
 
 ### 3. Secrets en job outputs
 
-**Error**: GitHub Actions enmascara secretos en outputs
-**Solución**: Pasar solo `image-version`, reconstruir tag completo en deploy job
+**Error**: GitHub Actions enmascara secretos en outputs **Solución**: Pasar solo
+`image-version`, reconstruir tag completo en deploy job
 
 ### 4. Labels GCP con puntos
 
-**Error**: `Label value 'v1.0.0' violates format`
-**Solución**: Convertir puntos a guiones `v1.0.0` → `v1-0-0`
+**Error**: `Label value 'v1.0.0' violates format` **Solución**: Convertir puntos
+a guiones `v1.0.0` → `v1-0-0`
 
 ### 5. CPU y concurrency incompatibles
 
-**Error**: `cpu < 1 not supported with concurrency > 1`
-**Solución**: Aumentar CPU a 1, memoria a 512Mi
+**Error**: `cpu < 1 not supported with concurrency > 1` **Solución**: Aumentar
+CPU a 1, memoria a 512Mi
 
 ### 6. Dockerfile no usa variable PORT
 
-**Error**: Contenedor no escucha en puerto correcto
-**Solución**: Cambiar CMD a `uvicorn ... --port ${PORT:-8000}`
+**Error**: Contenedor no escucha en puerto correcto **Solución**: Cambiar CMD a
+`uvicorn ... --port ${PORT:-8000}`
 
 ### 7. Falta variable GCP_PROJECT_ID
 
-**Error**: `ValidationError: 1 validation error for Settings`
-**Solución**: Agregar `GCP_PROJECT_ID` a env vars en deployment
+**Error**: `ValidationError: 1 validation error for Settings` **Solución**:
+Agregar `GCP_PROJECT_ID` a env vars en deployment
 
 ### 8. Organization Policy bloquea acceso público
 
 **Error**: `FAILED_PRECONDITION: users do not belong to permitted customer`
-**Solución**: Remover `--allow-unauthenticated`, usar autenticación en health check
+**Solución**: Remover `--allow-unauthenticated`, usar autenticación en health
+check
 
 ### 9. Buckets GCS no existen
 
-**Error**: `BucketNotFoundException: gs://adyela-web-staging`
-**Solución**: Crear buckets con `gcloud storage buckets create`
+**Error**: `BucketNotFoundException: gs://adyela-web-staging` **Solución**:
+Crear buckets con `gcloud storage buckets create`
 
 ### 10. CDN no configurado
 
-**Error**: `Compute Engine API disabled`
-**Solución**: Hacer CDN invalidation `continue-on-error: true`
+**Error**: `Compute Engine API disabled` **Solución**: Hacer CDN invalidation
+`continue-on-error: true`
 
 ---
 
@@ -292,16 +291,20 @@ gh workflow run cd-staging.yml \
 ### Links de Consola GCP
 
 - **Cloud Run**: https://console.cloud.google.com/run?project=adyela-staging
-- **Artifact Registry**: https://console.cloud.google.com/artifacts?project=adyela-staging
-- **Cloud Storage**: https://console.cloud.google.com/storage?project=adyela-staging
-- **Secret Manager**: https://console.cloud.google.com/security/secret-manager?project=adyela-staging
+- **Artifact Registry**:
+  https://console.cloud.google.com/artifacts?project=adyela-staging
+- **Cloud Storage**:
+  https://console.cloud.google.com/storage?project=adyela-staging
+- **Secret Manager**:
+  https://console.cloud.google.com/security/secret-manager?project=adyela-staging
 - **Logs**: https://console.cloud.google.com/logs?project=adyela-staging
 
 ---
 
 ## 🏆 Conclusión
 
-El deployment a staging fue **exitoso**. Ambos servicios (API y Frontend) están funcionando correctamente en GCP.
+El deployment a staging fue **exitoso**. Ambos servicios (API y Frontend) están
+funcionando correctamente en GCP.
 
 **Logros**:
 
@@ -323,6 +326,5 @@ El deployment a staging fue **exitoso**. Ambos servicios (API y Frontend) están
 
 ---
 
-**Última actualización**: 2025-10-07 13:30 UTC
-**Run ID exitoso**: 18314136468
+**Última actualización**: 2025-10-07 13:30 UTC **Run ID exitoso**: 18314136468
 **Commit hash**: fb6cd7f

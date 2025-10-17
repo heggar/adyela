@@ -1,7 +1,6 @@
 # Análisis de Secretos GitHub vs Pipeline CD-Staging
 
-**Fecha**: 2025-10-11
-**Archivo Pipeline**: `.github/workflows/cd-staging.yml`
+**Fecha**: 2025-10-11 **Archivo Pipeline**: `.github/workflows/cd-staging.yml`
 
 ---
 
@@ -48,7 +47,7 @@ Vite (el bundler de React) reemplaza las variables `VITE_*` en **BUILD TIME**:
 const apiUrl = import.meta.env.VITE_API_URL;
 
 // Después del build:
-const apiUrl = "https://staging.adyela.care";
+const apiUrl = 'https://staging.adyela.care';
 ```
 
 Las variables se "queman" (bake) en el JavaScript bundle durante el build.
@@ -75,10 +74,12 @@ build-args: |
 #### Deploy Stage (Líneas 329-333)
 
 ```yaml
---set-env-vars="VITE_ENV=${{ env.ENVIRONMENT }},VERSION=${{ inputs.version }},HIPAA_COMPLIANCE=true,AUDIT_LOGGING=true"
+--set-env-vars="VITE_ENV=${{ env.ENVIRONMENT }},VERSION=${{ inputs.version
+}},HIPAA_COMPLIANCE=true,AUDIT_LOGGING=true"
 ```
 
-⚠️ **Solo se configuran 4 variables en runtime** (¡pero ya no importan para Vite!)
+⚠️ **Solo se configuran 4 variables en runtime** (¡pero ya no importan para
+Vite!)
 
 ### ¿Entonces cuál es el problema?
 
@@ -88,7 +89,8 @@ El problema está en el **Dockerfile** de apps/web. Voy a verificarlo...
 
 ## 🔍 Verificación del Dockerfile
 
-Voy a revisar el Dockerfile para ver si está usando correctamente los `build-args`.
+Voy a revisar el Dockerfile para ver si está usando correctamente los
+`build-args`.
 
 ---
 
@@ -225,7 +227,8 @@ Actions > CD - Staging > Run workflow
 
 **Opción A: Update Manual Cloud Run** (5 min)
 
-Aunque las variables VITE no se usan en runtime, podemos actualizar el servicio y forzar un rebuild desde la última imagen con variables correctas:
+Aunque las variables VITE no se usan en runtime, podemos actualizar el servicio
+y forzar un rebuild desde la última imagen con variables correctas:
 
 ```bash
 # 1. Ver qué imagen está desplegada actualmente
@@ -268,7 +271,8 @@ docker run --rm $IMAGE cat /usr/share/nginx/html/assets/*.js | grep -o "VITE_[A-
 docker run --rm $IMAGE cat /usr/share/nginx/html/assets/*.js | grep -E "localhost:8000|staging.adyela.care"
 ```
 
-Si encuentras `localhost:8000` en el bundle JS, confirma que la imagen se buildó sin las variables correctas.
+Si encuentras `localhost:8000` en el bundle JS, confirma que la imagen se buildó
+sin las variables correctas.
 
 ---
 
@@ -294,17 +298,19 @@ Si encuentras `localhost:8000` en el bundle JS, confirma que la imagen se build�
 
 **El problema NO es del deploy**, sino del **build de la imagen**.
 
-La imagen Docker actual (`adyela-web-staging:latest`) fue compilada (built) sin las variables correctas de Firebase y API URL.
+La imagen Docker actual (`adyela-web-staging:latest`) fue compilada (built) sin
+las variables correctas de Firebase y API URL.
 
 **Solución:**
 
 1. Configurar los secretos de GitHub
 2. Corregir el nombre de variable inconsistente
-3. Re-ejecutar el pipeline para crear una nueva imagen con las variables correctas
+3. Re-ejecutar el pipeline para crear una nueva imagen con las variables
+   correctas
 
 ---
 
-**Próximos pasos:** Revisar el Dockerfile y luego verificar los secretos de GitHub.
+**Próximos pasos:** Revisar el Dockerfile y luego verificar los secretos de
+GitHub.
 
-**Última actualización**: 2025-10-12 00:10 UTC
-**Actualizado por**: Claude Code
+**Última actualización**: 2025-10-12 00:10 UTC **Actualizado por**: Claude Code

@@ -93,7 +93,8 @@ Esto creará:
 ./scripts/setup-gcp-oidc.sh adyela-production heggar/adyela production
 ```
 
-**IMPORTANTE:** Este comando mostrará los secrets que debes agregar a GitHub. Guárdalos en un lugar seguro.
+**IMPORTANTE:** Este comando mostrará los secrets que debes agregar a GitHub.
+Guárdalos en un lugar seguro.
 
 **Tiempo estimado:** 2-3 minutos por entorno
 
@@ -275,11 +276,12 @@ Una vez completada la configuración:
   ./scripts/check-daily-costs.sh adyela-production
   ```
 
-- **Backup de configuración:**
-  El archivo `.gcp-config` contiene tu configuración. NO lo subas a git (ya está en .gitignore).
+- **Backup de configuración:** El archivo `.gcp-config` contiene tu
+  configuración. NO lo subas a git (ya está en .gitignore).
 
 ---
 
 **Tiempo total estimado:** 15-20 minutos
 
-**¿Necesitas ayuda?** Revisa la documentación completa en `docs/deployment/gcp-setup.md`
+**¿Necesitas ayuda?** Revisa la documentación completa en
+`docs/deployment/gcp-setup.md`

@@ -1,16 +1,18 @@
 # MVP Task Prioritization Strategy
 
-**Fecha**: 11 de Enero, 2025
-**Versión**: 1.0
-**Proyecto**: Adyela Health System
+**Fecha**: 11 de Enero, 2025 **Versión**: 1.0 **Proyecto**: Adyela Health System
 
 ---
 
 ## 📋 Resumen Ejecutivo
 
-Basado en el análisis de costos de compliance HIPAA, este documento clasifica todas las tareas del proyecto en **críticas para MVP** vs **opcionales para post-MVP**.
+Basado en el análisis de costos de compliance HIPAA, este documento clasifica
+todas las tareas del proyecto en **críticas para MVP** vs **opcionales para
+post-MVP**.
 
-**Conclusión clave**: Podemos implementar un MVP con infraestructura HIPAA-Ready por solo **$1.20/mes adicionales**, postponiendo únicamente 2 componentes costosos hasta tener usuarios reales procesando PHI.
+**Conclusión clave**: Podemos implementar un MVP con infraestructura HIPAA-Ready
+por solo **$1.20/mes adicionales**, postponiendo únicamente 2 componentes
+costosos hasta tener usuarios reales procesando PHI.
 
 ---
 
@@ -18,8 +20,10 @@ Basado en el análisis de costos de compliance HIPAA, este documento clasifica t
 
 ### Principios Guía
 
-1. ✅ **Implementar infraestructura HIPAA-Ready desde el inicio** (costo mínimo: $1.20/mes)
-2. ⏸️ **Postponer solo 2 componentes**: CMEK y Cloud Armor WAF (costo: $5.29/mes)
+1. ✅ **Implementar infraestructura HIPAA-Ready desde el inicio** (costo mínimo:
+   $1.20/mes)
+2. ⏸️ **Postponer solo 2 componentes**: CMEK y Cloud Armor WAF (costo:
+   $5.29/mes)
 3. 🚀 **Priorizar features core** sobre features avanzadas
 4. 📊 **Validar product-market fit** antes de escalar
 5. 💰 **Mantener costos bajo $5/mes** durante MVP
@@ -34,10 +38,8 @@ Estas 12 tareas de infraestructura deben implementarse para el MVP:
 
 #### 1. **VPC y Networking** - $0.00/mes (FREE)
 
-**Prioridad**: P0 - Bloqueante
-**Justificación**: Base de toda la seguridad y aislamiento de red
-**Tiempo estimado**: 2-3 horas
-**Tareas**:
+**Prioridad**: P0 - Bloqueante **Justificación**: Base de toda la seguridad y
+aislamiento de red **Tiempo estimado**: 2-3 horas **Tareas**:
 
 - Crear VPC dedicada para Adyela
 - Configurar subnets privadas
@@ -46,9 +48,8 @@ Estas 12 tareas de infraestructura deben implementarse para el MVP:
 
 #### 2. **Identity Platform (Firebase Auth)** - $0.00/mes (FREE hasta 50K MAU)
 
-**Prioridad**: P0 - Bloqueante
-**Justificación**: Autenticación segura es obligatoria para cualquier sistema con PHI
-**Tiempo estimado**: 4-6 horas
+**Prioridad**: P0 - Bloqueante **Justificación**: Autenticación segura es
+obligatoria para cualquier sistema con PHI **Tiempo estimado**: 4-6 horas
 **Tareas**:
 
 - Configurar Identity Platform
@@ -58,10 +59,8 @@ Estas 12 tareas de infraestructura deben implementarse para el MVP:
 
 #### 3. **API Gateway** - $0.45/mes
 
-**Prioridad**: P0 - Bloqueante
-**Justificación**: Control de acceso centralizado y rate limiting
-**Tiempo estimado**: 3-4 horas
-**Tareas**:
+**Prioridad**: P0 - Bloqueante **Justificación**: Control de acceso centralizado
+y rate limiting **Tiempo estimado**: 3-4 horas **Tareas**:
 
 - Configurar API Gateway
 - Implementar rate limiting (10K requests/mes)
@@ -70,9 +69,8 @@ Estas 12 tareas de infraestructura deben implementarse para el MVP:
 
 #### 4. **Cloud Run (Backend API)** - Incluido en costo base
 
-**Prioridad**: P0 - Bloqueante
-**Justificación**: Runtime de la aplicación backend
-**Tiempo estimado**: Ya implementado, solo configuración HIPAA
+**Prioridad**: P0 - Bloqueante **Justificación**: Runtime de la aplicación
+backend **Tiempo estimado**: Ya implementado, solo configuración HIPAA
 **Tareas**:
 
 - Configurar service account con permisos mínimos
@@ -82,10 +80,8 @@ Estas 12 tareas de infraestructura deben implementarse para el MVP:
 
 #### 5. **Firestore** - $0.18/mes
 
-**Prioridad**: P0 - Bloqueante
-**Justificación**: Base de datos para la aplicación
-**Tiempo estimado**: 2-3 horas
-**Tareas**:
+**Prioridad**: P0 - Bloqueante **Justificación**: Base de datos para la
+aplicación **Tiempo estimado**: 2-3 horas **Tareas**:
 
 - Configurar Firestore en modo privado (VPC)
 - Implementar reglas de seguridad granulares
@@ -94,10 +90,8 @@ Estas 12 tareas de infraestructura deben implementarse para el MVP:
 
 #### 6. **Cloud Storage** - $0.13/mes
 
-**Prioridad**: P1 - Alta
-**Justificación**: Almacenamiento de archivos y documentos
-**Tiempo estimado**: 2-3 horas
-**Tareas**:
+**Prioridad**: P1 - Alta **Justificación**: Almacenamiento de archivos y
+documentos **Tiempo estimado**: 2-3 horas **Tareas**:
 
 - Configurar buckets con acceso privado
 - Implementar signed URLs para acceso temporal
@@ -106,10 +100,8 @@ Estas 12 tareas de infraestructura deben implementarse para el MVP:
 
 #### 7. **VPC Service Controls** - $0.00/mes (FREE)
 
-**Prioridad**: P0 - Bloqueante
-**Justificación**: Previene exfiltración de datos (requisito HIPAA crítico)
-**Tiempo estimado**: 3-4 horas
-**Tareas**:
+**Prioridad**: P0 - Bloqueante **Justificación**: Previene exfiltración de datos
+(requisito HIPAA crítico) **Tiempo estimado**: 3-4 horas **Tareas**:
 
 - Crear perimeter de seguridad
 - Configurar políticas de ingress/egress
@@ -118,10 +110,9 @@ Estas 12 tareas de infraestructura deben implementarse para el MVP:
 
 #### 8. **Secret Manager** - $0.24/mes
 
-**Prioridad**: P0 - Bloqueante
-**Justificación**: Manejo seguro de credenciales (ya en uso parcialmente)
-**Tiempo estimado**: 1-2 horas (configuración adicional)
-**Tareas**:
+**Prioridad**: P0 - Bloqueante **Justificación**: Manejo seguro de credenciales
+(ya en uso parcialmente) **Tiempo estimado**: 1-2 horas (configuración
+adicional) **Tareas**:
 
 - Migrar todas las secrets a Secret Manager
 - Configurar versionamiento automático
@@ -130,10 +121,8 @@ Estas 12 tareas de infraestructura deben implementarse para el MVP:
 
 #### 9. **Cloud Monitoring + Logging** - $0.00/mes (FREE hasta 50GB/mes)
 
-**Prioridad**: P0 - Bloqueante
-**Justificación**: Audit logging es requisito obligatorio HIPAA
-**Tiempo estimado**: 3-4 horas
-**Tareas**:
+**Prioridad**: P0 - Bloqueante **Justificación**: Audit logging es requisito
+obligatorio HIPAA **Tiempo estimado**: 3-4 horas **Tareas**:
 
 - Configurar Data Access Audit Logs
 - Implementar log sinks para retención >7 años
@@ -142,10 +131,8 @@ Estas 12 tareas de infraestructura deben implementarse para el MVP:
 
 #### 10. **Audit Logging específico para PHI** - $0.00/mes (FREE)
 
-**Prioridad**: P0 - Bloqueante
-**Justificación**: Obligatorio por HIPAA Security Rule
-**Tiempo estimado**: 4-6 horas
-**Tareas**:
+**Prioridad**: P0 - Bloqueante **Justificación**: Obligatorio por HIPAA Security
+Rule **Tiempo estimado**: 4-6 horas **Tareas**:
 
 - Implementar logging de todos los accesos a PHI
 - Capturar: user_id, patient_id, action, timestamp, reason
@@ -154,10 +141,8 @@ Estas 12 tareas de infraestructura deben implementarse para el MVP:
 
 #### 11. **IAM Policies (Least Privilege)** - $0.00/mes (FREE)
 
-**Prioridad**: P0 - Bloqueante
-**Justificación**: Principio de mínimo privilegio (HIPAA Security Rule)
-**Tiempo estimado**: 3-4 horas
-**Tareas**:
+**Prioridad**: P0 - Bloqueante **Justificación**: Principio de mínimo privilegio
+(HIPAA Security Rule) **Tiempo estimado**: 3-4 horas **Tareas**:
 
 - Crear service accounts por servicio
 - Implementar RBAC granular
@@ -166,18 +151,16 @@ Estas 12 tareas de infraestructura deben implementarse para el MVP:
 
 #### 12. **TLS 1.3 en todas las comunicaciones** - $0.00/mes (FREE)
 
-**Prioridad**: P0 - Bloqueante
-**Justificación**: Encriptación en tránsito (HIPAA Security Rule)
-**Tiempo estimado**: 1-2 horas
-**Tareas**:
+**Prioridad**: P0 - Bloqueante **Justificación**: Encriptación en tránsito
+(HIPAA Security Rule) **Tiempo estimado**: 1-2 horas **Tareas**:
 
 - Configurar Cloud Run con TLS 1.3 mínimo
 - Implementar HTTPS-only en API Gateway
 - Configurar certificados SSL/TLS automáticos
 - Verificar cipher suites seguras
 
-**Total Costo MVP Infraestructura Crítica: $1.00/mes**
-**Tiempo Total Estimado: 28-41 horas**
+**Total Costo MVP Infraestructura Crítica: $1.00/mes** **Tiempo Total Estimado:
+28-41 horas**
 
 ---
 
@@ -187,11 +170,10 @@ Estas 2 tareas se activan cuando hay usuarios reales procesando PHI:
 
 #### 13. **CMEK (Customer-Managed Encryption Keys)** - $0.12/mes
 
-**Prioridad**: P2 - Media (activar con primeros 100 usuarios)
-**Justificación**: Google-managed encryption es suficiente para MVP
-**Cuándo activar**: Al tener primeros 100 usuarios activos o primeros contratos enterprise
-**Tiempo de activación**: 2-3 horas
-**Tareas**:
+**Prioridad**: P2 - Media (activar con primeros 100 usuarios) **Justificación**:
+Google-managed encryption es suficiente para MVP **Cuándo activar**: Al tener
+primeros 100 usuarios activos o primeros contratos enterprise **Tiempo de
+activación**: 2-3 horas **Tareas**:
 
 - Crear key ring en Cloud KMS
 - Configurar rotation automática (90 días)
@@ -200,10 +182,9 @@ Estas 2 tareas se activan cuando hay usuarios reales procesando PHI:
 
 #### 14. **Cloud Armor WAF** - $5.17/mes
 
-**Prioridad**: P2 - Media (activar con tráfico real)
-**Justificación**: Rate limiting en API Gateway es suficiente para MVP
-**Cuándo activar**: Al superar 10K requests/día o detectar primeros ataques
-**Tiempo de activación**: 3-4 horas
+**Prioridad**: P2 - Media (activar con tráfico real) **Justificación**: Rate
+limiting en API Gateway es suficiente para MVP **Cuándo activar**: Al superar
+10K requests/día o detectar primeros ataques **Tiempo de activación**: 3-4 horas
 **Tareas**:
 
 - Configurar Cloud Armor en API Gateway
@@ -211,8 +192,8 @@ Estas 2 tareas se activan cuando hay usuarios reales procesando PHI:
 - Configurar rate limiting avanzado
 - Establecer geo-blocking si es necesario
 
-**Total Costo Infraestructura Opcional: $5.29/mes**
-**Tiempo Total Activación: 5-7 horas**
+**Total Costo Infraestructura Opcional: $5.29/mes** **Tiempo Total Activación:
+5-7 horas**
 
 ---
 
@@ -222,8 +203,7 @@ Estas 2 tareas se activan cuando hay usuarios reales procesando PHI:
 
 #### **Core Feature 1: Autenticación y Registro**
 
-**Prioridad**: P0 - Bloqueante
-**User Stories**:
+**Prioridad**: P0 - Bloqueante **User Stories**:
 
 - ✅ Como paciente, quiero registrarme con email/password
 - ✅ Como paciente, quiero hacer login con MFA
@@ -234,8 +214,7 @@ Estas 2 tareas se activan cuando hay usuarios reales procesando PHI:
 
 #### **Core Feature 2: Gestión de Citas**
 
-**Prioridad**: P0 - Bloqueante
-**User Stories**:
+**Prioridad**: P0 - Bloqueante **User Stories**:
 
 - ✅ Como paciente, quiero ver citas disponibles
 - ✅ Como paciente, quiero agendar una cita
@@ -247,14 +226,14 @@ Estas 2 tareas se activan cuando hay usuarios reales procesando PHI:
 
 #### **Core Feature 3: Videoconsultas**
 
-**Prioridad**: P0 - Bloqueante (diferenciador clave)
-**User Stories**:
+**Prioridad**: P0 - Bloqueante (diferenciador clave) **User Stories**:
 
 - ✅ Como paciente, quiero unirme a videollamada a la hora de mi cita
 - ✅ Como doctor, quiero iniciar videoconsulta con paciente
 - ⚠️ Como usuario, quiero que la llamada sea segura y encriptada
 
-**Estado actual**: ⚠️ Jitsi integrado, falta validación HIPAA de la implementación
+**Estado actual**: ⚠️ Jitsi integrado, falta validación HIPAA de la
+implementación
 
 **Tareas pendientes**:
 
@@ -267,8 +246,7 @@ Estas 2 tareas se activan cuando hay usuarios reales procesando PHI:
 
 #### **Core Feature 4: Perfil de Paciente (Mínimo)**
 
-**Prioridad**: P0 - Bloqueante
-**User Stories**:
+**Prioridad**: P0 - Bloqueante **User Stories**:
 
 - ✅ Como paciente, quiero ver mis datos personales
 - ✅ Como paciente, quiero editar mi información de contacto
@@ -278,8 +256,7 @@ Estas 2 tareas se activan cuando hay usuarios reales procesando PHI:
 
 #### **Core Feature 5: Dashboard de Doctor**
 
-**Prioridad**: P0 - Bloqueante
-**User Stories**:
+**Prioridad**: P0 - Bloqueante **User Stories**:
 
 - ✅ Como doctor, quiero ver lista de pacientes del día
 - ✅ Como doctor, quiero acceder rápidamente a citas próximas
@@ -293,66 +270,61 @@ Estas 2 tareas se activan cuando hay usuarios reales procesando PHI:
 
 #### **Feature Avanzada 1: Recetas Médicas (Prescriptions)**
 
-**Prioridad**: P1 - Alta (post-MVP)
-**Justificación**: Aumenta complejidad legal y requiere integración con farmacias
-**Cuándo implementar**: Después de validar PMF con features core
-**User Stories**:
+**Prioridad**: P1 - Alta (post-MVP) **Justificación**: Aumenta complejidad legal
+y requiere integración con farmacias **Cuándo implementar**: Después de validar
+PMF con features core **User Stories**:
 
 - Como doctor, quiero generar receta digital
 - Como paciente, quiero ver mis recetas activas
 - Como farmacia, quiero validar recetas
 
-**Tiempo estimado**: 20-30 horas
-**Dependencias**: Integración con sistema de farmacias, validación legal
+**Tiempo estimado**: 20-30 horas **Dependencias**: Integración con sistema de
+farmacias, validación legal
 
 #### **Feature Avanzada 2: Historial Médico Completo (EMR)**
 
-**Prioridad**: P1 - Alta (post-MVP)
-**Justificación**: Requiere compliance adicional y estructura de datos compleja
-**Cuándo implementar**: Después de 6 meses con MVP en producción
-**User Stories**:
+**Prioridad**: P1 - Alta (post-MVP) **Justificación**: Requiere compliance
+adicional y estructura de datos compleja **Cuándo implementar**: Después de 6
+meses con MVP en producción **User Stories**:
 
 - Como doctor, quiero registrar notas de consulta estructuradas
 - Como paciente, quiero ver mi historial médico completo
 - Como especialista, quiero importar historial de otros proveedores
 
-**Tiempo estimado**: 40-60 horas
-**Dependencias**: FHIR compliance, interoperabilidad HL7
+**Tiempo estimado**: 40-60 horas **Dependencias**: FHIR compliance,
+interoperabilidad HL7
 
 #### **Feature Avanzada 3: Laboratorios e Imágenes**
 
-**Prioridad**: P2 - Media (futuro)
-**Justificación**: Requiere integraciones externas y storage costoso
-**Cuándo implementar**: Fase 2 (año 2)
-**User Stories**:
+**Prioridad**: P2 - Media (futuro) **Justificación**: Requiere integraciones
+externas y storage costoso **Cuándo implementar**: Fase 2 (año 2) **User
+Stories**:
 
 - Como doctor, quiero solicitar exámenes de laboratorio
 - Como paciente, quiero ver resultados de mis exámenes
 - Como doctor, quiero visualizar imágenes médicas (DICOM)
 
-**Tiempo estimado**: 60-80 horas
-**Costo adicional**: Storage de imágenes DICOM (~$2-5/mes adicionales)
+**Tiempo estimado**: 60-80 horas **Costo adicional**: Storage de imágenes DICOM
+(~$2-5/mes adicionales)
 
 #### **Feature Avanzada 4: Pagos y Facturación**
 
-**Prioridad**: P1 - Alta (post-MVP)
-**Justificación**: Requiere integración con payment gateway y complejidad fiscal
-**Cuándo implementar**: Después de validar modelo de negocio
-**User Stories**:
+**Prioridad**: P1 - Alta (post-MVP) **Justificación**: Requiere integración con
+payment gateway y complejidad fiscal **Cuándo implementar**: Después de validar
+modelo de negocio **User Stories**:
 
 - Como paciente, quiero pagar consultas con tarjeta
 - Como clínica, quiero generar facturas automáticas
 - Como administrador, quiero reportes financieros
 
-**Tiempo estimado**: 30-40 horas
-**Costo adicional**: Payment gateway fees (Stripe ~2.9% + $0.30)
+**Tiempo estimado**: 30-40 horas **Costo adicional**: Payment gateway fees
+(Stripe ~2.9% + $0.30)
 
 #### **Feature Avanzada 5: Multi-idioma Completo**
 
-**Prioridad**: P2 - Media (futuro)
-**Justificación**: MVP funciona con ES/EN
-**Cuándo implementar**: Al expandir a nuevos mercados
-**Tiempo estimado**: 15-20 horas
+**Prioridad**: P2 - Media (futuro) **Justificación**: MVP funciona con ES/EN
+**Cuándo implementar**: Al expandir a nuevos mercados **Tiempo estimado**: 15-20
+horas
 
 ---
 
@@ -373,8 +345,8 @@ Estas 2 tareas se activan cuando hay usuarios reales procesando PHI:
 - ✅ Perfil básico de paciente
 - ✅ Dashboard básico de doctor
 
-**Tiempo total estimado MVP**: 35-50 horas
-**Costo mensual MVP**: $3.20/mes ($2.00 base + $1.20 HIPAA)
+**Tiempo total estimado MVP**: 35-50 horas **Costo mensual MVP**: $3.20/mes
+($2.00 base + $1.20 HIPAA)
 
 ### Post-MVP Scope (Fase 1: Meses 4-9)
 
@@ -389,8 +361,7 @@ Estas 2 tareas se activan cuando hay usuarios reales procesando PHI:
 - Pagos y facturación
 - Historial médico expandido
 
-**Tiempo estimado Fase 1**: 50-70 horas
-**Costo mensual Fase 1**: $8.49/mes
+**Tiempo estimado Fase 1**: 50-70 horas **Costo mensual Fase 1**: $8.49/mes
 
 ---
 
@@ -511,8 +482,10 @@ Total:                   $24.74/mes
 **Razones**:
 
 1. ✅ **Costo mínimo**: Solo $1.20/mes adicionales (incremental cost de 60%)
-2. ✅ **Evita migración futura**: Implementar HIPAA después es 10x más costoso en tiempo
-3. ✅ **Compliance desde día 1**: Podemos aceptar clientes healthcare inmediatamente
+2. ✅ **Evita migración futura**: Implementar HIPAA después es 10x más costoso
+   en tiempo
+3. ✅ **Compliance desde día 1**: Podemos aceptar clientes healthcare
+   inmediatamente
 4. ✅ **Diferenciador competitivo**: La mayoría de MVPs no son HIPAA-compliant
 5. ✅ **Tiempo de activación rápido**: Solo 35-50 horas de implementación
 6. ✅ **Escalabilidad**: Solo activar CMEK y Cloud Armor cuando sea necesario
@@ -612,6 +585,5 @@ Total:                   $24.74/mes
 
 ---
 
-**Última actualización**: 11 de Enero, 2025
-**Próxima revisión**: Al completar Sprint 1
-**Owner**: DevOps Team + Product Owner
+**Última actualización**: 11 de Enero, 2025 **Próxima revisión**: Al completar
+Sprint 1 **Owner**: DevOps Team + Product Owner

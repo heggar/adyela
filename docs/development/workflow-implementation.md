@@ -2,7 +2,9 @@
 
 ## Overview
 
-This document summarizes the automated feature development workflow that integrates Task Master AI with Git branching, enforces quality gates at every stage, maintains HIPAA compliance, and automates security validation.
+This document summarizes the automated feature development workflow that
+integrates Task Master AI with Git branching, enforces quality gates at every
+stage, maintains HIPAA compliance, and automates security validation.
 
 ## What Has Been Implemented
 
@@ -11,7 +13,8 @@ This document summarizes the automated feature development workflow that integra
 **Location**: `scripts/`
 
 - **`task-start.sh`**: Automates feature branch creation from Task Master tasks
-  - Creates descriptive feature branch using task title (e.g., `feature/implement-user-authentication`)
+  - Creates descriptive feature branch using task title (e.g.,
+    `feature/implement-user-authentication`)
   - Updates task status to `in-progress`
   - Generates development checklist
   - Creates task context directory (.task-context/task-<id>/)

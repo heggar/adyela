@@ -1,15 +1,16 @@
 # 🧪 QA Automation Agent Specification
 
-**Agent Type:** Specialized SDLC Agent
-**Domain:** Quality Assurance & Testing
-**Version:** 1.0.0
-**Last Updated:** 2025-10-05
+**Agent Type:** Specialized SDLC Agent **Domain:** Quality Assurance & Testing
+**Version:** 1.0.0 **Last Updated:** 2025-10-05
 
 ---
 
 ## 🎯 Purpose & Scope
 
-The QA Automation Agent ensures the quality, reliability, and performance of the Adyela platform through comprehensive automated testing strategies. This agent implements the testing pyramid with unit, integration, E2E, performance, and accessibility testing.
+The QA Automation Agent ensures the quality, reliability, and performance of the
+Adyela platform through comprehensive automated testing strategies. This agent
+implements the testing pyramid with unit, integration, E2E, performance, and
+accessibility testing.
 
 ### Primary Responsibilities
 
@@ -58,15 +59,9 @@ The QA Automation Agent ensures the quality, reliability, and performance of the
 
 #### Testing Pyramid
 
-\`\`\`
-╱╲
-╱ E2E╲ ~10% - Critical user flows
-╱──────╲
-╱Integration╲ ~20% - API contracts, service integration
-╱────────────╲
-╱ Unit Tests ╲ ~70% - Business logic, utilities
-╱────────────────╲
-\`\`\`
+\`\`\` ╱╲ ╱ E2E╲ ~10% - Critical user flows ╱──────╲ ╱Integration╲ ~20% - API
+contracts, service integration ╱────────────╲ ╱ Unit Tests ╲ ~70% - Business
+logic, utilities ╱────────────────╲ \`\`\`
 
 **Coverage Targets:**
 
@@ -86,16 +81,13 @@ The QA Automation Agent ensures the quality, reliability, and performance of the
 
 # apps/api/tests/unit/domain/test_appointment.py
 
-import pytest
-from datetime import datetime, timedelta
-from adyela_api.domain import Appointment, BusinessRuleViolationError
-from adyela_api.domain.value_objects import DateTimeRange, TenantId
-from adyela_api.config import AppointmentStatus, AppointmentType
+import pytest from datetime import datetime, timedelta from adyela_api.domain
+import Appointment, BusinessRuleViolationError from
+adyela_api.domain.value_objects import DateTimeRange, TenantId from
+adyela_api.config import AppointmentStatus, AppointmentType
 
-class TestAppointment:
-def test_create_appointment_success(self):
-"""Test creating a valid appointment"""
-start = datetime.utcnow() + timedelta(days=1)
+class TestAppointment: def test_create_appointment_success(self): """Test
+creating a valid appointment""" start = datetime.utcnow() + timedelta(days=1)
 end = start + timedelta(hours=1)
 
         appointment = Appointment(
@@ -142,24 +134,20 @@ end = start + timedelta(hours=1)
 
 \`\`\`
 
-**Current Coverage:** Unknown
-**Target Coverage:** 80%
+**Current Coverage:** Unknown **Target Coverage:** 80%
 
 ---
 
 #### Frontend Unit Tests (Vitest + Testing Library)
 
-\`\`\`typescript
-// apps/web/src/features/auth/components/LoginPage.test.tsx
+\`\`\`typescript // apps/web/src/features/auth/components/LoginPage.test.tsx
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { vi } from 'vitest';
-import { LoginPage } from './LoginPage';
-import { useAuth } from '../hooks/useAuth';
+import { vi } from 'vitest'; import { LoginPage } from './LoginPage'; import {
+useAuth } from '../hooks/useAuth';
 
 vi.mock('../hooks/useAuth');
 
-describe('LoginPage', () => {
-it('renders login form', () => {
+describe('LoginPage', () => { it('renders login form', () => {
 render(<LoginPage />);
 
     expect(screen.getByTestId('login-title')).toBeInTheDocument();
@@ -182,9 +170,8 @@ render(<LoginPage />);
 
 });
 
-it('calls login function on form submit', async () => {
-const mockLogin = vi.fn();
-(useAuth as any).mockReturnValue({ login: mockLogin });
+it('calls login function on form submit', async () => { const mockLogin =
+vi.fn(); (useAuth as any).mockReturnValue({ login: mockLogin });
 
     render(<LoginPage />);
 
@@ -200,12 +187,9 @@ const mockLogin = vi.fn();
       expect(mockLogin).toHaveBeenCalledWith('test@example.com', 'password123');
     });
 
-});
-});
-\`\`\`
+}); }); \`\`\`
 
-**Current Coverage:** Unknown
-**Target Coverage:** 75%
+**Current Coverage:** Unknown **Target Coverage:** 75%
 
 ---
 
@@ -217,30 +201,17 @@ const mockLogin = vi.fn();
 
 # tests/integration/api/test_appointments_api.py
 
-import pytest
-from httpx import AsyncClient
-from apps.api.adyela_api.main import app
+import pytest from httpx import AsyncClient from apps.api.adyela_api.main import
+app
 
-@pytest.mark.integration
-class TestAppointmentsAPI:
-@pytest.mark.asyncio
-async def test_create_appointment_success(self, async_client: AsyncClient, auth_token: str):
-"""Test creating appointment via API"""
-response = await async_client.post(
-"/api/v1/appointments",
-headers={
-"Authorization": f"Bearer {auth_token}",
-"X-Tenant-ID": "test-tenant"
-},
-json={
-"patient_id": "patient-123",
-"practitioner_id": "practitioner-456",
-"start_time": "2025-12-01T10:00:00Z",
-"end_time": "2025-12-01T11:00:00Z",
-"appointment_type": "video_call",
-"reason": "Regular checkup"
-}
-)
+@pytest.mark.integration class TestAppointmentsAPI: @pytest.mark.asyncio async
+def test_create_appointment_success(self, async_client: AsyncClient, auth_token:
+str): """Test creating appointment via API""" response = await
+async_client.post( "/api/v1/appointments", headers={ "Authorization": f"Bearer
+{auth_token}", "X-Tenant-ID": "test-tenant" }, json={ "patient_id":
+"patient-123", "practitioner_id": "practitioner-456", "start_time":
+"2025-12-01T10:00:00Z", "end_time": "2025-12-01T11:00:00Z", "appointment_type":
+"video_call", "reason": "Regular checkup" } )
 
         assert response.status_code == 201
         data = response.json()
@@ -278,23 +249,16 @@ import schemathesis
 
 schema = schemathesis.from_uri("http://localhost:8000/openapi.json")
 
-@schema.parametrize()
-def test_api_contract(case):
-"""Test all API endpoints against OpenAPI schema"""
-response = case.call()
-case.validate_response(response)
-\`\`\`
+@schema.parametrize() def test_api_contract(case): """Test all API endpoints
+against OpenAPI schema""" response = case.call()
+case.validate_response(response) \`\`\`
 
-**Command:**
-\`\`\`bash
+**Command:** \`\`\`bash
 
 # Run contract tests
 
-schemathesis run --url http://localhost:8000/openapi.json \\
---checks all \\
---hypothesis-max-examples=100 \\
---header "X-Tenant-ID: test-tenant"
-\`\`\`
+schemathesis run --url http://localhost:8000/openapi.json \\ --checks all \\
+--hypothesis-max-examples=100 \\ --header "X-Tenant-ID: test-tenant" \`\`\`
 
 ---
 
@@ -307,25 +271,20 @@ schemathesis run --url http://localhost:8000/openapi.json \\
 - **Authentication**: 7 tests
 - **API Health**: 9 tests
 
-**E2E Test Expansion Plan:**
-\`\`\`typescript
-// tests/e2e/appointments/create-appointment.spec.ts
-import { test, expect } from '@playwright/test';
+**E2E Test Expansion Plan:** \`\`\`typescript //
+tests/e2e/appointments/create-appointment.spec.ts import { test, expect } from
+'@playwright/test';
 
-test.describe('Appointment Creation Flow', () => {
-test.beforeEach(async ({ page }) => {
-// Login
-await page.goto('/login');
-await page.getByTestId('email-input').fill('doctor@clinic.com');
-await page.getByTestId('password-input').fill('password123');
-await page.getByTestId('login-button').click();
-await expect(page.getByTestId('dashboard-title')).toBeVisible();
-});
+test.describe('Appointment Creation Flow', () => { test.beforeEach(async ({ page
+}) => { // Login await page.goto('/login'); await
+page.getByTestId('email-input').fill('doctor@clinic.com'); await
+page.getByTestId('password-input').fill('password123'); await
+page.getByTestId('login-button').click(); await
+expect(page.getByTestId('dashboard-title')).toBeVisible(); });
 
-test('doctor can create new appointment', async ({ page }) => {
-// Navigate to appointments
-await page.getByTestId('nav-appointments').click();
-await page.getByTestId('create-appointment-button').click();
+test('doctor can create new appointment', async ({ page }) => { // Navigate to
+appointments await page.getByTestId('nav-appointments').click(); await
+page.getByTestId('create-appointment-button').click();
 
     // Fill appointment form
     await page.getByTestId('patient-select').selectOption('patient-123');
@@ -344,9 +303,9 @@ await page.getByTestId('create-appointment-button').click();
 
 });
 
-test('validates required fields', async ({ page }) => {
-await page.getByTestId('nav-appointments').click();
-await page.getByTestId('create-appointment-button').click();
+test('validates required fields', async ({ page }) => { await
+page.getByTestId('nav-appointments').click(); await
+page.getByTestId('create-appointment-button').click();
 
     // Submit without filling
     await page.getByTestId('submit-appointment').click();
@@ -355,9 +314,7 @@ await page.getByTestId('create-appointment-button').click();
     await expect(page.getByText(/patient is required/i)).toBeVisible();
     await expect(page.getByText(/date is required/i)).toBeVisible();
 
-});
-});
-\`\`\`
+}); }); \`\`\`
 
 **E2E Coverage Expansion:**
 
@@ -392,85 +349,45 @@ await page.getByTestId('create-appointment-button').click();
 - Best Practices: >95
 - SEO: >95
 
-**Lighthouse CI Configuration:**
-\`\`\`json
-// lighthouserc.json
-{
-"ci": {
-"collect": {
-"url": [
-"http://localhost:3000",
-"http://localhost:3000/dashboard",
-"http://localhost:3000/appointments"
-],
-"numberOfRuns": 3
-},
-"assert": {
-"preset": "lighthouse:recommended",
-"assertions": {
-"categories:performance": ["error", {"minScore": 0.9}],
+**Lighthouse CI Configuration:** \`\`\`json // lighthouserc.json { "ci": {
+"collect": { "url": [ "http://localhost:3000",
+"http://localhost:3000/dashboard", "http://localhost:3000/appointments" ],
+"numberOfRuns": 3 }, "assert": { "preset": "lighthouse:recommended",
+"assertions": { "categories:performance": ["error", {"minScore": 0.9}],
 "categories:accessibility": ["error", {"minScore": 1.0}],
-"categories:best-practices": ["error", {"minScore": 0.95}],
-"categories:seo": ["error", {"minScore": 0.95}],
-"first-contentful-paint": ["warn", {"maxNumericValue": 2000}],
-"largest-contentful-paint": ["error", {"maxNumericValue": 2500}],
-"cumulative-layout-shift": ["error", {"maxNumericValue": 0.1}],
-"total-blocking-time": ["error", {"maxNumericValue": 300}]
-}
-},
-"upload": {
-"target": "temporary-public-storage"
-}
-}
-}
-\`\`\`
+"categories:best-practices": ["error", {"minScore": 0.95}], "categories:seo":
+["error", {"minScore": 0.95}], "first-contentful-paint": ["warn",
+{"maxNumericValue": 2000}], "largest-contentful-paint": ["error",
+{"maxNumericValue": 2500}], "cumulative-layout-shift": ["error",
+{"maxNumericValue": 0.1}], "total-blocking-time": ["error", {"maxNumericValue":
+300}] } }, "upload": { "target": "temporary-public-storage" } } } \`\`\`
 
 ---
 
 #### Load Testing (k6)
 
-\`\`\`javascript
-// tests/performance/load-test.js
-import http from 'k6/http';
+\`\`\`javascript // tests/performance/load-test.js import http from 'k6/http';
 import { check, sleep } from 'k6';
 
-export const options = {
-stages: [
-{ duration: '2m', target: 50 }, // Ramp up to 50 users
-{ duration: '5m', target: 50 }, // Stay at 50 users
-{ duration: '2m', target: 100 }, // Ramp up to 100 users
-{ duration: '5m', target: 100 }, // Stay at 100 users
-{ duration: '2m', target: 0 }, // Ramp down
-],
-thresholds: {
+export const options = { stages: [ { duration: '2m', target: 50 }, // Ramp up to
+50 users { duration: '5m', target: 50 }, // Stay at 50 users { duration: '2m',
+target: 100 }, // Ramp up to 100 users { duration: '5m', target: 100 }, // Stay
+at 100 users { duration: '2m', target: 0 }, // Ramp down ], thresholds: {
 http_req_duration: ['p(95)<500'], // 95% of requests under 500ms
-http_req_failed: ['rate<0.01'], // Error rate < 1%
-},
-};
+http_req_failed: ['rate<0.01'], // Error rate < 1% }, };
 
-export default function () {
-// Health check
-const healthRes = http.get('http://api.adyela.com/health');
-check(healthRes, {
-'health check status is 200': (r) => r.status === 200,
-'health check response time < 200ms': (r) => r.timings.duration < 200,
-});
+export default function () { // Health check const healthRes =
+http.get('http://api.adyela.com/health'); check(healthRes, { 'health check
+status is 200': (r) => r.status === 200, 'health check response time < 200ms':
+(r) => r.timings.duration < 200, });
 
-// List appointments
-const listRes = http.get('http://api.adyela.com/api/v1/appointments', {
-headers: {
-'X-Tenant-ID': 'test-tenant',
-'Authorization': 'Bearer ${TOKEN}',
-},
-});
-check(listRes, {
-'list appointments status is 200': (r) => r.status === 200,
-'list appointments response time < 500ms': (r) => r.timings.duration < 500,
-});
+// List appointments const listRes =
+http.get('http://api.adyela.com/api/v1/appointments', { headers: {
+'X-Tenant-ID': 'test-tenant', 'Authorization': 'Bearer ${TOKEN}', }, });
+check(listRes, { 'list appointments status is 200': (r) => r.status === 200,
+'list appointments response time < 500ms': (r) => r.timings.duration < 500, });
 
-sleep(1);
-}
-\`\`\`
+sleep(1); } \`\`\`
 
 **Load Test Scenarios:**
 
@@ -486,14 +403,11 @@ sleep(1);
 
 #### Automated Accessibility Tests
 
-\`\`\`typescript
-// tests/e2e/accessibility/a11y.spec.ts
-import { test, expect } from '@playwright/test';
-import AxeBuilder from '@axe-core/playwright';
+\`\`\`typescript // tests/e2e/accessibility/a11y.spec.ts import { test, expect }
+from '@playwright/test'; import AxeBuilder from '@axe-core/playwright';
 
-test.describe('Accessibility', () => {
-test('homepage should not have accessibility violations', async ({ page }) => {
-await page.goto('/');
+test.describe('Accessibility', () => { test('homepage should not have
+accessibility violations', async ({ page }) => { await page.goto('/');
 
     const accessibilityScanResults = await new AxeBuilder({ page })
       .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
@@ -503,8 +417,8 @@ await page.goto('/');
 
 });
 
-test('login page should be keyboard navigable', async ({ page }) => {
-await page.goto('/login');
+test('login page should be keyboard navigable', async ({ page }) => { await
+page.goto('/login');
 
     // Tab through form
     await page.keyboard.press('Tab');
@@ -518,8 +432,8 @@ await page.goto('/login');
 
 });
 
-test('dashboard has proper ARIA labels', async ({ page }) => {
-await page.goto('/dashboard');
+test('dashboard has proper ARIA labels', async ({ page }) => { await
+page.goto('/dashboard');
 
     // Check ARIA landmarks
     await expect(page.locator('[role="main"]')).toBeVisible();
@@ -531,9 +445,7 @@ await page.goto('/dashboard');
       await expect(card).toHaveAttribute('aria-label');
     }
 
-});
-});
-\`\`\`
+}); }); \`\`\`
 
 **WCAG 2.1 AA Requirements:**
 
@@ -550,28 +462,20 @@ await page.goto('/dashboard');
 
 #### Percy/Chromatic Integration (Optional)
 
-\`\`\`typescript
-// tests/e2e/visual/visual-regression.spec.ts
-import { test } from '@playwright/test';
-import percySnapshot from '@percy/playwright';
+\`\`\`typescript // tests/e2e/visual/visual-regression.spec.ts import { test }
+from '@playwright/test'; import percySnapshot from '@percy/playwright';
 
-test.describe('Visual Regression', () => {
-test('dashboard snapshot', async ({ page }) => {
-await page.goto('/dashboard');
-await percySnapshot(page, 'Dashboard Page');
-});
+test.describe('Visual Regression', () => { test('dashboard snapshot', async ({
+page }) => { await page.goto('/dashboard'); await percySnapshot(page, 'Dashboard
+Page'); });
 
-test('appointment form snapshot', async ({ page }) => {
-await page.goto('/appointments/new');
-await percySnapshot(page, 'Appointment Form');
+test('appointment form snapshot', async ({ page }) => { await
+page.goto('/appointments/new'); await percySnapshot(page, 'Appointment Form');
 });
 
-test('appointment form - validation errors', async ({ page }) => {
-await page.goto('/appointments/new');
-await page.getByTestId('submit-button').click();
-await percySnapshot(page, 'Appointment Form - Validation Errors');
-});
-});
+test('appointment form - validation errors', async ({ page }) => { await
+page.goto('/appointments/new'); await page.getByTestId('submit-button').click();
+await percySnapshot(page, 'Appointment Form - Validation Errors'); }); });
 \`\`\`
 
 ---
@@ -601,50 +505,28 @@ name: CI
 
 on: [push, pull_request]
 
-jobs:
-lint:
-runs-on: ubuntu-latest
-steps: - uses: actions/checkout@v3 - name: Lint
-run: pnpm lint
+jobs: lint: runs-on: ubuntu-latest steps: - uses: actions/checkout@v3 - name:
+Lint run: pnpm lint
 
-type-check:
-runs-on: ubuntu-latest
-steps: - uses: actions/checkout@v3 - name: Type Check
-run: pnpm type-check
+type-check: runs-on: ubuntu-latest steps: - uses: actions/checkout@v3 - name:
+Type Check run: pnpm type-check
 
-unit-test:
-runs-on: ubuntu-latest
-steps: - uses: actions/checkout@v3 - name: Unit Tests
-run: pnpm test --coverage - name: Upload Coverage
-uses: codecov/codecov-action@v3
+unit-test: runs-on: ubuntu-latest steps: - uses: actions/checkout@v3 - name:
+Unit Tests run: pnpm test --coverage - name: Upload Coverage uses:
+codecov/codecov-action@v3
 
-integration-test:
-runs-on: ubuntu-latest
-services:
-firestore:
-image: google/cloud-sdk:emulators
-ports: - 8080:8080
-steps: - uses: actions/checkout@v3 - name: Integration Tests
-run: pnpm test:integration
+integration-test: runs-on: ubuntu-latest services: firestore: image:
+google/cloud-sdk:emulators ports: - 8080:8080 steps: - uses:
+actions/checkout@v3 - name: Integration Tests run: pnpm test:integration
 
-e2e-test:
-runs-on: ubuntu-latest
-steps: - uses: actions/checkout@v3 - name: Install Playwright
-run: pnpm playwright install --with-deps - name: Start Services
-run: docker-compose up -d - name: E2E Tests
-run: pnpm test:e2e - name: Upload Report
-uses: actions/upload-artifact@v3
-if: always()
-with:
-name: playwright-report
-path: playwright-report/
+e2e-test: runs-on: ubuntu-latest steps: - uses: actions/checkout@v3 - name:
+Install Playwright run: pnpm playwright install --with-deps - name: Start
+Services run: docker-compose up -d - name: E2E Tests run: pnpm test:e2e - name:
+Upload Report uses: actions/upload-artifact@v3 if: always() with: name:
+playwright-report path: playwright-report/
 
-performance:
-runs-on: ubuntu-latest
-steps: - uses: actions/checkout@v3 - name: Build Production
-run: pnpm build - name: Lighthouse CI
-run: lhci autorun
-\`\`\`
+performance: runs-on: ubuntu-latest steps: - uses: actions/checkout@v3 - name:
+Build Production run: pnpm build - name: Lighthouse CI run: lhci autorun \`\`\`
 
 ---
 
@@ -652,8 +534,7 @@ run: lhci autorun
 
 ### Test Naming Conventions
 
-\`\`\`
-Unit Tests:
+\`\`\` Unit Tests:
 
 - test*<function>*<scenario>\_<expected_result>
 - Example: test_create_appointment_invalid_date_raises_error
@@ -666,8 +547,7 @@ Integration Tests:
 E2E Tests:
 
 - <user_role> <action> <object> <expected_result>
-- Example: doctor can create appointment successfully
-  \`\`\`
+- Example: doctor can create appointment successfully \`\`\`
 
 ### Test Data Management
 
@@ -675,12 +555,9 @@ E2E Tests:
 
 # tests/fixtures/factories.py
 
-from datetime import datetime, timedelta
-import factory
+from datetime import datetime, timedelta import factory
 
-class AppointmentFactory(factory.Factory):
-class Meta:
-model = Appointment
+class AppointmentFactory(factory.Factory): class Meta: model = Appointment
 
     id = factory.Sequence(lambda n: f"appointment-{n}")
     tenant_id = TenantId("test-tenant")

@@ -24,9 +24,12 @@ docs/
 
 **Location**: `docs/quality/`
 
-- [Final Quality Report](quality/FINAL_QUALITY_REPORT.md) - Overall quality assessment (**A: 93/100**)
-- [Quality Execution Report](quality/QUALITY_EXECUTION_REPORT.md) - Quality automation implementation
-- [Cross-Browser Testing](quality/CROSS_BROWSER_TESTING_REPORT.md) - E2E testing (**16/16 passing**)
+- [Final Quality Report](quality/FINAL_QUALITY_REPORT.md) - Overall quality
+  assessment (**A: 93/100**)
+- [Quality Execution Report](quality/QUALITY_EXECUTION_REPORT.md) - Quality
+  automation implementation
+- [Cross-Browser Testing](quality/CROSS_BROWSER_TESTING_REPORT.md) - E2E testing
+  (**16/16 passing**)
 - [Fixes Summary](quality/FIXES_SUMMARY.md) - Bug fixes and improvements
 
 ### 📋 Planning & Roadmap
@@ -35,23 +38,29 @@ docs/
 
 - [Improvement Plan](planning/IMPROVEMENT_PLAN.md) - Future enhancements
 - [Next Steps](planning/NEXT_STEPS.md) - Immediate action items
-- [Workflow Setup Complete](planning/WORKFLOW_SETUP_COMPLETE.md) - CI/CD implementation status
+- [Workflow Setup Complete](planning/WORKFLOW_SETUP_COMPLETE.md) - CI/CD
+  implementation status
 
 ### 🚀 Deployment & Infrastructure
 
 **Location**: `docs/deployment/`
 
-- **[GCP Setup Guide](deployment/gcp-setup.md)** - Complete Google Cloud Platform configuration
-- [Deployment Strategy](deployment/DEPLOYMENT_STRATEGY.md) - Multi-environment approach
-- [Deployment Progress](deployment/DEPLOYMENT_PROGRESS.md) - Current deployment status
-- [Deployment Success](deployment/DEPLOYMENT_SUCCESS.md) - Successful deployments log
+- **[GCP Setup Guide](deployment/gcp-setup.md)** - Complete Google Cloud
+  Platform configuration
+- [Deployment Strategy](deployment/DEPLOYMENT_STRATEGY.md) - Multi-environment
+  approach
+- [Deployment Progress](deployment/DEPLOYMENT_PROGRESS.md) - Current deployment
+  status
+- [Deployment Success](deployment/DEPLOYMENT_SUCCESS.md) - Successful
+  deployments log
 - [GCP Setup Quickstart](deployment/GCP_SETUP_QUICKSTART.md) - Fast GCP setup
 
 ### ⚙️ Workflows & CI/CD
 
 **Location**: `docs/workflows/`
 
-- [Workflows Validation](workflows/WORKFLOWS_VALIDATION.md) - CI/CD workflow testing
+- [Workflows Validation](workflows/WORKFLOWS_VALIDATION.md) - CI/CD workflow
+  testing
 
 ### 📖 Guides & Tutorials
 
@@ -86,11 +95,14 @@ Essential documents in project root:
 
 ## 🔍 Finding Documentation
 
-**Setting Up**: [Local Setup](guides/LOCAL_SETUP.md) → [GCP Setup](deployment/GCP_SETUP_QUICKSTART.md)
+**Setting Up**: [Local Setup](guides/LOCAL_SETUP.md) →
+[GCP Setup](deployment/GCP_SETUP_QUICKSTART.md)
 
-**Deploying**: [Deployment Strategy](deployment/DEPLOYMENT_STRATEGY.md) → [Workflows](workflows/WORKFLOWS_VALIDATION.md)
+**Deploying**: [Deployment Strategy](deployment/DEPLOYMENT_STRATEGY.md) →
+[Workflows](workflows/WORKFLOWS_VALIDATION.md)
 
-**Quality**: [Final Report](quality/FINAL_QUALITY_REPORT.md) → [Cross-Browser Testing](quality/CROSS_BROWSER_TESTING_REPORT.md)
+**Quality**: [Final Report](quality/FINAL_QUALITY_REPORT.md) →
+[Cross-Browser Testing](quality/CROSS_BROWSER_TESTING_REPORT.md)
 
 ---
 

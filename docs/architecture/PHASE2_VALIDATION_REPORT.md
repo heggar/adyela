@@ -2,10 +2,9 @@
 
 ## 📋 Resumen Ejecutivo
 
-**Estado**: ✅ **EXCELENTE** - 90% completado
-**Cobertura Terraform**: **~90%** (53 recursos gestionados)
-**Cloudflare**: ✅ **Módulo implementado y configurado**
-**Drift**: ⚠️ **Menor** (6 recursos por agregar, 3 por actualizar)
+**Estado**: ✅ **EXCELENTE** - 90% completado **Cobertura Terraform**: **~90%**
+(53 recursos gestionados) **Cloudflare**: ✅ **Módulo implementado y
+configurado** **Drift**: ⚠️ **Menor** (6 recursos por agregar, 3 por actualizar)
 
 ---
 
@@ -86,8 +85,10 @@
 - ✅ `google_project_iam_audit_config.identity_platform_audit`
 - ⏳ `google_identity_platform_config.default` (por aplicar)
 - ⏳ `google_identity_platform_tenant.default` (por aplicar)
-- ⏳ `google_identity_platform_default_supported_idp_config.google` (por aplicar)
-- ⏳ `google_identity_platform_default_supported_idp_config.microsoft` (por aplicar)
+- ⏳ `google_identity_platform_default_supported_idp_config.google` (por
+  aplicar)
+- ⏳ `google_identity_platform_default_supported_idp_config.microsoft` (por
+  aplicar)
 - ⏳ `google_project_service.identity_platform` (por aplicar)
 
 **Storage** (2 recursos):
@@ -129,8 +130,8 @@
 
 #### Firebase Project
 
-**Razón**: El proyecto de Firebase se crea manualmente una vez
-**Estado**: ✅ `adyela-staging` (717907307897) creado y configurado
+**Razón**: El proyecto de Firebase se crea manualmente una vez **Estado**: ✅
+`adyela-staging` (717907307897) creado y configurado
 
 ---
 
@@ -217,7 +218,8 @@ Plan: 6 to add, 3 to update, 0 to destroy
 
 **Estado Actual**: ⚠️ **Configurado pero NO activo**
 
-**Razón**: DNS apunta a Cloudflare (proxy activo), pero Cloudflare está retornando 403
+**Razón**: DNS apunta a Cloudflare (proxy activo), pero Cloudflare está
+retornando 403
 
 **Acción Requerida**:
 
@@ -303,8 +305,7 @@ infra/
     └── vpc/                 ✅ Completo (11 recursos)
 ```
 
-**Total**: 6 módulos reutilizables
-**Total archivos**: 31 archivos .tf
+**Total**: 6 módulos reutilizables **Total archivos**: 31 archivos .tf
 **Cobertura**: ~90% de infraestructura
 
 ---
@@ -420,7 +421,5 @@ infra/
 
 ---
 
-**Estado**: 🟢 **APROBADO - 90% Completo**
-**Prioridad siguiente**: ⏳ Aplicar drift de Terraform (15 min)
-**Fecha**: 2025-10-12
-**Versión**: 1.0
+**Estado**: 🟢 **APROBADO - 90% Completo** **Prioridad siguiente**: ⏳ Aplicar
+drift de Terraform (15 min) **Fecha**: 2025-10-12 **Versión**: 1.0

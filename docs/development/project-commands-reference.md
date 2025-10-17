@@ -1,7 +1,6 @@
 # 🚀 Adyela Project Commands Reference
 
-**Project:** Adyela Medical Appointments Platform
-**Date:** October 5, 2025
+**Project:** Adyela Medical Appointments Platform **Date:** October 5, 2025
 **Version:** 1.0.0
 
 ---
@@ -27,8 +26,7 @@
 
 # Clone repository
 
-git clone https://github.com/adyela/adyela.git
-cd adyela
+git clone https://github.com/adyela/adyela.git cd adyela
 
 # Install dependencies
 
@@ -46,8 +44,7 @@ make start
 
 # Verify all services are running
 
-make health
-\`\`\`
+make health \`\`\`
 
 ### Daily Development Workflow
 
@@ -55,20 +52,17 @@ make health
 
 # Start development servers
 
-make start # Start all services (API, Web, Firebase, Redis)
-make logs # View combined logs
-make health # Check service health
+make start # Start all services (API, Web, Firebase, Redis) make logs # View
+combined logs make health # Check service health
 
 # Run tests before committing
 
-make test # Run all tests
-make lint # Lint code
-make type-check # TypeScript + Python type checking
+make test # Run all tests make lint # Lint code make type-check # TypeScript +
+Python type checking
 
 # Stop services when done
 
-make stop
-\`\`\`
+make stop \`\`\`
 
 ---
 
@@ -88,11 +82,8 @@ make start
 
 # Individual services
 
-make start-api # API only
-make start-web # Web only
-make start-db # Firebase emulator only
-make start-cache # Redis only
-\`\`\`
+make start-api # API only make start-web # Web only make start-db # Firebase
+emulator only make start-cache # Redis only \`\`\`
 
 #### Stop Services
 
@@ -104,15 +95,11 @@ make stop
 
 # Individual services
 
-make stop-api
-make stop-web
-make stop-db
-make stop-cache
+make stop-api make stop-web make stop-db make stop-cache
 
 # Force stop and remove volumes
 
-make clean
-\`\`\`
+make clean \`\`\`
 
 #### Monitor Services
 
@@ -120,16 +107,12 @@ make clean
 
 # View logs
 
-make logs # All services
-make logs-api # API only
-make logs-web # Web only
-make logs-follow # Follow logs in real-time
+make logs # All services make logs-api # API only make logs-web # Web only make
+logs-follow # Follow logs in real-time
 
 # Check service health
 
-make health # Quick health check
-make ps # List running containers
-\`\`\`
+make health # Quick health check make ps # List running containers \`\`\`
 
 ### Development Servers
 
@@ -139,20 +122,18 @@ make ps # List running containers
 
 # Start API development server
 
-cd apps/api
-poetry run dev # With hot reload
+cd apps/api poetry run dev # With hot reload
 
 # API available at http://localhost:8000
 
 # API documentation
 
-open http://localhost:8000/docs # Swagger UI
-open http://localhost:8000/redoc # ReDoc
+open http://localhost:8000/docs # Swagger UI open http://localhost:8000/redoc #
+ReDoc
 
 # Direct Python execution
 
-poetry run python -m uvicorn adyela_api.main:app --reload
-\`\`\`
+poetry run python -m uvicorn adyela_api.main:app --reload \`\`\`
 
 #### Frontend (Web)
 
@@ -160,16 +141,13 @@ poetry run python -m uvicorn adyela_api.main:app --reload
 
 # Start web development server
 
-cd apps/web
-pnpm dev # With HMR
+cd apps/web pnpm dev # With HMR
 
 # App available at http://localhost:3000
 
 # Preview production build
 
-pnpm build
-pnpm preview
-\`\`\`
+pnpm build pnpm preview \`\`\`
 
 ---
 
@@ -199,13 +177,11 @@ pnpm test src/features/auth/components/LoginPage.test.tsx
 
 # UI mode (interactive)
 
-pnpm test:ui
-\`\`\`
+pnpm test:ui \`\`\`
 
 #### Backend (Pytest)
 
-\`\`\`bash
-cd apps/api
+\`\`\`bash cd apps/api
 
 # Run all tests
 
@@ -221,7 +197,8 @@ poetry run pytest tests/unit/domain/test_appointment.py
 
 # Specific test function
 
-poetry run pytest tests/unit/domain/test_appointment.py::TestAppointment::test_create_appointment_success
+poetry run pytest
+tests/unit/domain/test_appointment.py::TestAppointment::test_create_appointment_success
 
 # Run only unit tests
 
@@ -233,8 +210,7 @@ poetry run pytest -m integration
 
 # Generate HTML coverage report
 
-poetry run pytest --cov=adyela_api --cov-report=html
-open htmlcov/index.html
+poetry run pytest --cov=adyela_api --cov-report=html open htmlcov/index.html
 \`\`\`
 
 ### E2E Tests (Playwright)
@@ -251,8 +227,7 @@ make e2e
 
 # Specific browser
 
-pnpm playwright test --project=chromium
-pnpm playwright test --project=firefox
+pnpm playwright test --project=chromium pnpm playwright test --project=firefox
 pnpm playwright test --project=webkit
 
 # Headed mode (visible browser)
@@ -279,8 +254,7 @@ pnpm playwright test tests/e2e/auth.spec.ts
 
 # Update snapshots
 
-pnpm playwright test --update-snapshots
-\`\`\`
+pnpm playwright test --update-snapshots \`\`\`
 
 #### Advanced E2E Options
 
@@ -292,8 +266,7 @@ pnpm playwright test -g "login"
 
 # Run with specific reporter
 
-pnpm playwright test --reporter=html
-pnpm playwright test --reporter=json
+pnpm playwright test --reporter=html pnpm playwright test --reporter=json
 
 # Run on specific URL
 
@@ -309,8 +282,7 @@ pnpm playwright test --workers=4
 
 # View HTML report
 
-pnpm playwright show-report
-\`\`\`
+pnpm playwright show-report \`\`\`
 
 ### API Contract Testing (Schemathesis)
 
@@ -322,16 +294,13 @@ make api-contract
 
 # Manual execution
 
-schemathesis run --url http://localhost:8000/openapi.json \\
---checks all \\
---hypothesis-max-examples=100 \\
---header "X-Tenant-ID: test-tenant"
+schemathesis run --url http://localhost:8000/openapi.json \\ --checks all \\
+--hypothesis-max-examples=100 \\ --header "X-Tenant-ID: test-tenant"
 
 # Generate test report
 
 schemathesis run --url http://localhost:8000/openapi.json \\
---junit-xml=contract-report.xml
-\`\`\`
+--junit-xml=contract-report.xml \`\`\`
 
 ---
 
@@ -353,16 +322,12 @@ make lint-fix
 
 # Frontend linting (ESLint)
 
-pnpm lint # Check
-pnpm lint:fix # Auto-fix
+pnpm lint # Check pnpm lint:fix # Auto-fix
 
 # Backend linting (Ruff + Black)
 
-cd apps/api
-poetry run ruff check . # Check
-poetry run ruff check --fix . # Auto-fix
-poetry run black . # Format
-\`\`\`
+cd apps/api poetry run ruff check . # Check poetry run ruff check --fix . #
+Auto-fix poetry run black . # Format \`\`\`
 
 #### Type Checking
 
@@ -382,9 +347,7 @@ cd apps/web && tsc --noEmit
 
 # Backend (MyPy)
 
-cd apps/api
-poetry run mypy adyela_api
-\`\`\`
+cd apps/api poetry run mypy adyela_api \`\`\`
 
 #### Code Formatting
 
@@ -400,14 +363,11 @@ make format-check
 
 # Frontend (Prettier)
 
-pnpm format # Fix
-pnpm format:check # Check only
+pnpm format # Fix pnpm format:check # Check only
 
 # Backend (Black)
 
-cd apps/api
-poetry run black . # Fix
-poetry run black --check . # Check only
+cd apps/api poetry run black . # Fix poetry run black --check . # Check only
 \`\`\`
 
 ### Security Scanning
@@ -422,15 +382,11 @@ make security-audit
 
 # Frontend dependencies (npm audit)
 
-pnpm audit
-pnpm audit --fix # Auto-fix
+pnpm audit pnpm audit --fix # Auto-fix
 
 # Backend dependencies (pip-audit)
 
-cd apps/api
-poetry run pip-audit
-poetry run safety check # Alternative
-\`\`\`
+cd apps/api poetry run pip-audit poetry run safety check # Alternative \`\`\`
 
 #### Container Security (Trivy)
 
@@ -446,8 +402,7 @@ trivy image --severity CRITICAL,HIGH adyela-api:latest
 
 # Scan web container
 
-trivy image adyela-web:latest
-\`\`\`
+trivy image adyela-web:latest \`\`\`
 
 #### Secret Detection
 
@@ -463,8 +418,7 @@ gitleaks detect --source . --commit SHA
 
 # Protect pre-commit
 
-gitleaks protect --staged
-\`\`\`
+gitleaks protect --staged \`\`\`
 
 ### Performance Auditing
 
@@ -478,10 +432,8 @@ make lighthouse
 
 # Manual execution
 
-cd apps/web
-pnpm build
-npx serve -s dist -p 3001 &
-lighthouse http://localhost:3001 --output html --output-path ./lighthouse-report.html
+cd apps/web pnpm build npx serve -s dist -p 3001 & lighthouse
+http://localhost:3001 --output html --output-path ./lighthouse-report.html
 \`\`\`
 
 #### Bundle Analysis
@@ -490,14 +442,11 @@ lighthouse http://localhost:3001 --output html --output-path ./lighthouse-report
 
 # Analyze frontend bundle
 
-cd apps/web
-pnpm build
-pnpm vite-bundle-analyzer
+cd apps/web pnpm build pnpm vite-bundle-analyzer
 
 # View bundle visualization
 
-open dist/stats.html
-\`\`\`
+open dist/stats.html \`\`\`
 
 ### Comprehensive Quality Checks
 
@@ -513,8 +462,7 @@ make quality-fix
 
 # Generate quality report
 
-make reports
-\`\`\`
+make reports \`\`\`
 
 ---
 
@@ -528,9 +476,7 @@ make reports
 
 # Build containers
 
-make build # Build all
-make build-api # API only
-make build-web # Web only
+make build # Build all make build-api # API only make build-web # Web only
 
 # Rebuild from scratch
 
@@ -538,8 +484,7 @@ make rebuild # Clean build all
 
 # Remove all containers and volumes
 
-make clean
-\`\`\`
+make clean \`\`\`
 
 #### Database (Firestore Emulator)
 
@@ -547,8 +492,7 @@ make clean
 
 # Start Firebase emulator
 
-cd apps/api
-firebase emulators:start
+cd apps/api firebase emulators:start
 
 # With specific ports
 
@@ -560,8 +504,7 @@ firebase emulators:start --import=./firebase-data
 
 # Export data
 
-firebase emulators:export ./firebase-data
-\`\`\`
+firebase emulators:export ./firebase-data \`\`\`
 
 ### Terraform (Infrastructure as Code)
 
@@ -571,8 +514,7 @@ firebase emulators:export ./firebase-data
 
 # Initialize Terraform
 
-cd infra/environments/staging
-terraform init
+cd infra/environments/staging terraform init
 
 # Plan changes
 
@@ -584,8 +526,7 @@ terraform apply tfplan
 
 # Destroy resources
 
-terraform destroy
-\`\`\`
+terraform destroy \`\`\`
 
 #### Workspace Management
 
@@ -605,8 +546,7 @@ terraform workspace select staging
 
 # Delete workspace
 
-terraform workspace delete dev
-\`\`\`
+terraform workspace delete dev \`\`\`
 
 ### Deployment
 
@@ -616,8 +556,7 @@ terraform workspace delete dev
 
 # Deploy to staging (via GitHub Actions)
 
-git tag staging-$(date +%Y%m%d-%H%M%S)
-git push origin --tags
+git tag staging-$(date +%Y%m%d-%H%M%S) git push origin --tags
 
 # Manual deployment
 
@@ -625,8 +564,7 @@ make deploy-staging
 
 # Verify deployment
 
-make verify-staging
-\`\`\`
+make verify-staging \`\`\`
 
 #### Production Deployment
 
@@ -634,15 +572,13 @@ make verify-staging
 
 # Create release tag
 
-git tag v1.2.0
-git push origin v1.2.0
+git tag v1.2.0 git push origin v1.2.0
 
 # GitHub Actions automatically deploys to production
 
 # Manual rollback
 
-make rollback-production --to=v1.1.0
-\`\`\`
+make rollback-production --to=v1.1.0 \`\`\`
 
 ---
 
@@ -660,8 +596,7 @@ firebase emulators:start
 
 # Access Firestore Emulator UI
 
-open http://localhost:4000
-\`\`\`
+open http://localhost:4000 \`\`\`
 
 #### Using Python (Script)
 
@@ -669,42 +604,32 @@ open http://localhost:4000
 
 # apps/api/scripts/db_seed.py
 
-from google.cloud import firestore
-from adyela_api.domain import Appointment, Patient
+from google.cloud import firestore from adyela_api.domain import Appointment,
+Patient
 
 db = firestore.Client()
 
 # Create test data
 
-patient = Patient(
-id="patient-123",
-first_name="John",
-last_name="Doe",
-email="john@example.com"
-)
+patient = Patient( id="patient-123", first_name="John", last_name="Doe",
+email="john@example.com" )
 
-db.collection("patients").document(patient.id).set(patient.to_dict())
-\`\`\`
+db.collection("patients").document(patient.id).set(patient.to_dict()) \`\`\`
 
 ### Database Migrations
 
 #### Create Migration
 
-\`\`\`bash
-cd apps/api/migrations
+\`\`\`bash cd apps/api/migrations
 
 # Create new migration file
 
-cat > 001_add_prescription_collection.py << EOF
-"""Add prescription collection"""
+cat > 001_add_prescription_collection.py << EOF """Add prescription
+collection"""
 
-async def up(db): # Migration logic
-pass
+async def up(db): # Migration logic pass
 
-async def down(db): # Rollback logic
-pass
-EOF
-\`\`\`
+async def down(db): # Rollback logic pass EOF \`\`\`
 
 #### Run Migrations
 
@@ -716,8 +641,7 @@ python -m scripts.run_migrations up
 
 # Rollback last migration
 
-python -m scripts.run_migrations down
-\`\`\`
+python -m scripts.run_migrations down \`\`\`
 
 ### Backup & Restore
 
@@ -731,8 +655,7 @@ gcloud firestore export gs://adyela-backups/$(date +%Y%m%d)
 
 # Import Firestore data
 
-gcloud firestore import gs://adyela-backups/20251005
-\`\`\`
+gcloud firestore import gs://adyela-backups/20251005 \`\`\`
 
 ---
 
@@ -750,8 +673,7 @@ git checkout -b feature/prescription-management
 
 # Push to remote
 
-git push -u origin feature/prescription-management
-\`\`\`
+git push -u origin feature/prescription-management \`\`\`
 
 #### Work on Branch
 
@@ -759,8 +681,7 @@ git push -u origin feature/prescription-management
 
 # Make changes
 
-git add .
-git commit -m "feat: add prescription model"
+git add . git commit -m "feat: add prescription model"
 
 # Push changes
 
@@ -768,9 +689,7 @@ git push
 
 # Sync with main
 
-git fetch origin
-git rebase origin/main
-\`\`\`
+git fetch origin git rebase origin/main \`\`\`
 
 ### Commit Messages
 
@@ -800,8 +719,7 @@ git commit -m "test: add E2E tests for prescriptions"
 
 # Chore
 
-git commit -m "chore: update dependencies"
-\`\`\`
+git commit -m "chore: update dependencies" \`\`\`
 
 #### Using Commitizen
 
@@ -835,9 +753,8 @@ pnpm commit
 
 # Using GitHub CLI
 
-gh pr create \\
---title "feat: Add prescription management" \\
---body "$(cat <<EOF
+gh pr create \\ --title "feat: Add prescription management" \\ --body "$(cat
+<<EOF
 
 ## Summary
 
@@ -856,9 +773,7 @@ Added prescription management feature
 - [x] E2E tests pass
 - [x] Manual testing completed
 
-🤖 Generated with [Claude Code](https://claude.com/claude-code)
-EOF
-)"
+🤖 Generated with [Claude Code](https://claude.com/claude-code) EOF )"
 
 # Using Git + Browser
 
@@ -886,13 +801,12 @@ gh pr diff 123
 
 # Review PR
 
-gh pr review 123 --approve
-gh pr review 123 --request-changes --body "Please fix linting errors"
+gh pr review 123 --approve gh pr review 123 --request-changes --body "Please fix
+linting errors"
 
 # Merge PR
 
-gh pr merge 123 --squash --delete-branch
-\`\`\`
+gh pr merge 123 --squash --delete-branch \`\`\`
 
 ---
 
@@ -906,8 +820,7 @@ gh pr merge 123 --squash --delete-branch
 
 # Find process using port
 
-lsof -i :3000 # Web
-lsof -i :8000 # API
+lsof -i :3000 # Web lsof -i :8000 # API
 
 # Kill process
 
@@ -915,8 +828,7 @@ kill -9 <PID>
 
 # Or use different port
 
-PORT=3001 pnpm dev
-\`\`\`
+PORT=3001 pnpm dev \`\`\`
 
 #### Docker Issues
 
@@ -932,10 +844,7 @@ docker volume prune -f
 
 # Clean rebuild
 
-make clean
-make build
-make start
-\`\`\`
+make clean make build make start \`\`\`
 
 #### Node Modules Issues
 
@@ -947,14 +856,11 @@ pnpm store prune
 
 # Reinstall dependencies
 
-rm -rf node_modules pnpm-lock.yaml
-pnpm install
-\`\`\`
+rm -rf node_modules pnpm-lock.yaml pnpm install \`\`\`
 
 #### Python Environment Issues
 
-\`\`\`bash
-cd apps/api
+\`\`\`bash cd apps/api
 
 # Remove virtual environment
 
@@ -966,8 +872,7 @@ poetry install
 
 # Verify environment
 
-poetry run python --version
-\`\`\`
+poetry run python --version \`\`\`
 
 ### Debugging
 
@@ -977,8 +882,8 @@ poetry run python --version
 
 # Run with debugger
 
-cd apps/api
-poetry run python -m debugpy --listen 5678 -m uvicorn adyela_api.main:app --reload
+cd apps/api poetry run python -m debugpy --listen 5678 -m uvicorn
+adyela_api.main:app --reload
 
 # View logs
 
@@ -986,8 +891,7 @@ docker-compose logs -f api
 
 # Execute inside container
 
-docker-compose exec api bash
-\`\`\`
+docker-compose exec api bash \`\`\`
 
 #### Frontend Debugging
 
@@ -995,8 +899,7 @@ docker-compose exec api bash
 
 # Run with source maps
 
-cd apps/web
-pnpm dev --sourcemap
+cd apps/web pnpm dev --sourcemap
 
 # View detailed logs
 
@@ -1004,8 +907,7 @@ DEBUG=\* pnpm dev
 
 # Clear cache
 
-rm -rf node_modules/.vite
-\`\`\`
+rm -rf node_modules/.vite \`\`\`
 
 ### Performance Issues
 
@@ -1023,9 +925,7 @@ htop
 
 # Disk space
 
-df -h
-docker system df
-\`\`\`
+df -h docker system df \`\`\`
 
 #### Optimize Performance
 
@@ -1037,13 +937,11 @@ docker system prune -a --volumes
 
 # Clear build cache
 
-pnpm store prune
-rm -rf apps/web/.next apps/web/dist
+pnpm store prune rm -rf apps/web/.next apps/web/dist
 
 # Restart services
 
-make restart
-\`\`\`
+make restart \`\`\`
 
 ---
 
@@ -1078,27 +976,18 @@ make restart
 
 # Essential Daily Commands
 
-make start # Start all services
-make logs # View logs
-make test # Run all tests
-make lint # Lint code
-make e2e # Run E2E tests
-make stop # Stop all services
+make start # Start all services make logs # View logs make test # Run all tests
+make lint # Lint code make e2e # Run E2E tests make stop # Stop all services
 
 # Quality Checks (Before Commit)
 
-make lint # Linting
-make type-check # Type checking
-make test # Unit tests
-make e2e # E2E tests
-make quality # All quality checks
+make lint # Linting make type-check # Type checking make test # Unit tests make
+e2e # E2E tests make quality # All quality checks
 
 # CI/CD
 
-git push # Push code (triggers CI)
-git tag v1.2.0 # Create release
-gh pr create # Create pull request
-\`\`\`
+git push # Push code (triggers CI) git tag v1.2.0 # Create release gh pr
+create # Create pull request \`\`\`
 
 ---
 

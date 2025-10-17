@@ -1,14 +1,15 @@
 # 🎯 Token Optimization Strategy for Claude Code
 
-**Project:** Adyela Medical Appointments Platform
-**Date:** October 5, 2025
+**Project:** Adyela Medical Appointments Platform **Date:** October 5, 2025
 **Version:** 1.0.0
 
 ---
 
 ## 🎯 Purpose
 
-Optimize the use of Claude's context window (200K tokens) to maximize productivity, reduce costs, and enable more comprehensive code analysis and generation for the Adyela project.
+Optimize the use of Claude's context window (200K tokens) to maximize
+productivity, reduce costs, and enable more comprehensive code analysis and
+generation for the Adyela project.
 
 **Context Window:** 200,000 tokens (~150,000 words or ~600 pages)
 
@@ -18,29 +19,19 @@ Optimize the use of Claude's context window (200K tokens) to maximize productivi
 
 ### Typical Session Breakdown
 
-\`\`\`
-Component | Tokens | Percentage
------------------------------|-----------|------------
-System Prompt | ~3,000 | 1.5%
-Conversation History | ~40,000 | 20%
-File Reads (Code) | ~50,000 | 25%
-Agent Responses | ~20,000 | 10%
-Documentation/Reports | ~30,000 | 15%
-Available Buffer | ~57,000 | 28.5%
------------------------------|-----------|------------
-Total | 200,000 | 100%
-\`\`\`
+\`\`\` Component | Tokens | Percentage
+-----------------------------|-----------|------------ System Prompt | ~3,000 |
+1.5% Conversation History | ~40,000 | 20% File Reads (Code) | ~50,000 | 25%
+Agent Responses | ~20,000 | 10% Documentation/Reports | ~30,000 | 15% Available
+Buffer | ~57,000 | 28.5% -----------------------------|-----------|------------
+Total | 200,000 | 100% \`\`\`
 
 ### Token Costs per File Type (Approximate)
 
-\`\`\`
-File Type | Avg Size | Tokens/File | Files in Project
-------------------|----------|-------------|------------------
-Python (.py) | 200 LOC | ~800 | ~50
-TypeScript (.ts) | 150 LOC | ~600 | ~80
-Config (.json) | 50 lines | ~250 | ~20
-Markdown (.md) | 100 lines| ~400 | ~30
-\`\`\`
+\`\`\` File Type | Avg Size | Tokens/File | Files in Project
+------------------|----------|-------------|------------------ Python (.py) |
+200 LOC | ~800 | ~50 TypeScript (.ts) | 150 LOC | ~600 | ~80 Config (.json) | 50
+lines | ~250 | ~20 Markdown (.md) | 100 lines| ~400 | ~30 \`\`\`
 
 ---
 
@@ -50,21 +41,13 @@ Markdown (.md) | 100 lines| ~400 | ~30
 
 #### Use Glob/Grep Before Read
 
-**Before:**
-\`\`\`
-Read entire file → Extract relevant section
-Cost: 800 tokens (full file)
-\`\`\`
+**Before:** \`\`\` Read entire file → Extract relevant section Cost: 800 tokens
+(full file) \`\`\`
 
-**After:**
-\`\`\`
-Grep for specific function → Read with offset/limit
-Cost: 200 tokens (relevant section only)
-Savings: 75%
-\`\`\`
+**After:** \`\`\` Grep for specific function → Read with offset/limit Cost: 200
+tokens (relevant section only) Savings: 75% \`\`\`
 
-**Implementation:**
-\`\`\`bash
+**Implementation:** \`\`\`bash
 
 # Instead of reading entire file
 
@@ -72,10 +55,8 @@ Read("/path/to/large/file.py")
 
 # Use targeted search
 
-Grep("def create_appointment", path="apps/api/adyela_api/")
-→ Get exact location
-→ Read(file_path, offset=line_number, limit=50)
-\`\`\`
+Grep("def create_appointment", path="apps/api/adyela_api/") → Get exact location
+→ Read(file_path, offset=line_number, limit=50) \`\`\`
 
 ---
 
@@ -85,31 +66,21 @@ Grep("def create_appointment", path="apps/api/adyela_api/")
 
 **Principle:** Don't read files you won't modify or reference
 
-**Decision Matrix:**
-\`\`\`
-Task Type | Files to Read | Skip
---------------------|--------------------------------|------------------
-Bug Fix | Affected file + tests | Unrelated modules
-New Feature | Related components only | Framework code
-Refactoring | Target files + dependents | Independent code
-Documentation | Docs folder only | Source code
-Architecture Review | Config files, main entry points| Implementation details
-\`\`\`
+**Decision Matrix:** \`\`\` Task Type | Files to Read | Skip
+--------------------|--------------------------------|------------------ Bug Fix
+| Affected file + tests | Unrelated modules New Feature | Related components
+only | Framework code Refactoring | Target files + dependents | Independent code
+Documentation | Docs folder only | Source code Architecture Review | Config
+files, main entry points| Implementation details \`\`\`
 
-**Example:**
-\`\`\`
-Task: "Fix login validation bug"
+**Example:** \`\`\` Task: "Fix login validation bug"
 
-Read (required):
-✅ apps/web/src/features/auth/components/LoginPage.tsx
-✅ apps/web/src/features/auth/hooks/useAuth.ts
-✅ tests/e2e/auth.spec.ts
+Read (required): ✅ apps/web/src/features/auth/components/LoginPage.tsx ✅
+apps/web/src/features/auth/hooks/useAuth.ts ✅ tests/e2e/auth.spec.ts
 
-Skip (unnecessary):
-❌ apps/api/ (backend not involved)
-❌ apps/web/src/features/appointments/ (different feature)
-❌ docs/ (not code-related)
-\`\`\`
+Skip (unnecessary): ❌ apps/api/ (backend not involved) ❌
+apps/web/src/features/appointments/ (different feature) ❌ docs/ (not
+code-related) \`\`\`
 
 ---
 
@@ -119,21 +90,12 @@ Skip (unnecessary):
 
 **Start Small → Expand as Needed**
 
-\`\`\`mermaid
-graph TD
-A[Task Request] --> B[Read Config/Overview]
-B --> C{Need More Context?}
-C -->|Yes| D[Read Specific Files]
-C -->|No| E[Proceed with Task]
-D --> F{Still Need More?}
-F -->|Yes| G[Read Related Files]
-F -->|No| E
-G --> E
+\`\`\`mermaid graph TD A[Task Request] --> B[Read Config/Overview] B --> C{Need
+More Context?} C -->|Yes| D[Read Specific Files] C -->|No| E[Proceed with Task]
+D --> F{Still Need More?} F -->|Yes| G[Read Related Files] F -->|No| E G --> E
 \`\`\`
 
-**Example:**
-\`\`\`
-User: "Add email validation to appointment form"
+**Example:** \`\`\` User: "Add email validation to appointment form"
 
 Step 1 (High-level context):
 
@@ -147,8 +109,7 @@ Step 3 (If needed - similar patterns):
 
 - Read: apps/web/src/features/auth/components/LoginPage.tsx
 
-Stop when you have enough context to complete the task.
-\`\`\`
+Stop when you have enough context to complete the task. \`\`\`
 
 ---
 
@@ -156,19 +117,12 @@ Stop when you have enough context to complete the task.
 
 #### Delegate to Specialized Agents
 
-**Instead of:**
-\`\`\`
-Reading 50 files to find all occurrences of "createAppointment"
-Cost: 40,000 tokens
-\`\`\`
+**Instead of:** \`\`\` Reading 50 files to find all occurrences of
+"createAppointment" Cost: 40,000 tokens \`\`\`
 
-**Use MCP:**
-\`\`\`
-Task Agent: "Search for all occurrences of createAppointment"
-Agent reads files internally, returns summary
-Cost: 500 tokens (result only)
-Savings: 98.75%
-\`\`\`
+**Use MCP:** \`\`\` Task Agent: "Search for all occurrences of
+createAppointment" Agent reads files internally, returns summary Cost: 500
+tokens (result only) Savings: 98.75% \`\`\`
 
 **When to Use Agents:**
 
@@ -193,7 +147,8 @@ Read("apps/api/adyela_api/domain/entities/appointment.py") # 800 tokens
 
 # Extract only signatures and types
 
-class Appointment: - id: str - tenant_id: TenantId - patient_id: str - Methods: confirm(), cancel(), complete()
+class Appointment: - id: str - tenant_id: TenantId - patient_id: str - Methods:
+confirm(), cancel(), complete()
 
 # Now only 100 tokens in context
 
@@ -215,21 +170,18 @@ class Appointment: - id: str - tenant_id: TenantId - patient_id: str - Methods: 
 
 **How it works:** Claude caches repeated content within a conversation
 
-**Best Practices:**
-\`\`\`
+**Best Practices:** \`\`\`
 
 1. Read foundational files early in conversation
    - package.json, tsconfig.json, pyproject.toml
    - These are unlikely to change
 
-2. Reference by name instead of re-reading
-   "According to package.json we read earlier..."
-   Instead of: Read("package.json") again
+2. Reference by name instead of re-reading "According to package.json we read
+   earlier..." Instead of: Read("package.json") again
 
 3. Keep stable context at beginning of conversation
    - Project structure overview
-   - Architecture documentation
-     \`\`\`
+   - Architecture documentation \`\`\`
 
 ---
 
@@ -239,18 +191,15 @@ class Appointment: - id: str - tenant_id: TenantId - patient_id: str - Methods: 
 
 **Long conversation → Summarize → Continue**
 
-\`\`\`
-Tokens Used: 150,000 / 200,000 (75%)
+\`\`\` Tokens Used: 150,000 / 200,000 (75%)
 
-Action: Request conversation summary
-"Summarize the key decisions and changes we made"
+Action: Request conversation summary "Summarize the key decisions and changes we
+made"
 
 Claude provides 2,000 token summary
 
-Reset with summary as context
-Tokens Used: 2,000 / 200,000 (1%)
-Continue working with 198,000 tokens available
-\`\`\`
+Reset with summary as context Tokens Used: 2,000 / 200,000 (1%) Continue working
+with 198,000 tokens available \`\`\`
 
 **When to Summarize:**
 
@@ -266,24 +215,18 @@ Continue working with 198,000 tokens available
 
 **Scenario:** Understanding authentication flow
 
-**Inefficient:**
-\`\`\`
-Read: apps/api/adyela_api/infrastructure/services/auth/firebase_auth.py
-Read: apps/web/src/features/auth/hooks/useAuth.ts
-Read: apps/web/src/features/auth/services/authService.ts
-Read: apps/api/adyela_api/presentation/middleware/auth_middleware.py
+**Inefficient:** \`\`\` Read:
+apps/api/adyela_api/infrastructure/services/auth/firebase_auth.py Read:
+apps/web/src/features/auth/hooks/useAuth.ts Read:
+apps/web/src/features/auth/services/authService.ts Read:
+apps/api/adyela_api/presentation/middleware/auth_middleware.py
 
-Total: ~3,000 tokens
-\`\`\`
+Total: ~3,000 tokens \`\`\`
 
-**Efficient:**
-\`\`\`
-Read: docs/architecture/authentication-flow.md (if exists)
+**Efficient:** \`\`\` Read: docs/architecture/authentication-flow.md (if exists)
 Or Request: "Explain authentication flow" (use existing knowledge)
 
-Total: ~500 tokens
-Savings: 83%
-\`\`\`
+Total: ~500 tokens Savings: 83% \`\`\`
 
 **Recommendation:** Create architecture docs for complex flows
 
@@ -293,27 +236,17 @@ Savings: 83%
 
 #### Show Changes, Not Entire Files
 
-**Inefficient:**
-\`\`\`
-Read: file.py (800 tokens)
-Modify: 5 lines
-Write: file.py (800 tokens)
+**Inefficient:** \`\`\` Read: file.py (800 tokens) Modify: 5 lines Write:
+file.py (800 tokens)
 
-Total: 1,600 tokens
-\`\`\`
+Total: 1,600 tokens \`\`\`
 
-**Efficient:**
-\`\`\`
-Read: file.py:45-60 (120 tokens)
-Edit: Use Edit tool with old_string/new_string
-Write: Only changed lines
+**Efficient:** \`\`\` Read: file.py:45-60 (120 tokens) Edit: Use Edit tool with
+old_string/new_string Write: Only changed lines
 
-Total: 250 tokens
-Savings: 84%
-\`\`\`
+Total: 250 tokens Savings: 84% \`\`\`
 
-**Implementation:**
-Use Grep to find exact location, then Read with offset/limit
+**Implementation:** Use Grep to find exact location, then Read with offset/limit
 
 ---
 
@@ -321,25 +254,16 @@ Use Grep to find exact location, then Read with offset/limit
 
 #### Group Similar Tasks
 
-**Inefficient:**
-\`\`\`
-Task 1: Add data-testid to Button component
-Task 2: Add data-testid to Input component
-Task 3: Add data-testid to Card component
+**Inefficient:** \`\`\` Task 1: Add data-testid to Button component Task 2: Add
+data-testid to Input component Task 3: Add data-testid to Card component
 
-Each requires reading component file separately
-Total: 3 × 600 = 1,800 tokens
+Each requires reading component file separately Total: 3 × 600 = 1,800 tokens
 \`\`\`
 
-**Efficient:**
-\`\`\`
-Single Task: Add data-testid to all UI components
-Read all components together or use Glob pattern
-Process in single pass
+**Efficient:** \`\`\` Single Task: Add data-testid to all UI components Read all
+components together or use Glob pattern Process in single pass
 
-Total: ~1,000 tokens
-Savings: 44%
-\`\`\`
+Total: ~1,000 tokens Savings: 44% \`\`\`
 
 ---
 
@@ -347,23 +271,19 @@ Savings: 44%
 
 ### Pattern 1: Task Agent for Large-Scale Analysis
 
-\`\`\`
-User Request: "Analyze security vulnerabilities across the codebase"
+\`\`\` User Request: "Analyze security vulnerabilities across the codebase"
 
 Inefficient Approach:
 
 - Read all files one by one
 - Analyze each file
-- Synthesize findings
-  Token Cost: 80,000+
+- Synthesize findings Token Cost: 80,000+
 
 Efficient Approach:
 
 - Launch SecurityAgent with task
 - Agent reads files internally
-- Returns consolidated report
-  Token Cost: 2,000
-  \`\`\`
+- Returns consolidated report Token Cost: 2,000 \`\`\`
 
 ### Pattern 2: Progressive File Discovery
 
@@ -393,11 +313,8 @@ Read("apps/api/.../firestore_appointment_repository.py") # 800 tokens
 
 # Monitor token usage
 
-if (tokens_used > 140,000): # 70% threshold
-request_summary()
-save_progress()
-start_new_session()
-\`\`\`
+if (tokens_used > 140,000): # 70% threshold request_summary() save_progress()
+start_new_session() \`\`\`
 
 ---
 
@@ -409,8 +326,7 @@ start_new_session()
 
 - Read: 1-2 files (max 2,000 tokens)
 - Edit: Targeted changes
-- Verify: Quick test
-  \`\`\`
+- Verify: Quick test \`\`\`
 
 ### Feature Addition (10,000-20,000 tokens)
 
@@ -419,8 +335,7 @@ start_new_session()
 - Read: 5-10 related files
 - Create: New components
 - Tests: Read test files
-- Documentation: Update docs
-  \`\`\`
+- Documentation: Update docs \`\`\`
 
 ### Refactoring (20,000-40,000 tokens)
 
@@ -429,8 +344,7 @@ start_new_session()
 - Read: Multiple related files
 - Analyze: Dependencies
 - Modify: Several files
-- Tests: Update test suite
-  \`\`\`
+- Tests: Update test suite \`\`\`
 
 ### Architecture Review (40,000-80,000 tokens)
 
@@ -439,8 +353,7 @@ start_new_session()
 - Read: Config files, main entry points
 - Use: Task agents for detailed analysis
 - Generate: Comprehensive reports
-- Document: Create diagrams and ADRs
-  \`\`\`
+- Document: Create diagrams and ADRs \`\`\`
 
 ---
 
@@ -472,8 +385,7 @@ start_new_session()
 
 ### Scenario: Add Validation to Form
 
-**Inefficient Approach:**
-\`\`\`
+**Inefficient Approach:** \`\`\`
 
 1. Read entire form component (800)
 2. Read form library docs (1,500)
@@ -482,11 +394,9 @@ start_new_session()
 5. Implement changes
 6. Read test file (600)
 
-Total: 6,500 tokens
-\`\`\`
+Total: 6,500 tokens \`\`\`
 
-**Optimized Approach:**
-\`\`\`
+**Optimized Approach:** \`\`\`
 
 1. Grep for validation patterns (50)
 2. Read form component (validation section only) (200)
@@ -494,9 +404,7 @@ Total: 6,500 tokens
 4. Implement changes using known patterns
 5. Read relevant test section (150)
 
-Total: 500 tokens
-Savings: 92%
-\`\`\`
+Total: 500 tokens Savings: 92% \`\`\`
 
 ---
 

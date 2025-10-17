@@ -1,15 +1,13 @@
 # ⚡ Resumen Ejecutivo - Plan Staging
 
-**Fecha**: 2025-10-15
-**Tiempo**: 32 minutos
-**Costo**: $0 adicional
+**Fecha**: 2025-10-15 **Tiempo**: 32 minutos **Costo**: $0 adicional
 
 ---
 
 ## 🎯 Objetivo
 
-Estabilizar staging con monitoring básico.
-**NO** necesitamos HIPAA 100% (eso es para production).
+Estabilizar staging con monitoring básico. **NO** necesitamos HIPAA 100% (eso es
+para production).
 
 ---
 
@@ -17,8 +15,8 @@ Estabilizar staging con monitoring básico.
 
 ### 1️⃣ Cloudflare DNS-only para API (5 min)
 
-**Archivo**: `infra/modules/cloudflare/main.tf`
-**Línea 33**: Cambiar `proxied = true` a `proxied = false`
+**Archivo**: `infra/modules/cloudflare/main.tf` **Línea 33**: Cambiar
+`proxied = true` a `proxied = false`
 
 ```hcl
 resource "cloudflare_record" "api_staging" {
@@ -39,8 +37,8 @@ terraform apply -target=module.cloudflare
 
 ### 2️⃣ Deshabilitar IAP (2 min)
 
-**Archivo**: `infra/environments/staging/main.tf`
-**Línea 105**: Cambiar `iap_enabled = true` a `false`
+**Archivo**: `infra/environments/staging/main.tf` **Línea 105**: Cambiar
+`iap_enabled = true` a `false`
 
 ```hcl
 iap_enabled = false
@@ -56,8 +54,7 @@ terraform apply -target=module.load_balancer
 
 ### 3️⃣ Deploy Monitoring (15 min)
 
-**Archivo**: `infra/environments/staging/variables.tf`
-Agregar:
+**Archivo**: `infra/environments/staging/variables.tf` Agregar:
 
 ```hcl
 variable "alert_email" {
@@ -67,8 +64,7 @@ variable "alert_email" {
 }
 ```
 
-**Archivo**: `infra/environments/staging/main.tf`
-Agregar al final:
+**Archivo**: `infra/environments/staging/main.tf` Agregar al final:
 
 ```hcl
 module "monitoring" {
@@ -101,8 +97,7 @@ terraform apply -target=module.monitoring
 
 ### 4️⃣ Variables Min Instances (10 min)
 
-**Archivo**: `infra/modules/cloud-run/variables.tf`
-Agregar:
+**Archivo**: `infra/modules/cloud-run/variables.tf` Agregar:
 
 ```hcl
 variable "min_instances" {
@@ -118,8 +113,7 @@ variable "max_instances" {
 }
 ```
 
-**Archivo**: `infra/modules/cloud-run/main.tf`
-Cambiar líneas 14-17 y 126-129:
+**Archivo**: `infra/modules/cloud-run/main.tf` Cambiar líneas 14-17 y 126-129:
 
 ```hcl
 scaling {
@@ -128,8 +122,7 @@ scaling {
 }
 ```
 
-**Archivo**: `infra/environments/staging/main.tf`
-En módulo cloud_run agregar:
+**Archivo**: `infra/environments/staging/main.tf` En módulo cloud_run agregar:
 
 ```hcl
 min_instances = 0

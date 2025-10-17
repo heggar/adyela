@@ -3,18 +3,18 @@ name: CI - Infrastructure
 on:
   pull_request:
     paths:
-      - "infra/**"
-      - ".github/workflows/ci-infra.yml"
+      - 'infra/**'
+      - '.github/workflows/ci-infra.yml'
   push:
     branches:
       - main
       - develop
     paths:
-      - "infra/**"
-      - ".github/workflows/ci-infra.yml"
+      - 'infra/**'
+      - '.github/workflows/ci-infra.yml'
 
 env:
-  TERRAFORM_VERSION: "1.9.0"
+  TERRAFORM_VERSION: '1.9.0'
   WORKING_DIR: infra
 
 permissions:
@@ -103,9 +103,9 @@ jobs:
         uses: tenable/terrascan-action@main
         continue-on-error: true
         with:
-          iac_type: "terraform"
+          iac_type: 'terraform'
           iac_dir: ${{ env.WORKING_DIR }}
-          policy_type: "gcp"
+          policy_type: 'gcp'
           sarif_upload: true
           non_recursive: false
           verbose: true

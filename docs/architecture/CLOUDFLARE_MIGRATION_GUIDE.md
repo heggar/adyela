@@ -2,7 +2,8 @@
 
 ## 📋 Overview
 
-This guide covers the migration from Google Cloud CDN to Cloudflare CDN for the Adyela project. The migration provides:
+This guide covers the migration from Google Cloud CDN to Cloudflare CDN for the
+Adyela project. The migration provides:
 
 - **20% cost reduction** ($8-9/month savings)
 - **Better performance** with 200+ edge locations
@@ -94,7 +95,8 @@ terraform apply
 
 ### Step 3: Update DNS
 
-The Terraform configuration will automatically create DNS records pointing to the GCP Load Balancer IP (`34.96.108.162`).
+The Terraform configuration will automatically create DNS records pointing to
+the GCP Load Balancer IP (`34.96.108.162`).
 
 ### Step 4: Test Migration
 

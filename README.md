@@ -6,7 +6,8 @@
 [![Node Version](https://img.shields.io/badge/node-%3E%3D20.0.0-brightgreen.svg)](https://nodejs.org)
 [![Python Version](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org)
 
-Sistema de gestión de citas médicas con videollamadas, diseñado para clínicas y centros de salud.
+Sistema de gestión de citas médicas con videollamadas, diseñado para clínicas y
+centros de salud.
 
 ## 🏗️ Arquitectura
 
@@ -25,23 +26,31 @@ Adyela es un monorepo que contiene:
 
 ### Infraestructura GCP
 
-🚀 **[Vista Rápida ASCII](docs/architecture/QUICK_VIEW.md)** - ⭐ **LEE ESTO PRIMERO** - Puedes verlo ahora mismo  
-📊 **[Diagrama Visual Completo](docs/architecture/adyela-gcp-architecture.drawio)** - Abrir en [app.diagrams.net](https://app.diagrams.net/)  
-📖 **[Guía Completa de Arquitectura](docs/architecture/GCP_ARCHITECTURE_GUIDE.md)** - 50+ páginas de detalles técnicos  
-🔧 **[Instrucciones de Visualización](docs/architecture/VIEWING_INSTRUCTIONS.md)** - Si tienes problemas
+🚀 **[Vista Rápida ASCII](docs/architecture/QUICK_VIEW.md)** - ⭐ **LEE ESTO
+PRIMERO** - Puedes verlo ahora mismo  
+📊 **[Diagrama Visual Completo](docs/architecture/adyela-gcp-architecture.drawio)** -
+Abrir en [app.diagrams.net](https://app.diagrams.net/)  
+📖 **[Guía Completa de Arquitectura](docs/architecture/GCP_ARCHITECTURE_GUIDE.md)** -
+50+ páginas de detalles técnicos  
+🔧 **[Instrucciones de Visualización](docs/architecture/VIEWING_INSTRUCTIONS.md)** -
+Si tienes problemas
 
 **Ambientes:**
 
-- 🟨 **Staging** (`adyela-staging`): Ambiente de pruebas con scale-to-zero ($5-10/mes)
-- 🟩 **Production** (`adyela-production`): Alta disponibilidad con HIPAA compliance ($200-500/mes)
+- 🟨 **Staging** (`adyela-staging`): Ambiente de pruebas con scale-to-zero
+  ($5-10/mes)
+- 🟩 **Production** (`adyela-production`): Alta disponibilidad con HIPAA
+  compliance ($200-500/mes)
 
 **Componentes Principales:**
 
 - **Edge**: Cloud Armor (WAF) + API Gateway + Load Balancer
 - **Compute**: Cloud Run (API + Web) + Cloud Functions + Cloud Scheduler
-- **Data**: Firestore (multi-tenant) + Cloud Storage (documentos) + Secret Manager
+- **Data**: Firestore (multi-tenant) + Cloud Storage (documentos) + Secret
+  Manager
 - **Async**: Pub/Sub (event bus) + Cloud Tasks (queue)
-- **Observability**: Cloud Logging (7 años) + Monitoring + Trace + Error Reporting
+- **Observability**: Cloud Logging (7 años) + Monitoring + Trace + Error
+  Reporting
 - **Security**: Identity Platform (JWT+MFA) + VPC-SC + CMEK (producción)
 
 **Características:**
@@ -79,7 +88,8 @@ Adyela es un monorepo que contiene:
 - Terraform (IaC)
 - Turbo (monorepo build system)
 - pnpm (package manager)
-- **Task Master AI** (automated task management) - 📖 **[Ver Integración con Claude Code](./docs/TASKMASTER_CLAUDE_INTEGRATION.md)**
+- **Task Master AI** (automated task management) - 📖
+  **[Ver Integración con Claude Code](./docs/TASKMASTER_CLAUDE_INTEGRATION.md)**
 
 ## 📋 Requisitos Previos
 
@@ -160,11 +170,14 @@ make task-complete ID=5     # Mark done, create PR
 - ✅ HIPAA audit logging
 - ✅ Security scanning (secrets, deps, containers)
 
-**Documentation**: [`docs/guides/feature-workflow.md`](docs/guides/feature-workflow.md)
+**Documentation**:
+[`docs/guides/feature-workflow.md`](docs/guides/feature-workflow.md)
 
 ### Conventional Commits
 
-Este proyecto utiliza [Conventional Commits](https://www.conventionalcommits.org/). El workflow aplica esto automáticamente:
+Este proyecto utiliza
+[Conventional Commits](https://www.conventionalcommits.org/). El workflow aplica
+esto automáticamente:
 
 ```bash
 # Commits are automatically validated and task-linked
@@ -181,7 +194,8 @@ Husky configura hooks automáticamente:
 
 ## 🎯 Multi-tenant & RBAC
 
-El sistema soporta múltiples organizaciones (clínicas) con control de acceso basado en roles:
+El sistema soporta múltiples organizaciones (clínicas) con control de acceso
+basado en roles:
 
 - **Super Admin**: Gestión global del sistema
 - **Org Admin**: Gestión de la organización

@@ -1,8 +1,7 @@
 # 🚀 Deployment Progress - Staging Environment
 
-**Fecha**: 2025-10-07
-**Branch**: `feat/api-backend`
-**Objetivo**: Desplegar Adyela API y Web a staging en GCP
+**Fecha**: 2025-10-07 **Branch**: `feat/api-backend` **Objetivo**: Desplegar
+Adyela API y Web a staging en GCP
 
 ---
 
@@ -27,9 +26,11 @@
 
 - ✅ **Error de pnpm**: Actualizado de `version: 9` a `version: 9.15.0`
 - ✅ **Artifact Registry**: Creado repositorio `adyela` en us-central1
-- ✅ **Secrets en outputs**: Cambiado de pasar `image-tag` completo a solo `image-version`
+- ✅ **Secrets en outputs**: Cambiado de pasar `image-tag` completo a solo
+  `image-version`
 - ✅ **Labels GCP**: Convertir `v1.0.0` → `v1-0-0` (puntos no permitidos)
-- ✅ **CPU/Concurrency**: Aumentado de 0.5 CPU a 1 CPU (requerido con concurrency > 1)
+- ✅ **CPU/Concurrency**: Aumentado de 0.5 CPU a 1 CPU (requerido con
+  concurrency > 1)
 - ✅ **Memoria**: Aumentada de 256Mi a 512Mi
 
 ### 3. Problemas Resueltos
@@ -49,9 +50,8 @@
 
 ### Último Error (Run #18300921730)
 
-**Status**: Deployment fallando
-**Último commit**: `799a98f`
-**Run ID**: https://github.com/heggar/adyela/actions/runs/18300921730
+**Status**: Deployment fallando **Último commit**: `799a98f` **Run ID**:
+https://github.com/heggar/adyela/actions/runs/18300921730
 
 **Acción para mañana**:
 
@@ -65,7 +65,8 @@
 
 ### Configuración Pendiente
 
-- ⏳ **VITE_API_URL_STAGING**: Se configurará después del primer deploy exitoso del backend
+- ⏳ **VITE_API_URL_STAGING**: Se configurará después del primer deploy exitoso
+  del backend
 - ⏳ **Segundo deployment del frontend**: Después de obtener API URL
 
 ---
@@ -76,7 +77,8 @@
 
 - ✅ **Build**: Exitoso
 - ✅ **Push**: Exitoso
-- ✅ **Image**: `us-central1-docker.pkg.dev/adyela-staging/adyela/adyela-api-staging:v1.0.0`
+- ✅ **Image**:
+  `us-central1-docker.pkg.dev/adyela-staging/adyela/adyela-api-staging:v1.0.0`
 - ✅ **Digest**: Disponible
 
 ### Deploy API to Cloud Run
@@ -84,13 +86,8 @@
 - ❌ **Status**: Fallando (último intento)
 - 📝 **Configuración actual**:
   ```yaml
-  --min-instances=0
-  --max-instances=1
-  --memory=512Mi
-  --cpu=1
-  --timeout=60s
-  --concurrency=80
-  --port=8000
+  --min-instances=0 --max-instances=1 --memory=512Mi --cpu=1 --timeout=60s
+  --concurrency=80 --port=8000
   ```
 
 ### Build Web Application
@@ -168,7 +165,8 @@ gcloud secrets list --project adyela-staging
 
 1. ✅ **Revisar logs del último run** - Identificar error específico
 2. ⚠️ **Corregir error de deployment** - Aplicar fix necesario
-3. ⚠️ **Verificar deploy exitoso del backend** - Confirmar que Cloud Run funciona
+3. ⚠️ **Verificar deploy exitoso del backend** - Confirmar que Cloud Run
+   funciona
 4. ⚠️ **Obtener API URL** - Guardarla para siguiente paso
 5. ⚠️ **Configurar VITE_API_URL_STAGING** - Para build del frontend
 6. ⚠️ **Ejecutar segundo deployment** - Backend + Frontend completo
@@ -224,6 +222,5 @@ gcloud artifacts docker images list \
 
 ---
 
-**Última actualización**: 2025-10-07 03:17 UTC
-**Estado**: En progreso - 80% completado
-**Próxima sesión**: Resolver último error de deployment
+**Última actualización**: 2025-10-07 03:17 UTC **Estado**: En progreso - 80%
+completado **Próxima sesión**: Resolver último error de deployment

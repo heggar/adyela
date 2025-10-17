@@ -2,7 +2,9 @@
 
 ## Overview
 
-Adyela uses descriptive, human-readable branch names derived from Task Master task titles. This approach makes Git history more meaningful and easier to understand.
+Adyela uses descriptive, human-readable branch names derived from Task Master
+task titles. This approach makes Git history more meaningful and easier to
+understand.
 
 ## Branch Naming Convention
 
@@ -54,7 +56,8 @@ git log --oneline --graph
 
 ### ✅ Better Pull Requests
 
-GitHub PR titles automatically use the branch name, making them instantly understandable.
+GitHub PR titles automatically use the branch name, making them instantly
+understandable.
 
 ### ✅ Task Traceability
 
@@ -165,11 +168,14 @@ feature/optimize-database-queries
 
 If a task title is extremely long, the script handles it gracefully:
 
-**Original**: "Implement comprehensive user authentication system with OAuth2, JWT, and multi-factor authentication support"
+**Original**: "Implement comprehensive user authentication system with OAuth2,
+JWT, and multi-factor authentication support"
 
-**Branch**: `feature/implement-comprehensive-user-authentication-system-with-oauth2-jwt-and-multi-factor-authentication-support`
+**Branch**:
+`feature/implement-comprehensive-user-authentication-system-with-oauth2-jwt-and-multi-factor-authentication-support`
 
-**Note**: While this is valid, consider editing task titles to be more concise (20-40 characters ideal).
+**Note**: While this is valid, consider editing task titles to be more concise
+(20-40 characters ideal).
 
 ### Task Titles with Special Characters
 
@@ -253,7 +259,8 @@ npx task-master-ai update-task --id=5 --prompt="Change title to 'Update API endp
 
 ### Issue: Multiple tasks with similar names
 
-**Problem**: "Add user settings" and "Add user preferences" create similar branches
+**Problem**: "Add user settings" and "Add user preferences" create similar
+branches
 
 **Solution**: Add context to task titles:
 
@@ -284,4 +291,5 @@ ls -la .task-context/
 - ✅ Better Git history and PR titles
 - ✅ Full traceability maintained
 
-**Remember**: Use `make task-start ID=<id>` to let the system handle everything automatically!
+**Remember**: Use `make task-start ID=<id>` to let the system handle everything
+automatically!

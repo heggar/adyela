@@ -1,6 +1,7 @@
 # Guía de Configuración OAuth
 
-Esta guía explica cómo configurar la autenticación OAuth con Google, Facebook, Apple y Microsoft para la aplicación Adyela.
+Esta guía explica cómo configurar la autenticación OAuth con Google, Facebook,
+Apple y Microsoft para la aplicación Adyela.
 
 ## Tabla de Contenidos
 
@@ -152,7 +153,8 @@ firebase emulators:start --only auth,firestore
 1. Abre http://localhost:5173
 2. Ve a la página de login
 3. Prueba cada botón OAuth
-4. Verifica en Firebase Emulator UI (http://localhost:4000) que se crean usuarios
+4. Verifica en Firebase Emulator UI (http://localhost:4000) que se crean
+   usuarios
 5. Revisa logs del backend para confirmar sincronización
 
 ## Deploy a Staging
@@ -184,8 +186,7 @@ Agrega los nuevos secrets OAuth al workflow:
 
 #### 1. Error: "Invalid OAuth client"
 
-**Causa**: Client ID incorrecto o dominio no autorizado
-**Solución**:
+**Causa**: Client ID incorrecto o dominio no autorizado **Solución**:
 
 - Verifica Client ID en Firebase Console
 - Agrega dominio a dominios autorizados
@@ -193,8 +194,7 @@ Agrega los nuevos secrets OAuth al workflow:
 
 #### 2. Error: "Redirect URI mismatch"
 
-**Causa**: URI de redirección no configurado correctamente
-**Solución**:
+**Causa**: URI de redirección no configurado correctamente **Solución**:
 
 - Verifica URI de redirección en proveedor OAuth
 - Debe incluir `/__/auth/handler` al final
@@ -202,8 +202,7 @@ Agrega los nuevos secrets OAuth al workflow:
 
 #### 3. Error: "Firebase Auth Emulator not connected"
 
-**Causa**: Emulator no está ejecutándose
-**Solución**:
+**Causa**: Emulator no está ejecutándose **Solución**:
 
 - Ejecuta `firebase emulators:start --only auth`
 - Verifica que el puerto 9099 esté disponible

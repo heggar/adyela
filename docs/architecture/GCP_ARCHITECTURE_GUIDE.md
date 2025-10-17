@@ -2,7 +2,9 @@
 
 ## Overview
 
-This document explains the complete Google Cloud Platform architecture for the Adyela health system, covering both staging and production environments with HIPAA compliance.
+This document explains the complete Google Cloud Platform architecture for the
+Adyela health system, covering both staging and production environments with
+HIPAA compliance.
 
 ## Diagram
 
@@ -141,7 +143,8 @@ This document explains the complete Google Cloud Platform architecture for the A
 
 #### 1. Cloud Run - API Service
 
-- **Image**: `us-central1-docker.pkg.dev/adyela-staging/adyela/adyela-api-staging`
+- **Image**:
+  `us-central1-docker.pkg.dev/adyela-staging/adyela/adyela-api-staging`
 - **Configuration**:
   ```yaml
   min_instances: 0 # Scale to zero
@@ -160,7 +163,8 @@ This document explains the complete Google Cloud Platform architecture for the A
 
 #### 2. Cloud Run - Web App (PWA)
 
-- **Image**: `us-central1-docker.pkg.dev/adyela-staging/adyela/adyela-web-staging`
+- **Image**:
+  `us-central1-docker.pkg.dev/adyela-staging/adyela/adyela-web-staging`
 - **Configuration**:
   ```yaml
   min_instances: 0

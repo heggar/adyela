@@ -113,7 +113,8 @@ VITE_FIREBASE_APP_ID=1:123456789:web:abcdef123456
 VITE_API_BASE_URL=http://localhost:8000
 ```
 
-See [OAuth Setup Guide](../../docs/guides/OAUTH_SETUP.md) for production configuration.
+See [OAuth Setup Guide](../../docs/guides/OAUTH_SETUP.md) for production
+configuration.
 
 ## 📱 PWA Features
 

@@ -1,15 +1,15 @@
 # 🔧 Fix: OAuth Redirect a Localhost en Producción
 
-**Fecha**: 2025-10-16
-**Commit**: `2b23aaa`
-**Autor**: Claude Code + hever_gonzalezg@adyela.care
-**Estado**: ✅ RESUELTO
+**Fecha**: 2025-10-16 **Commit**: `2b23aaa` **Autor**: Claude Code +
+hever_gonzalezg@adyela.care **Estado**: ✅ RESUELTO
 
 ---
 
 ## 🐛 Problema Reportado
 
-Después de autenticarse con Google OAuth en `staging.adyela.care`, el frontend intentaba conectarse a `localhost:8000/api/v1/auth/sync` en lugar de `staging.adyela.care/api/v1/auth/sync`.
+Después de autenticarse con Google OAuth en `staging.adyela.care`, el frontend
+intentaba conectarse a `localhost:8000/api/v1/auth/sync` en lugar de
+`staging.adyela.care/api/v1/auth/sync`.
 
 **Síntomas**:
 
@@ -34,13 +34,14 @@ Fallback: "http://localhost:8000"
 
 ### ¿Por qué era undefined?
 
-El valor de `import.meta.env.VITE_API_BASE_URL` depende de una cadena de configuración:
+El valor de `import.meta.env.VITE_API_BASE_URL` depende de una cadena de
+configuración:
 
 1. **Código Frontend** (authStore.ts:52):
 
    ```typescript
    const apiBaseUrl =
-     import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
+     import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
    ```
 
 2. **Dockerfile** (apps/web/Dockerfile:7):
@@ -59,7 +60,8 @@ El valor de `import.meta.env.VITE_API_BASE_URL` depende de una cadena de configu
 
 4. **GitHub Secret**: ❌ `VITE_API_URL_STAGING` no existe o está vacío
 
-**Resultado**: Vite inyecta `undefined` en tiempo de build → usa fallback `localhost:8000`
+**Resultado**: Vite inyecta `undefined` en tiempo de build → usa fallback
+`localhost:8000`
 
 ---
 
@@ -67,7 +69,8 @@ El valor de `import.meta.env.VITE_API_BASE_URL` depende de una cadena de configu
 
 ### Opción Elegida: Detección Dinámica de Entorno
 
-En lugar de depender de variables de entorno en tiempo de build, detectar el entorno en tiempo de ejecución.
+En lugar de depender de variables de entorno en tiempo de build, detectar el
+entorno en tiempo de ejecución.
 
 ### Cambios Realizados
 
@@ -95,7 +98,7 @@ En lugar de depender de variables de entorno en tiempo de build, detectar el ent
 const getApiBaseUrl = (): string => {
   // In development, use localhost
   if (import.meta.env.DEV) {
-    return "http://localhost:8000";
+    return 'http://localhost:8000';
   }
 
   // In production/staging, use the same origin
@@ -171,7 +174,7 @@ getApiBaseUrl(); // → "http://localhost:8000" ✅
 getApiBaseUrl(); // → "https://staging.adyela.care" ✅
 
 // Fetch call:
-fetch("https://staging.adyela.care/api/v1/auth/sync");
+fetch('https://staging.adyela.care/api/v1/auth/sync');
 // Load Balancer routes to API service ✅
 ```
 
@@ -184,7 +187,7 @@ fetch("https://staging.adyela.care/api/v1/auth/sync");
 getApiBaseUrl(); // → "https://adyela.care" ✅
 
 // Fetch call:
-fetch("https://adyela.care/api/v1/auth/sync");
+fetch('https://adyela.care/api/v1/auth/sync');
 // Load Balancer routes to API service ✅
 ```
 
@@ -351,7 +354,8 @@ pnpm lint
 
 ### Vite Environment Variables
 
-**Importante**: En Vite, las variables con prefijo `VITE_*` se inyectan en tiempo de **BUILD**, no en tiempo de **RUNTIME**.
+**Importante**: En Vite, las variables con prefijo `VITE_*` se inyectan en
+tiempo de **BUILD**, no en tiempo de **RUNTIME**.
 
 ```typescript
 // ❌ Esto NO funciona como variable de runtime en Cloud Run:
@@ -365,7 +369,8 @@ const apiUrl = window.location.origin;
 
 ### Window Object Availability
 
-La función `getApiBaseUrl()` usa `window.location.origin`, que solo está disponible en el navegador.
+La función `getApiBaseUrl()` usa `window.location.origin`, que solo está
+disponible en el navegador.
 
 **Consideraciones**:
 
@@ -378,8 +383,8 @@ Si en el futuro se migra a Next.js o SSR:
 ```typescript
 const getApiBaseUrl = (): string => {
   // Server-side
-  if (typeof window === "undefined") {
-    return process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+  if (typeof window === 'undefined') {
+    return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
   }
 
   // Client-side
@@ -484,10 +489,10 @@ const getApiBaseUrl = (): string => {
 
 **Estado**: ✅ **RESUELTO Y DOCUMENTADO**
 
-**Próximo paso**: Desplegar a staging y verificar que OAuth funciona correctamente end-to-end.
+**Próximo paso**: Desplegar a staging y verificar que OAuth funciona
+correctamente end-to-end.
 
 ---
 
-**Generado**: 2025-10-16
-**Autor**: Claude Code
-**Proyecto**: Adyela Healthcare Platform
+**Generado**: 2025-10-16 **Autor**: Claude Code **Proyecto**: Adyela Healthcare
+Platform

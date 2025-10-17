@@ -2,7 +2,8 @@
 
 ## 📊 Overview
 
-El proyecto tiene configurado un sistema de monitoreo de presupuesto con alertas automáticas y auto-shutdown para staging.
+El proyecto tiene configurado un sistema de monitoreo de presupuesto con alertas
+automáticas y auto-shutdown para staging.
 
 ## 💰 Presupuestos Configurados
 
@@ -74,7 +75,8 @@ Verificar costos actuales:
 
 ### Ver Presupuestos
 
-- **Console**: https://console.cloud.google.com/billing/0166AB-671459-CB9565/budgets
+- **Console**:
+  https://console.cloud.google.com/billing/0166AB-671459-CB9565/budgets
 - **CLI**: `gcloud billing budgets list --billing-account=0166AB-671459-CB9565`
 
 ### Ver Costos Actuales
@@ -226,7 +228,8 @@ Al inicio de cada mes:
 Para consultas sobre facturación:
 
 - **Email**: hever_gonzalezg@adyela.care
-- **GCP Support**: [Google Cloud Console](https://console.cloud.google.com/support)
+- **GCP Support**:
+  [Google Cloud Console](https://console.cloud.google.com/support)
 
 ---
 

@@ -478,4 +478,5 @@ Additional Security:
 
 ---
 
-**Próximos Pasos**: Implementar Fase 1 del plan Cloudflare y actualizar QUICK_VIEW.md con las nuevas recomendaciones.
+**Próximos Pasos**: Implementar Fase 1 del plan Cloudflare y actualizar
+QUICK_VIEW.md con las nuevas recomendaciones.

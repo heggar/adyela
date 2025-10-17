@@ -2,7 +2,8 @@
 
 ## ¿Qué es MCP?
 
-Model Context Protocol (MCP) permite que Claude Code se conecte a servidores externos para obtener información y ejecutar acciones en tiempo real.
+Model Context Protocol (MCP) permite que Claude Code se conecte a servidores
+externos para obtener información y ejecutar acciones en tiempo real.
 
 ## Configurar GitHub MCP
 
@@ -94,7 +95,8 @@ Una vez configurado, puedes pedirle a Claude que:
 
 ## Alternativa: CLI de GitHub (gh)
 
-Si no quieres configurar MCP, puedes usar el CLI de GitHub que ya tienes instalado:
+Si no quieres configurar MCP, puedes usar el CLI de GitHub que ya tienes
+instalado:
 
 ```bash
 # Ver workflows
@@ -154,7 +156,8 @@ gh run watch
 
 ### Workflows no se ejecutan
 
-1. Verificar que los paths en `on.push.paths` coinciden con los archivos modificados
+1. Verificar que los paths en `on.push.paths` coinciden con los archivos
+   modificados
 2. Revisar que la rama está en la lista de `on.push.branches`
 3. Verificar que no hay errores de sintaxis YAML
 

@@ -1,6 +1,7 @@
 # ☁️ Google Cloud Platform Setup - Adyela
 
-Complete guide to configure Google Cloud Platform for staging and production environments.
+Complete guide to configure Google Cloud Platform for staging and production
+environments.
 
 ---
 
@@ -523,7 +524,8 @@ jobs:
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
         with:
-          workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER_STAGING }}
+          workload_identity_provider:
+            ${{ secrets.WORKLOAD_IDENTITY_PROVIDER_STAGING }}
           service_account: ${{ secrets.SERVICE_ACCOUNT_STAGING }}
 
       - name: Set up Cloud SDK
@@ -1233,4 +1235,5 @@ After completing this setup:
 
 ---
 
-**Questions or issues?** Open an issue in the GitHub repository or contact the DevOps team.
+**Questions or issues?** Open an issue in the GitHub repository or contact the
+DevOps team.

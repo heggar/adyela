@@ -1,11 +1,11 @@
-import { defineConfig, devices } from "@playwright/test";
+import { defineConfig, devices } from '@playwright/test';
 
 /**
  * Playwright configuration for Adyela E2E tests
  * @see https://playwright.dev/docs/test-configuration
  */
 export default defineConfig({
-  testDir: "./tests/e2e",
+  testDir: './tests/e2e',
 
   // Maximum time one test can run
   timeout: 30 * 1000,
@@ -24,24 +24,24 @@ export default defineConfig({
 
   // Reporter to use
   reporter: [
-    ["html", { outputFolder: "playwright-report" }],
-    ["json", { outputFile: "playwright-report/results.json" }],
-    ["list"],
+    ['html', { outputFolder: 'playwright-report' }],
+    ['json', { outputFile: 'playwright-report/results.json' }],
+    ['list'],
   ],
 
   // Shared settings for all the projects below
   use: {
     // Base URL to use in actions like `await page.goto('/')`
-    baseURL: process.env.BASE_URL || "http://localhost:3000",
+    baseURL: process.env.BASE_URL || 'http://localhost:3000',
 
     // Collect trace when retrying the failed test
-    trace: "on-first-retry",
+    trace: 'on-first-retry',
 
     // Screenshot on failure
-    screenshot: "only-on-failure",
+    screenshot: 'only-on-failure',
 
     // Video on failure
-    video: "retain-on-failure",
+    video: 'retain-on-failure',
 
     // Maximum time each action such as `click()` can take
     actionTimeout: 15 * 1000,
@@ -50,28 +50,28 @@ export default defineConfig({
     navigationTimeout: 30 * 1000,
 
     // Wait for network idle before considering navigation done
-    waitForLoadState: "domcontentloaded",
+    waitForLoadState: 'domcontentloaded',
   },
 
   // Configure projects for major browsers
   projects: [
     {
-      name: "chromium",
-      use: { ...devices["Desktop Chrome"] },
+      name: 'chromium',
+      use: { ...devices['Desktop Chrome'] },
     },
     {
-      name: "firefox",
+      name: 'firefox',
       use: {
-        ...devices["Desktop Firefox"],
+        ...devices['Desktop Firefox'],
         // Firefox may need extra time for HMR
         navigationTimeout: 45 * 1000,
         actionTimeout: 20 * 1000,
       },
     },
     {
-      name: "webkit",
+      name: 'webkit',
       use: {
-        ...devices["Desktop Safari"],
+        ...devices['Desktop Safari'],
         // WebKit/Safari may need extra time
         navigationTimeout: 45 * 1000,
         actionTimeout: 20 * 1000,
@@ -80,13 +80,13 @@ export default defineConfig({
 
     // Mobile viewports
     {
-      name: "Mobile Chrome",
-      use: { ...devices["Pixel 5"] },
+      name: 'Mobile Chrome',
+      use: { ...devices['Pixel 5'] },
     },
     {
-      name: "Mobile Safari",
+      name: 'Mobile Safari',
       use: {
-        ...devices["iPhone 12"],
+        ...devices['iPhone 12'],
         navigationTimeout: 45 * 1000,
         actionTimeout: 20 * 1000,
       },
@@ -94,9 +94,9 @@ export default defineConfig({
 
     // Tablet viewports
     {
-      name: "iPad",
+      name: 'iPad',
       use: {
-        ...devices["iPad Pro"],
+        ...devices['iPad Pro'],
         navigationTimeout: 45 * 1000,
         actionTimeout: 20 * 1000,
       },
@@ -107,8 +107,8 @@ export default defineConfig({
   webServer: process.env.CI
     ? undefined
     : {
-        command: "pnpm dev",
-        url: "http://localhost:3000",
+        command: 'pnpm dev',
+        url: 'http://localhost:3000',
         reuseExistingServer: !process.env.CI,
         timeout: 120 * 1000,
       },

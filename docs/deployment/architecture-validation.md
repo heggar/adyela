@@ -1,10 +1,9 @@
 # 🔍 Architecture Validation Report
 
-Análisis de coherencia entre la arquitectura actual y las guías de deployment, incluyendo controles de costos y optimización de recursos.
+Análisis de coherencia entre la arquitectura actual y las guías de deployment,
+incluyendo controles de costos y optimización de recursos.
 
-**Fecha:** 2025-10-05
-**Versión:** 1.0.0
-**Estado:** 🔴 Acción requerida
+**Fecha:** 2025-10-05 **Versión:** 1.0.0 **Estado:** 🔴 Acción requerida
 
 ---
 
@@ -18,7 +17,8 @@ Análisis de coherencia entre la arquitectura actual y las guías de deployment,
 | Seguridad                    | 🟡 Parcial         | 7/10  | Alta      |
 | Infraestructura como Código  | 🔴 No implementado | 0/10  | **Alta**  |
 
-**Resultado General:** 48/100 - **Requiere mejoras críticas antes de producción**
+**Resultado General:** 48/100 - **Requiere mejoras críticas antes de
+producción**
 
 ---
 
@@ -492,18 +492,18 @@ retention-days: 30  # production
 
 #### 1. Preemptible/Spot Instances
 
-**Estado:** No disponible en Cloud Run (solo Compute Engine)
-**Alternativa:** Usar Cloud Run Jobs para tareas batch
+**Estado:** No disponible en Cloud Run (solo Compute Engine) **Alternativa:**
+Usar Cloud Run Jobs para tareas batch
 
 #### 2. Reserved Capacity
 
-**Estado:** No configurado
-**Recomendación:** No aplicable para Cloud Run (pago por uso)
+**Estado:** No configurado **Recomendación:** No aplicable para Cloud Run (pago
+por uso)
 
 #### 3. Multi-Region Deployment
 
-**Estado:** Single region (us-central1)
-**Impacto:** OK para MVP, considerar multi-region en fase de escala
+**Estado:** Single region (us-central1) **Impacto:** OK para MVP, considerar
+multi-region en fase de escala
 
 #### 4. Database Optimization
 
@@ -581,8 +581,7 @@ COPY --from=builder /app/.venv /app/.venv
 
 #### 1. Crear Infraestructura como Código
 
-**Esfuerzo:** 3-5 días
-**Impacto:** Crítico
+**Esfuerzo:** 3-5 días **Impacto:** Crítico
 
 ```bash
 infrastructure/
@@ -608,8 +607,7 @@ infrastructure/
 
 #### 2. Configurar Budgets y Alertas
 
-**Esfuerzo:** 1 día
-**Impacto:** Crítico
+**Esfuerzo:** 1 día **Impacto:** Crítico
 
 ```bash
 # Ejecutar scripts de setup
@@ -619,8 +617,7 @@ infrastructure/
 
 #### 3. Implementar Rate Limiting (Cloud Armor)
 
-**Esfuerzo:** 2 días
-**Impacto:** Alta (seguridad + costos)
+**Esfuerzo:** 2 días **Impacto:** Alta (seguridad + costos)
 
 ```terraform
 # Prevenir ataques DDoS que disparan costos
@@ -634,8 +631,7 @@ module "cloud_armor" {
 
 #### 4. Documentar y Crear Secretos Requeridos
 
-**Esfuerzo:** 1 día
-**Impacto:** Alta
+**Esfuerzo:** 1 día **Impacto:** Alta
 
 ```bash
 # Script para crear todos los secretos
@@ -645,8 +641,7 @@ module "cloud_armor" {
 
 #### 5. Reducir min-instances en Production
 
-**Esfuerzo:** 5 minutos
-**Impacto:** Ahorro $25-40/mes
+**Esfuerzo:** 5 minutos **Impacto:** Ahorro $25-40/mes
 
 ```yaml
 # cd-production.yml
@@ -681,8 +676,7 @@ module "cloud_armor" {
 
 #### 10. Optimizar Docker Images
 
-**Esfuerzo:** 1 día
-**Ahorro:** ~$2-5/mes en registry storage
+**Esfuerzo:** 1 día **Ahorro:** ~$2-5/mes en registry storage
 
 #### 11. Implementar Request Tracing Avanzado
 
@@ -690,8 +684,7 @@ module "cloud_armor" {
 
 #### 12. Auto-shutdown Staging en Weekends
 
-**Esfuerzo:** 1 día
-**Ahorro:** ~$2-3/mes
+**Esfuerzo:** 1 día **Ahorro:** ~$2-3/mes
 
 ---
 
@@ -833,6 +826,5 @@ module "cloud_armor" {
 
 ---
 
-**Próxima revisión:** 2025-10-12
-**Responsable:** DevOps Team
-**Aprobadores:** Tech Lead, Product Owner
+**Próxima revisión:** 2025-10-12 **Responsable:** DevOps Team **Aprobadores:**
+Tech Lead, Product Owner

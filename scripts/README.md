@@ -1,6 +1,7 @@
 # 📜 Scripts Directory
 
-This directory contains all automation scripts for the Adyela project, organized by category for better maintainability.
+This directory contains all automation scripts for the Adyela project, organized
+by category for better maintainability.
 
 ## 📁 Directory Structure
 
@@ -21,45 +22,46 @@ Scripts for initial environment configuration and service setup.
 
 ### `setup/setup-mcp-servers.sh`
 
-**Purpose**: Configure MCP (Model Context Protocol) servers for Claude Code integration
-**Usage**: `./scripts/setup/setup-mcp-servers.sh` or `make mcp-setup`
-**Prerequisites**: Claude Desktop installed
-**Description**: Configures 5 MCP servers (Playwright, Filesystem, GitHub, Sequential Thinking, Taskmaster AI) in Claude Desktop configuration file.
+**Purpose**: Configure MCP (Model Context Protocol) servers for Claude Code
+integration **Usage**: `./scripts/setup/setup-mcp-servers.sh` or
+`make mcp-setup` **Prerequisites**: Claude Desktop installed **Description**:
+Configures 5 MCP servers (Playwright, Filesystem, GitHub, Sequential Thinking,
+Taskmaster AI) in Claude Desktop configuration file.
 
 ### `setup/dev-setup.sh`
 
-**Purpose**: One-time developer environment setup
-**Usage**: `./scripts/setup/dev-setup.sh` or `make dev-setup`
-**Prerequisites**: Docker, pnpm, Python 3.12
-**Description**: Initializes local development environment, copies .env files, installs dependencies, and verifies service health.
+**Purpose**: One-time developer environment setup **Usage**:
+`./scripts/setup/dev-setup.sh` or `make dev-setup` **Prerequisites**: Docker,
+pnpm, Python 3.12 **Description**: Initializes local development environment,
+copies .env files, installs dependencies, and verifies service health.
 
 ### `setup/setup-firebase-secrets.sh`
 
-**Purpose**: Configure Firebase credentials in GCP Secret Manager
-**Usage**: `./scripts/setup/setup-firebase-secrets.sh`
-**Prerequisites**: Firebase project, GCP authentication
-**Description**: Stores Firebase configuration securely in Google Secret Manager for environment-specific access.
+**Purpose**: Configure Firebase credentials in GCP Secret Manager **Usage**:
+`./scripts/setup/setup-firebase-secrets.sh` **Prerequisites**: Firebase project,
+GCP authentication **Description**: Stores Firebase configuration securely in
+Google Secret Manager for environment-specific access.
 
 ### `setup/setup-gcp-oidc.sh`
 
 **Purpose**: Configure OpenID Connect for GitHub Actions authentication
-**Usage**: `./scripts/setup/setup-gcp-oidc.sh`
-**Prerequisites**: GCP project, GitHub repository
-**Description**: Sets up Workload Identity Federation for secure CI/CD authentication without service account keys.
+**Usage**: `./scripts/setup/setup-gcp-oidc.sh` **Prerequisites**: GCP project,
+GitHub repository **Description**: Sets up Workload Identity Federation for
+secure CI/CD authentication without service account keys.
 
 ### `setup/setup-gcp-secrets.sh`
 
-**Purpose**: Automated GCP secrets configuration
-**Usage**: `./scripts/setup/setup-gcp-secrets.sh`
-**Prerequisites**: GCP authentication, Secret Manager API enabled
-**Description**: Automated script to create and configure all required secrets for the application.
+**Purpose**: Automated GCP secrets configuration **Usage**:
+`./scripts/setup/setup-gcp-secrets.sh` **Prerequisites**: GCP authentication,
+Secret Manager API enabled **Description**: Automated script to create and
+configure all required secrets for the application.
 
 ### `setup/setup-gcp-secrets-manual.sh`
 
-**Purpose**: Manual GCP secrets configuration with prompts
-**Usage**: `./scripts/setup/setup-gcp-secrets-manual.sh`
-**Prerequisites**: GCP authentication
-**Description**: Interactive script that prompts for each secret value and stores them in Secret Manager.
+**Purpose**: Manual GCP secrets configuration with prompts **Usage**:
+`./scripts/setup/setup-gcp-secrets-manual.sh` **Prerequisites**: GCP
+authentication **Description**: Interactive script that prompts for each secret
+value and stores them in Secret Manager.
 
 ---
 
@@ -69,80 +71,80 @@ Scripts for managing Google Cloud Platform resources and operations.
 
 ### `gcp/gcp-setup-interactive.sh`
 
-**Purpose**: Interactive GCP project setup wizard
-**Usage**: `./scripts/gcp/gcp-setup-interactive.sh`
-**Prerequisites**: gcloud CLI installed
-**Description**: Step-by-step wizard for configuring a new GCP project with all required APIs, IAM roles, and resources.
+**Purpose**: Interactive GCP project setup wizard **Usage**:
+`./scripts/gcp/gcp-setup-interactive.sh` **Prerequisites**: gcloud CLI installed
+**Description**: Step-by-step wizard for configuring a new GCP project with all
+required APIs, IAM roles, and resources.
 
 ### `gcp/setup-gcp-complete.sh`
 
-**Purpose**: Complete automated GCP environment setup
-**Usage**: `./scripts/gcp/setup-gcp-complete.sh`
-**Prerequisites**: GCP authentication
-**Description**: Automated script that configures entire GCP infrastructure including VPC, Cloud Run, Firestore, etc.
+**Purpose**: Complete automated GCP environment setup **Usage**:
+`./scripts/gcp/setup-gcp-complete.sh` **Prerequisites**: GCP authentication
+**Description**: Automated script that configures entire GCP infrastructure
+including VPC, Cloud Run, Firestore, etc.
 
 ### `gcp/enable-gcp-apis.sh`
 
-**Purpose**: Enable required GCP APIs
-**Usage**: `./scripts/gcp/enable-gcp-apis.sh`
-**Prerequisites**: GCP project with billing enabled
-**Description**: Enables all necessary Google Cloud APIs (Cloud Run, Firestore, Secret Manager, Artifact Registry, etc.).
+**Purpose**: Enable required GCP APIs **Usage**:
+`./scripts/gcp/enable-gcp-apis.sh` **Prerequisites**: GCP project with billing
+enabled **Description**: Enables all necessary Google Cloud APIs (Cloud Run,
+Firestore, Secret Manager, Artifact Registry, etc.).
 
 ### `gcp/setup-terraform-backend.sh`
 
-**Purpose**: Configure Terraform remote state backend
-**Usage**: `./scripts/gcp/setup-terraform-backend.sh`
-**Prerequisites**: Terraform installed, GCP authentication
-**Description**: Creates GCS bucket for Terraform state storage with versioning and state locking.
+**Purpose**: Configure Terraform remote state backend **Usage**:
+`./scripts/gcp/setup-terraform-backend.sh` **Prerequisites**: Terraform
+installed, GCP authentication **Description**: Creates GCS bucket for Terraform
+state storage with versioning and state locking.
 
 ### `gcp/setup-staging-deployment.sh`
 
-**Purpose**: Deploy application to staging environment
-**Usage**: `./scripts/gcp/setup-staging-deployment.sh`
-**Prerequisites**: Docker images built, GCP authentication
-**Description**: Deploys API and Web services to Cloud Run staging environment with proper configuration.
+**Purpose**: Deploy application to staging environment **Usage**:
+`./scripts/gcp/setup-staging-deployment.sh` **Prerequisites**: Docker images
+built, GCP authentication **Description**: Deploys API and Web services to Cloud
+Run staging environment with proper configuration.
 
 ### `gcp/create-artifact-registry.sh`
 
-**Purpose**: Create Artifact Registry repository for Docker images
-**Usage**: `./scripts/gcp/create-artifact-registry.sh`
-**Prerequisites**: GCP authentication
-**Description**: Sets up Docker repository in Artifact Registry for storing container images.
+**Purpose**: Create Artifact Registry repository for Docker images **Usage**:
+`./scripts/gcp/create-artifact-registry.sh` **Prerequisites**: GCP
+authentication **Description**: Sets up Docker repository in Artifact Registry
+for storing container images.
 
 ### `gcp/check-daily-costs.sh`
 
-**Purpose**: Monitor daily GCP spending
-**Usage**: `./scripts/gcp/check-daily-costs.sh`
-**Prerequisites**: Cloud Billing API enabled
-**Description**: Retrieves and reports current day's GCP costs with breakdown by service.
+**Purpose**: Monitor daily GCP spending **Usage**:
+`./scripts/gcp/check-daily-costs.sh` **Prerequisites**: Cloud Billing API
+enabled **Description**: Retrieves and reports current day's GCP costs with
+breakdown by service.
 
 ### `gcp/setup-budgets.sh`
 
-**Purpose**: Configure GCP budget alerts
-**Usage**: `./scripts/gcp/setup-budgets.sh`
-**Prerequisites**: Cloud Billing API enabled
-**Description**: Creates budget alerts for cost monitoring with email notifications at 50%, 80%, and 100% thresholds.
+**Purpose**: Configure GCP budget alerts **Usage**:
+`./scripts/gcp/setup-budgets.sh` **Prerequisites**: Cloud Billing API enabled
+**Description**: Creates budget alerts for cost monitoring with email
+notifications at 50%, 80%, and 100% thresholds.
 
 ### `gcp/setup-budget-notifications.sh`
 
-**Purpose**: Configure budget alert notification channels
-**Usage**: `./scripts/gcp/setup-budget-notifications.sh`
-**Prerequisites**: Budgets created
-**Description**: Sets up email and Pub/Sub notification channels for budget alerts.
+**Purpose**: Configure budget alert notification channels **Usage**:
+`./scripts/gcp/setup-budget-notifications.sh` **Prerequisites**: Budgets created
+**Description**: Sets up email and Pub/Sub notification channels for budget
+alerts.
 
 ### `gcp/setup-auto-shutdown.sh`
 
-**Purpose**: Schedule automatic resource shutdown
-**Usage**: `./scripts/gcp/setup-auto-shutdown.sh`
-**Prerequisites**: Cloud Scheduler API enabled
-**Description**: Creates Cloud Scheduler jobs to automatically shut down development resources during off-hours to save costs.
+**Purpose**: Schedule automatic resource shutdown **Usage**:
+`./scripts/gcp/setup-auto-shutdown.sh` **Prerequisites**: Cloud Scheduler API
+enabled **Description**: Creates Cloud Scheduler jobs to automatically shut down
+development resources during off-hours to save costs.
 
 ### `gcp/simple-auto-shutdown.sh`
 
-**Purpose**: Simple resource shutdown script
-**Usage**: `./scripts/gcp/simple-auto-shutdown.sh`
-**Prerequisites**: GCP authentication
-**Description**: Manual script to quickly shut down all non-production Cloud Run services and development resources.
+**Purpose**: Simple resource shutdown script **Usage**:
+`./scripts/gcp/simple-auto-shutdown.sh` **Prerequisites**: GCP authentication
+**Description**: Manual script to quickly shut down all non-production Cloud Run
+services and development resources.
 
 ---
 
@@ -152,11 +154,11 @@ Scripts for quality assurance, testing, and validation.
 
 ### `testing/quality-checks.sh`
 
-**Purpose**: Run comprehensive quality checks
-**Usage**: `./scripts/testing/quality-checks.sh` or `make quality`
-**Prerequisites**: Services running
-**Description**: Executes linting, type checking, tests, and security audits for both API and Web. Used in CI/CD pipeline.
-**Checks Performed**:
+**Purpose**: Run comprehensive quality checks **Usage**:
+`./scripts/testing/quality-checks.sh` or `make quality` **Prerequisites**:
+Services running **Description**: Executes linting, type checking, tests, and
+security audits for both API and Web. Used in CI/CD pipeline. **Checks
+Performed**:
 
 - ✓ Code formatting (Black, Prettier)
 - ✓ Linting (Ruff, ESLint)
@@ -166,11 +168,11 @@ Scripts for quality assurance, testing, and validation.
 
 ### `testing/lighthouse-audit.sh`
 
-**Purpose**: Run Lighthouse performance and accessibility audit
-**Usage**: `./scripts/testing/lighthouse-audit.sh [URL]` or `make lighthouse`
-**Prerequisites**: Chrome/Chromium installed
-**Description**: Performs Lighthouse audit for performance, accessibility, best practices, and SEO. Generates HTML report.
-**Metrics**:
+**Purpose**: Run Lighthouse performance and accessibility audit **Usage**:
+`./scripts/testing/lighthouse-audit.sh [URL]` or `make lighthouse`
+**Prerequisites**: Chrome/Chromium installed **Description**: Performs
+Lighthouse audit for performance, accessibility, best practices, and SEO.
+Generates HTML report. **Metrics**:
 
 - Performance (>= 90 target)
 - Accessibility (>= 100 target)
@@ -179,10 +181,11 @@ Scripts for quality assurance, testing, and validation.
 
 ### `testing/api-contract-tests.sh`
 
-**Purpose**: Run API contract tests with Schemathesis
-**Usage**: `./scripts/testing/api-contract-tests.sh` or `make api-contract`
-**Prerequisites**: API running, Schemathesis installed
-**Description**: Validates API against OpenAPI specification, tests all endpoints for contract compliance and generates coverage report.
+**Purpose**: Run API contract tests with Schemathesis **Usage**:
+`./scripts/testing/api-contract-tests.sh` or `make api-contract`
+**Prerequisites**: API running, Schemathesis installed **Description**:
+Validates API against OpenAPI specification, tests all endpoints for contract
+compliance and generates coverage report.
 
 ---
 
@@ -192,17 +195,17 @@ General-purpose utility scripts for development workflow.
 
 ### `utils/task-start.sh`
 
-**Purpose**: Start working on a Task Master task
-**Usage**: `./scripts/utils/task-start.sh <TASK_ID>` or `make task-start ID=5`
-**Prerequisites**: Taskmaster AI configured
-**Description**: Sets task status to "in-progress", creates feature branch, and displays task details.
+**Purpose**: Start working on a Task Master task **Usage**:
+`./scripts/utils/task-start.sh <TASK_ID>` or `make task-start ID=5`
+**Prerequisites**: Taskmaster AI configured **Description**: Sets task status to
+"in-progress", creates feature branch, and displays task details.
 
 ### `utils/task-complete.sh`
 
-**Purpose**: Mark Task Master task as complete
-**Usage**: `./scripts/utils/task-complete.sh <TASK_ID>` or `make task-complete ID=5`
-**Prerequisites**: Taskmaster AI configured
-**Description**: Sets task status to "done", generates completion summary, and suggests next task.
+**Purpose**: Mark Task Master task as complete **Usage**:
+`./scripts/utils/task-complete.sh <TASK_ID>` or `make task-complete ID=5`
+**Prerequisites**: Taskmaster AI configured **Description**: Sets task status to
+"done", generates completion summary, and suggests next task.
 
 ---
 
@@ -369,5 +372,5 @@ When adding new scripts:
 
 ---
 
-**Last Updated**: 2025-01-10
-**Total Scripts**: 22 (Setup: 6, GCP: 11, Testing: 3, Utils: 2)
+**Last Updated**: 2025-01-10 **Total Scripts**: 22 (Setup: 6, GCP: 11, Testing:
+3, Utils: 2)

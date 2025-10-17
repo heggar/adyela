@@ -1,16 +1,17 @@
 # ✅ Pragmatic Staging Implementation - COMPLETE
 
-**Date**: 2025-10-15
-**Status**: ✅ DEPLOYED
-**Commit**: `a2c394f` - feat(infra): implement pragmatic staging with monitoring
+**Date**: 2025-10-15 **Status**: ✅ DEPLOYED **Commit**: `a2c394f` -
+feat(infra): implement pragmatic staging with monitoring
 
 ---
 
 ## 🎯 Overview
 
-Successfully implemented comprehensive staging environment improvements based on the user's architectural decision to migrate DNS from Cloudflare to GoDaddy.
+Successfully implemented comprehensive staging environment improvements based on
+the user's architectural decision to migrate DNS from Cloudflare to GoDaddy.
 
-**Key Decision**: Keep DNS in GoDaddy for simplified architecture, direct routing, and better debugging.
+**Key Decision**: Keep DNS in GoDaddy for simplified architecture, direct
+routing, and better debugging.
 
 ---
 
@@ -37,14 +38,16 @@ Successfully implemented comprehensive staging environment improvements based on
 ✅ module.cloudflare.cloudflare_zone_settings_override.ssl_settings
 ```
 
-**Note**: Cloud CDN is already active in the GCP Load Balancer, so no CDN functionality is lost.
+**Note**: Cloud CDN is already active in the GCP Load Balancer, so no CDN
+functionality is lost.
 
 ---
 
 #### IAP Configuration ✅
 
 - **Changed**: IAP disabled (`iap_enabled = false`)
-- **Why**: IAP is for internal apps with Google Workspace users, not patient-facing authentication
+- **Why**: IAP is for internal apps with Google Workspace users, not
+  patient-facing authentication
 - **Alternative**: Identity Platform OAuth (correct for patient authentication)
 
 **Documentation Added**:
@@ -95,13 +98,15 @@ iap_enabled = false
 ```markdown
 ## API Health Check Failure
 
-**Service**: adyela API (staging)
-**Endpoint**: https://api.staging.adyela.care/health
+**Service**: adyela API (staging) **Endpoint**:
+https://api.staging.adyela.care/health
 
 ### Immediate Actions:
 
-1. Check API logs: `gcloud logging read "resource.labels.service_name=adyela-api-staging" --limit=50`
-2. Check Cloud Run status: `gcloud run services describe adyela-api-staging --region=us-central1`
+1. Check API logs:
+   `gcloud logging read "resource.labels.service_name=adyela-api-staging" --limit=50`
+2. Check Cloud Run status:
+   `gcloud run services describe adyela-api-staging --region=us-central1`
 3. Verify Load Balancer health: GCP Console → Network Services → Load Balancing
 
 ### Escalation:
@@ -111,8 +116,10 @@ iap_enabled = false
 
 ### Recovery:
 
-- Check recent deployments: `gcloud run revisions list --service=adyela-api-staging`
-- Rollback if needed: `gcloud run services update-traffic adyela-api-staging --to-revisions=PREVIOUS_REVISION=100`
+- Check recent deployments:
+  `gcloud run revisions list --service=adyela-api-staging`
+- Rollback if needed:
+  `gcloud run services update-traffic adyela-api-staging --to-revisions=PREVIOUS_REVISION=100`
 ```
 
 ---
@@ -124,7 +131,8 @@ iap_enabled = false
 | **Email Alerts**            | Email | `hever_gonzalezg@adyela.care` | ✅ Active   |
 | **SMS Critical** (optional) | SMS   | Not configured                | ⚪ Disabled |
 
-**Action Required**: Update email address in `infra/environments/staging/variables.tf`
+**Action Required**: Update email address in
+`infra/environments/staging/variables.tf`
 
 ---
 
@@ -145,8 +153,8 @@ iap_enabled = false
 
 #### Monitoring Dashboard (1/1) ✅
 
-**Dashboard**: Adyela staging - Main Dashboard
-**URL**: https://console.cloud.google.com/monitoring/dashboards/custom/projects/717907307897/dashboards/da395e1e-dad9-40ca-8850-342d01126a90?project=adyela-staging
+**Dashboard**: Adyela staging - Main Dashboard **URL**:
+https://console.cloud.google.com/monitoring/dashboards/custom/projects/717907307897/dashboards/da395e1e-dad9-40ca-8850-342d01126a90?project=adyela-staging
 
 **Dashboard Widgets**:
 
@@ -215,7 +223,8 @@ variable "max_instances" {
 }
 ```
 
-**Flexibility**: Can now easily change scaling for performance testing or production requirements.
+**Flexibility**: Can now easily change scaling for performance testing or
+production requirements.
 
 ---
 
@@ -317,8 +326,8 @@ variable "max_instances" {
 
 ### 1. Simplicity ✅
 
-**Before**: GoDaddy → Cloudflare → GCP Load Balancer → Cloud Run
-**After**: GoDaddy → GCP Load Balancer → Cloud Run
+**Before**: GoDaddy → Cloudflare → GCP Load Balancer → Cloud Run **After**:
+GoDaddy → GCP Load Balancer → Cloud Run
 
 **Benefits**:
 
@@ -409,7 +418,8 @@ Reason: AUTH_PERMISSION_DENIED
 
 **Workaround**: Not required for current functionality
 
-**Resolution**: Request `serviceusage.serviceUsageAdmin` IAM role if full Identity Platform features are needed
+**Resolution**: Request `serviceusage.serviceUsageAdmin` IAM role if full
+Identity Platform features are needed
 
 ---
 
@@ -607,11 +617,16 @@ gcloud run services describe adyela-web-staging \
 
 ### GCP Console
 
-- **Monitoring Dashboard**: https://console.cloud.google.com/monitoring/dashboards/custom/projects/717907307897/dashboards/da395e1e-dad9-40ca-8850-342d01126a90?project=adyela-staging
-- **Alert Policies**: https://console.cloud.google.com/monitoring/alerting/policies?project=adyela-staging
-- **Uptime Checks**: https://console.cloud.google.com/monitoring/uptime?project=adyela-staging
-- **Cloud Run Services**: https://console.cloud.google.com/run?project=adyela-staging
-- **Load Balancer**: https://console.cloud.google.com/net-services/loadbalancing/list/loadBalancers?project=adyela-staging
+- **Monitoring Dashboard**:
+  https://console.cloud.google.com/monitoring/dashboards/custom/projects/717907307897/dashboards/da395e1e-dad9-40ca-8850-342d01126a90?project=adyela-staging
+- **Alert Policies**:
+  https://console.cloud.google.com/monitoring/alerting/policies?project=adyela-staging
+- **Uptime Checks**:
+  https://console.cloud.google.com/monitoring/uptime?project=adyela-staging
+- **Cloud Run Services**:
+  https://console.cloud.google.com/run?project=adyela-staging
+- **Load Balancer**:
+  https://console.cloud.google.com/net-services/loadbalancing/list/loadBalancers?project=adyela-staging
 
 ### Documentation
 
@@ -630,11 +645,10 @@ gcloud run services describe adyela-web-staging \
 
 Successfully implemented a **pragmatic staging environment** with:
 
-✅ **Simplified architecture** (removed Cloudflare, direct GoDaddy → GCP)
-✅ **Comprehensive monitoring** (9 resources deployed)
-✅ **Cost optimization** (scale-to-zero, $18-35/month)
-✅ **Flexibility** (configurable scaling)
-✅ **Production-ready patterns** (monitoring, alerting, SLOs)
+✅ **Simplified architecture** (removed Cloudflare, direct GoDaddy → GCP) ✅
+**Comprehensive monitoring** (9 resources deployed) ✅ **Cost optimization**
+(scale-to-zero, $18-35/month) ✅ **Flexibility** (configurable scaling) ✅
+**Production-ready patterns** (monitoring, alerting, SLOs)
 
 **Status**: ✅ DEPLOYED and OPERATIONAL
 
@@ -642,6 +656,5 @@ Successfully implemented a **pragmatic staging environment** with:
 
 ---
 
-**Generated**: 2025-10-15
-**Commit**: `a2c394f`
-**Author**: Claude Code + hever_gonzalezg@adyela.care
+**Generated**: 2025-10-15 **Commit**: `a2c394f` **Author**: Claude Code +
+hever_gonzalezg@adyela.care

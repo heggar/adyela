@@ -99,7 +99,7 @@ Crear índices para consultas complejas reduce lecturas redundantes.
 
 ```typescript
 // En lugar de escuchar todos los documentos
-onSnapshot(query(appointmentsRef, where("userId", "==", currentUserId)));
+onSnapshot(query(appointmentsRef, where('userId', '==', currentUserId)));
 ```
 
 **Ahorro estimado:** 60-80% en lecturas
@@ -183,6 +183,5 @@ gcloud billing budgets create \
 
 ---
 
-**Generado:** 2025-10-07
-**Proyecto:** Adyela
-**Billing Account:** 0166AB-671459-CB9565
+**Generado:** 2025-10-07 **Proyecto:** Adyela **Billing Account:**
+0166AB-671459-CB9565

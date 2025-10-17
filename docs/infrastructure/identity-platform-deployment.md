@@ -1,6 +1,7 @@
 # Identity Platform Deployment Guide
 
-This guide provides step-by-step instructions for deploying Google Identity Platform using the Terraform module created for the Adyela healthcare platform.
+This guide provides step-by-step instructions for deploying Google Identity
+Platform using the Terraform module created for the Adyela healthcare platform.
 
 ## Overview
 
@@ -374,10 +375,13 @@ terraform apply -state=backup-state-file
 
 ## Next Steps
 
-1. **Integrate with API**: Update backend to use service account for token verification
-2. **Add Custom Claims**: Implement tenant_id and role assignment in user creation flow
+1. **Integrate with API**: Update backend to use service account for token
+   verification
+2. **Add Custom Claims**: Implement tenant_id and role assignment in user
+   creation flow
 3. **Enable Additional Providers**: Add Apple Sign In if needed
-4. **Setup Monitoring Dashboard**: Create custom dashboard for authentication metrics
+4. **Setup Monitoring Dashboard**: Create custom dashboard for authentication
+   metrics
 5. **Test Disaster Recovery**: Practice backup and restore procedures
 
 ## References
@@ -389,6 +393,5 @@ terraform apply -state=backup-state-file
 
 ---
 
-**Version**: 1.0.0
-**Last Updated**: 2025-10-11
-**Maintained By**: Adyela Infrastructure Team
+**Version**: 1.0.0 **Last Updated**: 2025-10-11 **Maintained By**: Adyela
+Infrastructure Team

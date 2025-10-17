@@ -292,8 +292,10 @@ open docs/architecture/adyela-gcp-architecture.drawio
 
 ## 📚 Documentación Relacionada
 
-- **[Guía Completa de Arquitectura](./GCP_ARCHITECTURE_GUIDE.md)** - 50+ páginas de detalles técnicos
-- **[Instrucciones de Visualización](./VIEWING_INSTRUCTIONS.md)** - Solución de problemas
+- **[Guía Completa de Arquitectura](./GCP_ARCHITECTURE_GUIDE.md)** - 50+ páginas
+  de detalles técnicos
+- **[Instrucciones de Visualización](./VIEWING_INSTRUCTIONS.md)** - Solución de
+  problemas
 - **[Guía de Edición](./DIAGRAM_GUIDE.md)** - Cómo editar el diagrama
 - **[README](./README.md)** - Índice general
 
@@ -301,7 +303,8 @@ open docs/architecture/adyela-gcp-architecture.drawio
 
 ## ⚠️ Nota Importante
 
-Este diagrama ASCII es una **representación simplificada**. Para ver la arquitectura completa con:
+Este diagrama ASCII es una **representación simplificada**. Para ver la
+arquitectura completa con:
 
 - ✅ Iconos oficiales de GCP
 - ✅ Colores y diseño profesional

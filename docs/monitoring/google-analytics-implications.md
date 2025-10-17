@@ -2,11 +2,13 @@
 
 ## ⚠️ IMPORTANTE: Consideraciones HIPAA
 
-**Adyela es una aplicación de salud que maneja PHI (Protected Health Information).**
+**Adyela es una aplicación de salud que maneja PHI (Protected Health
+Information).**
 
 ### 🚨 PROBLEMA: Google Analytics NO es HIPAA Compliant
 
-Google Analytics **NO debe usarse** para rastrear datos que contengan PHI, incluyendo:
+Google Analytics **NO debe usarse** para rastrear datos que contengan PHI,
+incluyendo:
 
 ❌ **NO rastrear:**
 
@@ -118,7 +120,7 @@ Al activar Analytics se habilitan:
 
 ```typescript
 // apps/web/src/main.tsx
-import { initializeApp } from "firebase/app";
+import { initializeApp } from 'firebase/app';
 
 const firebaseConfig = {
   // ... config
@@ -132,18 +134,18 @@ const firebaseConfig = {
 
 ```typescript
 // apps/web/src/services/analytics.ts
-import { logEvent, setUserId } from "firebase/analytics";
+import { logEvent, setUserId } from 'firebase/analytics';
 
 // ✅ CORRECTO: Eventos genéricos sin PHI
 export function trackPageView(pageName: string) {
-  logEvent(analytics, "page_view", {
+  logEvent(analytics, 'page_view', {
     page_name: pageName, // ✅ OK: Solo nombre de página
   });
 }
 
 // ❌ INCORRECTO: Incluye PHI
 export function trackAppointmentCreated(appointment: Appointment) {
-  logEvent(analytics, "appointment_created", {
+  logEvent(analytics, 'appointment_created', {
     patient_name: appointment.patientName, // ❌ PHI
     reason: appointment.reason, // ❌ PHI
   });
@@ -151,7 +153,7 @@ export function trackAppointmentCreated(appointment: Appointment) {
 
 // ✅ CORRECTO: Sin PHI
 export function trackAppointmentCreated() {
-  logEvent(analytics, "appointment_created", {
+  logEvent(analytics, 'appointment_created', {
     // Solo métricas agregadas, sin identificadores
   });
 }
@@ -176,7 +178,7 @@ Si tienes usuarios en Europa:
 
    ```typescript
    // En firebase config
-   import { getAnalytics } from "firebase/analytics";
+   import { getAnalytics } from 'firebase/analytics';
    const analytics = getAnalytics(app);
 
    // GA4 anonimiza IP por defecto ✅
@@ -217,12 +219,12 @@ Firebase Performance NO recolecta PHI:
 
 ```typescript
 // apps/web/src/services/performance.ts
-import { getPerformance } from "firebase/performance";
+import { getPerformance } from 'firebase/performance';
 
 const perf = getPerformance();
 
 // ✅ HIPAA OK: Solo métricas técnicas
-trace.putMetric("api_response_time", 250);
+trace.putMetric('api_response_time', 250);
 ```
 
 **Ventajas:**
@@ -237,7 +239,7 @@ trace.putMetric("api_response_time", 250);
 // apps/web/src/services/audit-log.ts
 interface AuditLog {
   timestamp: Date;
-  action: "page_view" | "appointment_created" | "login";
+  action: 'page_view' | 'appointment_created' | 'login';
   userId: string; // ✅ OK: Referencia, no PHI directamente
   metadata: {
     // ✅ Solo datos no-PHI
@@ -247,7 +249,7 @@ interface AuditLog {
 }
 
 // Almacenar logs en Firestore (HIPAA compliant)
-await addDoc(collection(db, "audit_logs"), auditLog);
+await addDoc(collection(db, 'audit_logs'), auditLog);
 ```
 
 **Ventajas:**
@@ -290,10 +292,10 @@ VITE_ANALYTICS_MODE = strict; // Solo eventos genéricos
 
 // apps/web/src/services/analytics.ts
 const ALLOWED_EVENTS = [
-  "page_view",
-  "button_click",
-  "error_occurred",
-  "session_start",
+  'page_view',
+  'button_click',
+  'error_occurred',
+  'session_start',
 ];
 
 // Validar que NO se envíe PHI
@@ -309,8 +311,8 @@ function sanitizeEventData(data: any) {
 
   // Bloquear si detecta PHI
   for (const [key, value] of Object.entries(data)) {
-    if (PHI_PATTERNS.some((pattern) => pattern.test(key))) {
-      throw new Error("PHI detected in analytics data");
+    if (PHI_PATTERNS.some(pattern => pattern.test(key))) {
+      throw new Error('PHI detected in analytics data');
     }
   }
 }
@@ -339,7 +341,7 @@ Si decides activar Analytics:
 
 ```typescript
 // apps/web/src/config/firebase.ts
-import { getAnalytics, isSupported } from "firebase/analytics";
+import { getAnalytics, isSupported } from 'firebase/analytics';
 
 export async function initializeAnalytics() {
   // Solo si el usuario da consentimiento
@@ -364,29 +366,29 @@ export async function initializeAnalytics() {
 ```typescript
 // apps/web/src/services/analytics-safe.ts
 const BLOCKED_PROPERTIES = [
-  "name",
-  "email",
-  "phone",
-  "patient",
-  "diagnosis",
-  "reason",
-  "notes",
-  "ssn",
-  "dob",
-  "address",
+  'name',
+  'email',
+  'phone',
+  'patient',
+  'diagnosis',
+  'reason',
+  'notes',
+  'ssn',
+  'dob',
+  'address',
 ];
 
 export function safeLogEvent(eventName: string, params?: Record<string, any>) {
   // Validar nombre del evento
   if (!ALLOWED_EVENTS.includes(eventName)) {
-    console.error("Event not allowed:", eventName);
+    console.error('Event not allowed:', eventName);
     return;
   }
 
   // Sanitizar parámetros
   if (params) {
     for (const key of Object.keys(params)) {
-      if (BLOCKED_PROPERTIES.some((prop) => key.toLowerCase().includes(prop))) {
+      if (BLOCKED_PROPERTIES.some(prop => key.toLowerCase().includes(prop))) {
         throw new Error(`Blocked property in analytics: ${key}`);
       }
     }
@@ -408,12 +410,12 @@ Puedes rastrear estas métricas sin violar HIPAA:
 ### Performance Monitoring ✅
 
 ```typescript
-import { trace } from "firebase/performance";
+import { trace } from 'firebase/performance';
 
 // Rendimiento de API
-const t = trace(perf, "api_call");
+const t = trace(perf, 'api_call');
 t.start();
-await fetch("/api/appointments");
+await fetch('/api/appointments');
 t.stop();
 ```
 
@@ -423,7 +425,7 @@ t.stop();
 // Eventos agregados sin PHI
 interface AppMetric {
   date: Date;
-  metric: "appointments_created" | "logins" | "errors";
+  metric: 'appointments_created' | 'logins' | 'errors';
   count: number;
   // Sin identificadores de pacientes
 }
@@ -487,6 +489,5 @@ def log_metric(metric_name: str, value: float):
 
 ---
 
-**Última actualización:** 2025-10-07
-**Proyecto:** Adyela (Healthcare Application)
-**Compliance:** HIPAA, GDPR
+**Última actualización:** 2025-10-07 **Proyecto:** Adyela (Healthcare
+Application) **Compliance:** HIPAA, GDPR

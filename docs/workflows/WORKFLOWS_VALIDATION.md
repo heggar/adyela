@@ -2,8 +2,7 @@
 
 ## ✅ Estado de Validación
 
-**Fecha:** 2025-10-04
-**PR:** #3 - https://github.com/heggar/adyela/pull/3
+**Fecha:** 2025-10-04 **PR:** #3 - https://github.com/heggar/adyela/pull/3
 **Workflows validados:** 6/6
 
 ---
@@ -86,7 +85,8 @@ Bandit: Security issues detected
 2. **Path filters funcionan** - Solo se ejecutan cuando hay cambios relevantes
 3. **Jobs paralelos funcionan** - Lint, Test, Type check corren simultáneamente
 4. **Caching funciona** - Poetry dependencies cached correctamente
-5. **Validaciones funcionan** - Coverage threshold, format checks, security scans
+5. **Validaciones funcionan** - Coverage threshold, format checks, security
+   scans
 6. **Artifacts se suben** - Test results, security reports
 7. **CI Summary funciona** - Falla si algún job falla
 
@@ -260,6 +260,7 @@ Todos los workflows están:
 ## Referencias
 
 - **PR con workflows:** https://github.com/heggar/adyela/pull/3
-- **Workflow run details:** https://github.com/heggar/adyela/actions/runs/18250766601
+- **Workflow run details:**
+  https://github.com/heggar/adyela/actions/runs/18250766601
 - **Workflow files:** `.github/workflows/`
 - **Documentation:** `.github/workflows/README.md`

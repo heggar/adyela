@@ -1,13 +1,14 @@
 # 🔄 Workflow Completo: Desde Inicio de Tarea hasta PR Mergeado
 
-**Última actualización**: 11 de Octubre, 2025
-**Proyecto**: Adyela Health System
+**Última actualización**: 11 de Octubre, 2025 **Proyecto**: Adyela Health System
 
 ---
 
 ## 📋 Resumen
 
-Este documento describe el workflow completo y automatizado para trabajar con tareas en Adyela, desde la selección de una tarea hasta el merge del Pull Request en staging.
+Este documento describe el workflow completo y automatizado para trabajar con
+tareas en Adyela, desde la selección de una tarea hasta el merge del Pull
+Request en staging.
 
 **Tiempo estimado por tarea**:
 
@@ -574,8 +575,8 @@ gh auth login
 | 9. CI/CD           | 10-15 min       | Automático             |
 | 10. Review + Merge | Variable        | Depende de reviewers   |
 
-**Total para tarea simple**: ~1-2 horas
-**Total para tarea compleja**: ~4-8 horas
+**Total para tarea simple**: ~1-2 horas **Total para tarea compleja**: ~4-8
+horas
 
 ### Calidad Garantizada
 
@@ -619,13 +620,14 @@ gh pr create --fill
 ## 📚 Referencias
 
 - **[Task Start Script](../../scripts/utils/task-start.sh)** - Script de inicio
-- **[Task Complete Script](../../scripts/utils/task-complete.sh)** - Script de completación
+- **[Task Complete Script](../../scripts/utils/task-complete.sh)** - Script de
+  completación
 - **[Quality Checks](../../scripts/testing/quality-checks.sh)** - Validaciones
-- **[Workflow Implementation](./workflow-implementation.md)** - Detalles técnicos
+- **[Workflow Implementation](./workflow-implementation.md)** - Detalles
+  técnicos
 - **[Feature Workflow Guide](./feature-workflow.md)** - Guía detallada
 
 ---
 
-**Última actualización**: 11 de Octubre, 2025
-**Versión**: 1.0
-**Mantenido por**: Equipo de DevOps Adyela
+**Última actualización**: 11 de Octubre, 2025 **Versión**: 1.0 **Mantenido
+por**: Equipo de DevOps Adyela

@@ -2,13 +2,13 @@
 
 ## 📊 Executive Summary
 
-**Status**: ⚠️ **PARTIAL COMPLIANCE** - Workflow funcional pero requiere actualizaciones para HIPAA
+**Status**: ⚠️ **PARTIAL COMPLIANCE** - Workflow funcional pero requiere
+actualizaciones para HIPAA
 
-**Compliance Score**: 60% (Funcional) → 85% (HIPAA-compliant con actualizaciones)
+**Compliance Score**: 60% (Funcional) → 85% (HIPAA-compliant con
+actualizaciones)
 
-**Critical Issues Found**: 3
-**Warnings**: 5
-**Recommendations**: 8
+**Critical Issues Found**: 3 **Warnings**: 5 **Recommendations**: 8
 
 ---
 
@@ -124,8 +124,7 @@ Missing for HIPAA:
 
 ```yaml
 # Add to both API and Web deployment steps:
---vpc-connector=adyela-staging-connector
---vpc-egress=private-ranges-only
+--vpc-connector=adyela-staging-connector --vpc-egress=private-ranges-only
 ```
 
 ### 2. **Remove Public Access** (Priority: CRITICAL)
@@ -142,15 +141,12 @@ Missing for HIPAA:
 
 ```yaml
 # Add to API service:
---set-secrets="
-SECRET_KEY=api-secret-key:latest,
+--set-secrets=" SECRET_KEY=api-secret-key:latest,
 FIREBASE_PROJECT_ID=firebase-project-id:latest,
-FIREBASE_ADMIN_KEY=firebase-admin-key:latest,
-JWT_SECRET=jwt-secret-key:latest,
+FIREBASE_ADMIN_KEY=firebase-admin-key:latest, JWT_SECRET=jwt-secret-key:latest,
 ENCRYPTION_KEY=encryption-key:latest,
 DATABASE_URL=database-connection-string:latest,
-SMTP_CREDENTIALS=smtp-credentials:latest
-"
+SMTP_CREDENTIALS=smtp-credentials:latest "
 ```
 
 ### 4. **Service Account Configuration** (Priority: HIGH)
@@ -164,14 +160,9 @@ SMTP_CREDENTIALS=smtp-credentials:latest
 
 ```yaml
 # Add HIPAA-specific environment variables:
---set-env-vars="
-ENVIRONMENT=staging,
-VERSION=${{ inputs.version }},
-GCP_PROJECT_ID=${{ secrets.GCP_PROJECT_ID_STAGING }},
-HIPAA_COMPLIANCE=true,
-AUDIT_LOGGING=true,
-DATA_ENCRYPTION=true
-"
+--set-env-vars=" ENVIRONMENT=staging, VERSION=${{ inputs.version }},
+GCP_PROJECT_ID=${{ secrets.GCP_PROJECT_ID_STAGING }}, HIPAA_COMPLIANCE=true,
+AUDIT_LOGGING=true, DATA_ENCRYPTION=true "
 ```
 
 ---
@@ -292,6 +283,5 @@ DATA_ENCRYPTION=true
 
 ---
 
-**Report Generated**: $(date)
-**Infrastructure Validated**: adyela-staging
+**Report Generated**: $(date) **Infrastructure Validated**: adyela-staging
 **Compliance Target**: HIPAA 85%

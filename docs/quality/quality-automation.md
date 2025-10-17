@@ -2,7 +2,9 @@
 
 ## Overview
 
-This project now includes comprehensive quality automation tools and MCP (Model Context Protocol) server integrations to enhance development workflow, testing, and code quality.
+This project now includes comprehensive quality automation tools and MCP (Model
+Context Protocol) server integrations to enhance development workflow, testing,
+and code quality.
 
 ## 🎯 Features Implemented
 

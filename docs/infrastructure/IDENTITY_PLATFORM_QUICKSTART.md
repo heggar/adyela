@@ -4,7 +4,8 @@ Esta guía te permite desplegar Identity Platform en 15 minutos.
 
 ## ⚠️ Nota Importante sobre Permisos
 
-El deployment de Identity Platform **requiere permisos especiales**. Si encuentras errores de permisos:
+El deployment de Identity Platform **requiere permisos especiales**. Si
+encuentras errores de permisos:
 
 ### Opción 1: Habilitar desde Firebase Console (RECOMENDADO)
 
@@ -27,7 +28,8 @@ gcloud projects add-iam-policy-binding adyela-staging \
 
 **Antes de usar Terraform**, habilita Identity Platform manualmente:
 
-1. Abre: https://console.firebase.google.com/project/adyela-staging/authentication
+1. Abre:
+   https://console.firebase.google.com/project/adyela-staging/authentication
 2. Click en "Get Started"
 3. Esto crea la configuración base de Identity Platform
 
@@ -52,7 +54,8 @@ gcloud projects add-iam-policy-binding adyela-staging \
 
 **Configurar en Azure:**
 
-1. Ve a: https://portal.azure.com/#blade/Microsoft_AAD_IAM/ActiveDirectoryMenuBlade/RegisteredApps
+1. Ve a:
+   https://portal.azure.com/#blade/Microsoft_AAD_IAM/ActiveDirectoryMenuBlade/RegisteredApps
 2. "New registration" > Name: "Adyela Healthcare Platform"
 3. Redirect URI: `https://adyela-staging.firebaseapp.com/__/auth/handler`
 4. Copiar Application ID y crear Client Secret
@@ -75,7 +78,8 @@ gcloud projects add-iam-policy-binding adyela-staging \
    - **Privacy Policy URL**: https://staging.adyela.care/privacy
    - **Terms of Service URL**: https://staging.adyela.care/terms
 5. Facebook Login > Settings:
-   - **Valid OAuth Redirect URIs**: `https://adyela-staging.firebaseapp.com/__/auth/handler`
+   - **Valid OAuth Redirect URIs**:
+     `https://adyela-staging.firebaseapp.com/__/auth/handler`
 
 ## Paso 3: Verificar Configuración
 
@@ -138,7 +142,8 @@ terraform apply
 
 ## Paso 5: Actualizar App Frontend
 
-Tu app React ya tiene el código OAuth implementado. Solo necesitas actualizar las variables de entorno:
+Tu app React ya tiene el código OAuth implementado. Solo necesitas actualizar
+las variables de entorno:
 
 ```bash
 # apps/web/.env.staging (o .env.production)
@@ -186,7 +191,8 @@ npm run dev
 
 ### Error: "Unauthorized domain"
 
-- Agregar dominio en Firebase Console > Authentication > Settings > Authorized domains
+- Agregar dominio en Firebase Console > Authentication > Settings > Authorized
+  domains
 
 ### Error: "API not enabled"
 
@@ -196,7 +202,8 @@ npm run dev
 
 Una vez que OAuth funciona:
 
-1. **Habilitar MFA**: Firebase Console > Authentication > Settings > Multi-factor auth
+1. **Habilitar MFA**: Firebase Console > Authentication > Settings >
+   Multi-factor auth
 2. **Configurar Email Templates**: Authentication > Templates
 3. **Setup Audit Logging**: Logging > Log Router
 4. **Production Deployment**: Repetir pasos para proyecto production

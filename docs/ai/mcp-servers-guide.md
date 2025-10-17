@@ -2,7 +2,8 @@
 
 ## Overview
 
-This guide provides recommendations and configuration for Model Context Protocol (MCP) servers to enhance development quality, testing, and verification.
+This guide provides recommendations and configuration for Model Context Protocol
+(MCP) servers to enhance development quality, testing, and verification.
 
 ## Currently Available
 
@@ -14,8 +15,7 @@ This guide provides recommendations and configuration for Model Context Protocol
 
 #### Playwright (Already Configured)
 
-**Purpose**: End-to-end testing, browser automation
-**Use cases**:
+**Purpose**: End-to-end testing, browser automation **Use cases**:
 
 - Test user flows (login, appointments, video calls)
 - Visual regression testing
@@ -32,8 +32,7 @@ This guide provides recommendations and configuration for Model Context Protocol
 
 #### Context7
 
-**Purpose**: Advanced code analysis and semantic search
-**Installation**:
+**Purpose**: Advanced code analysis and semantic search **Installation**:
 
 ```bash
 npm install -g @context7/mcp-server
@@ -50,8 +49,7 @@ npm install -g @context7/mcp-server
 
 #### ESLint MCP
 
-**Purpose**: Real-time linting and code quality checks
-**Use cases**:
+**Purpose**: Real-time linting and code quality checks **Use cases**:
 
 - Automated linting on file changes
 - Custom rule enforcement
@@ -59,8 +57,7 @@ npm install -g @context7/mcp-server
 
 #### Prettier MCP
 
-**Purpose**: Code formatting
-**Use cases**:
+**Purpose**: Code formatting **Use cases**:
 
 - Consistent code style
 - Auto-formatting on save
@@ -69,8 +66,7 @@ npm install -g @context7/mcp-server
 
 #### Jest/Vitest MCP
 
-**Purpose**: Unit and integration testing
-**Use cases**:
+**Purpose**: Unit and integration testing **Use cases**:
 
 - Run tests on demand
 - Coverage reports
@@ -78,8 +74,7 @@ npm install -g @context7/mcp-server
 
 #### Schemathesis MCP
 
-**Purpose**: API contract testing
-**Use cases**:
+**Purpose**: API contract testing **Use cases**:
 
 - OpenAPI spec validation
 - API fuzzing
@@ -89,8 +84,7 @@ npm install -g @context7/mcp-server
 
 #### PostgreSQL MCP (Future)
 
-**Purpose**: Database operations and schema management
-**Use cases**:
+**Purpose**: Database operations and schema management **Use cases**:
 
 - Query execution
 - Schema migrations
@@ -98,8 +92,7 @@ npm install -g @context7/mcp-server
 
 #### Firebase Admin MCP
 
-**Purpose**: Firebase operations
-**Use cases**:
+**Purpose**: Firebase operations **Use cases**:
 
 - Firestore queries
 - Auth management
@@ -109,8 +102,7 @@ npm install -g @context7/mcp-server
 
 #### Docker MCP
 
-**Purpose**: Container management
-**Use cases**:
+**Purpose**: Container management **Use cases**:
 
 - Build and tag images
 - Container inspection
@@ -118,8 +110,7 @@ npm install -g @context7/mcp-server
 
 #### Kubernetes MCP (Future)
 
-**Purpose**: Kubernetes cluster management
-**Use cases**:
+**Purpose**: Kubernetes cluster management **Use cases**:
 
 - Deployment status
 - Pod logs
@@ -127,8 +118,7 @@ npm install -g @context7/mcp-server
 
 #### Google Cloud MCP
 
-**Purpose**: GCP operations
-**Installation**:
+**Purpose**: GCP operations **Installation**:
 
 ```bash
 npm install -g @google-cloud/mcp-server
@@ -145,8 +135,7 @@ npm install -g @google-cloud/mcp-server
 
 #### Sentry MCP
 
-**Purpose**: Error tracking and monitoring
-**Use cases**:
+**Purpose**: Error tracking and monitoring **Use cases**:
 
 - Error investigation
 - Performance monitoring
@@ -154,8 +143,7 @@ npm install -g @google-cloud/mcp-server
 
 #### Lighthouse MCP
 
-**Purpose**: Performance and accessibility audits
-**Use cases**:
+**Purpose**: Performance and accessibility audits **Use cases**:
 
 - Performance scores
 - Accessibility checks
@@ -166,8 +154,7 @@ npm install -g @google-cloud/mcp-server
 
 #### GitHub MCP (Partially Available via gh CLI)
 
-**Purpose**: GitHub operations
-**Use cases**:
+**Purpose**: GitHub operations **Use cases**:
 
 - PR management
 - Issue tracking
@@ -176,8 +163,7 @@ npm install -g @google-cloud/mcp-server
 
 #### Sequential Thinking MCP
 
-**Purpose**: Complex problem solving
-**Use cases**:
+**Purpose**: Complex problem solving **Use cases**:
 
 - Debugging complex issues
 - Architecture decisions
@@ -187,7 +173,8 @@ npm install -g @google-cloud/mcp-server
 
 ### Global MCP Configuration
 
-Create or update `~/Library/Application Support/Claude/claude_desktop_config.json`:
+Create or update
+`~/Library/Application Support/Claude/claude_desktop_config.json`:
 
 ```json
 {
@@ -276,21 +263,21 @@ Create `.claude/mcp-config.json` in the project:
 
 ```typescript
 // Test login flow
-await browser_navigate({ url: "http://localhost:3000" });
+await browser_navigate({ url: 'http://localhost:3000' });
 const snapshot = await browser_snapshot();
 await browser_type({
-  element: "email input",
-  ref: "email-field",
-  text: "test@example.com",
+  element: 'email input',
+  ref: 'email-field',
+  text: 'test@example.com',
 });
 await browser_type({
-  element: "password input",
-  ref: "password-field",
-  text: "password123",
+  element: 'password input',
+  ref: 'password-field',
+  text: 'password123',
 });
 await browser_click({
-  element: "login button",
-  ref: "login-btn",
+  element: 'login button',
+  ref: 'login-btn',
 });
 ```
 

@@ -116,8 +116,7 @@ This directory contains all CI/CD workflows for the Adyela project.
 5. **Smoke Tests**: Basic health checks and critical path validation
 6. **Notify**: Slack notification with deployment status
 
-**Environment:** `development`
-**URLs:**
+**Environment:** `development` **URLs:**
 
 - API: Auto-generated Cloud Run URL
 - Web: `https://dev.adyela.com`
@@ -149,8 +148,7 @@ This directory contains all CI/CD workflows for the Adyela project.
 8. **Security Scan**: OWASP ZAP full scan
 9. **Notify**: Detailed Slack notification
 
-**Environment:** `staging`
-**URLs:**
+**Environment:** `staging` **URLs:**
 
 - API: Auto-generated Cloud Run URL
 - Web: `https://staging.adyela.com`
@@ -189,8 +187,7 @@ This directory contains all CI/CD workflows for the Adyela project.
 12. **Create Release**: GitHub release with notes
 13. **Notify**: Success/failure Slack notification
 
-**Environment:** `production`
-**URLs:**
+**Environment:** `production` **URLs:**
 
 - API: `https://api.adyela.com`
 - Web: `https://adyela.com`

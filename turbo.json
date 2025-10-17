@@ -5,13 +5,7 @@
     "build": {
       "dependsOn": ["^build"],
       "outputs": ["dist/**", "build/**", ".next/**", "!.next/cache/**"],
-      "env": [
-        "NODE_ENV",
-        "VITE_API_URL",
-        "VITE_FIREBASE_API_KEY",
-        "VITE_FIREBASE_PROJECT_ID",
-        "VITE_JITSI_DOMAIN"
-      ]
+      "env": ["NODE_ENV", "VITE_API_URL", "VITE_FIREBASE_API_KEY", "VITE_FIREBASE_PROJECT_ID", "VITE_JITSI_DOMAIN"]
     },
     "dev": {
       "cache": false,

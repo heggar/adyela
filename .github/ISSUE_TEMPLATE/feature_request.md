@@ -1,9 +1,9 @@
 ---
 name: ✨ Feature Request
 about: Sugiere una nueva funcionalidad
-title: "[FEATURE] "
-labels: "enhancement"
-assignees: ""
+title: '[FEATURE] '
+labels: 'enhancement'
+assignees: ''
 ---
 
 ## ✨ Descripción de la funcionalidad

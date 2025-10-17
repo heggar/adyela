@@ -1,17 +1,19 @@
 # Solicitud de Excepción de Política IAM Organizacional
 
-**Fecha**: 2025-10-12
-**Solicitante**: Hever González
-**Proyecto**: adyela-staging
-**Servicio Afectado**: adyela-web-staging (Frontend Web)
+**Fecha**: 2025-10-12 **Solicitante**: Hever González **Proyecto**:
+adyela-staging **Servicio Afectado**: adyela-web-staging (Frontend Web)
 
 ---
 
 ## 📋 Resumen Ejecutivo
 
-El servicio `adyela-web-staging` (frontend web React/TypeScript) requiere acceso público para servir contenido estático a usuarios finales a través del Load Balancer HTTPS.
+El servicio `adyela-web-staging` (frontend web React/TypeScript) requiere acceso
+público para servir contenido estático a usuarios finales a través del Load
+Balancer HTTPS.
 
-La política organizacional `constraints/iam.allowedPolicyMemberDomains` actualmente bloquea la asignación de `allUsers` al rol `roles/run.invoker`, impidiendo el acceso público al frontend.
+La política organizacional `constraints/iam.allowedPolicyMemberDomains`
+actualmente bloquea la asignación de `allUsers` al rol `roles/run.invoker`,
+impidiendo el acceso público al frontend.
 
 ---
 
@@ -37,7 +39,8 @@ perhaps due to an organization policy.
 
 ### 1. **Naturaleza del Servicio**
 
-El servicio `adyela-web-staging` es un **contenedor Nginx que sirve contenido estático**:
+El servicio `adyela-web-staging` es un **contenedor Nginx que sirve contenido
+estático**:
 
 ```
 - HTML, CSS, JavaScript (bundle compilado de React)
@@ -78,7 +81,8 @@ Frontends web modernos **siempre** son públicos:
 - Firebase Console (console.firebase.google.com)
 - AWS Console (console.aws.amazon.com)
 
-Todos sirven JavaScript estático públicamente y protegen el backend con autenticación.
+Todos sirven JavaScript estático públicamente y protegen el backend con
+autenticación.
 
 ---
 
@@ -241,10 +245,8 @@ curl -I https://staging.adyela.care/
 
 ## 📞 Contacto
 
-**Solicitante**: Hever González (hever_gonzalezg@adyela.care)
-**Proyecto GCP**: adyela-staging
-**ID Proyecto**: 717907307897
-**Región**: us-central1
+**Solicitante**: Hever González (hever_gonzalezg@adyela.care) **Proyecto GCP**:
+adyela-staging **ID Proyecto**: 717907307897 **Región**: us-central1
 
 ---
 
@@ -256,6 +258,5 @@ curl -I https://staging.adyela.care/
 
 ---
 
-**Última actualización**: 2025-10-12
-**Estado**: Pendiente aprobación
+**Última actualización**: 2025-10-12 **Estado**: Pendiente aprobación
 **Prioridad**: Alta (bloqueador de testing)

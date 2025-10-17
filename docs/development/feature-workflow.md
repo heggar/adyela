@@ -28,7 +28,9 @@ make task-start ID=5
 # Generates: Checklist at .task-context/task-5/checklist.md
 ```
 
-**Branch Naming**: The branch name is derived from the task title, using descriptive names instead of task numbers. This makes branches more readable and meaningful in Git history.
+**Branch Naming**: The branch name is derived from the task title, using
+descriptive names instead of task numbers. This makes branches more readable and
+meaningful in Git history.
 
 ### Phase 3: Development (varies)
 

@@ -1,9 +1,9 @@
 ---
 name: 🐛 Bug Report
 about: Reporta un error o comportamiento inesperado
-title: "[BUG] "
-labels: "bug"
-assignees: ""
+title: '[BUG] '
+labels: 'bug'
+assignees: ''
 ---
 
 ## 🐛 Descripción del bug

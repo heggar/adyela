@@ -13,11 +13,11 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Version to deploy (e.g., v1.2.3 or commit SHA)"
+        description: 'Version to deploy (e.g., v1.2.3 or commit SHA)'
         required: true
         type: string
       skip_e2e:
-        description: "Skip E2E tests"
+        description: 'Skip E2E tests'
         required: false
         type: boolean
         default: false
@@ -809,8 +809,8 @@ jobs:
         uses: zaproxy/action-full-scan@v0.10.0
         with:
           target: https://staging.adyela.care
-          rules_file_name: ".zap/rules.tsv"
-          cmd_options: "-a"
+          rules_file_name: '.zap/rules.tsv'
+          cmd_options: '-a'
           fail_action: false
 
       - name: Run OWASP ZAP scan (default rules)
@@ -819,7 +819,7 @@ jobs:
         uses: zaproxy/action-full-scan@v0.10.0
         with:
           target: https://staging.adyela.care
-          cmd_options: "-a"
+          cmd_options: '-a'
           fail_action: false
 
       - name: Upload ZAP scan results

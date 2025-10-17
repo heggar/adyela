@@ -1,14 +1,14 @@
 # Staging Environment - HIPAA-Ready Infrastructure
 
-**Cost**: $1.20/month (HIPAA-Ready base) + ~$2-3/month (usage)
-**Deployment Time**: 15-20 minutes
-**Status**: 🟢 1/12 components implemented (VPC)
+**Cost**: $1.20/month (HIPAA-Ready base) + ~$2-3/month (usage) **Deployment
+Time**: 15-20 minutes **Status**: 🟢 1/12 components implemented (VPC)
 
 ---
 
 ## 📋 Overview
 
-This staging environment implements a **HIPAA-Ready infrastructure** with 85% compliance at minimal cost ($1.20/month additional).
+This staging environment implements a **HIPAA-Ready infrastructure** with 85%
+compliance at minimal cost ($1.20/month additional).
 
 ### Current Implementation Status
 
@@ -53,7 +53,8 @@ This staging environment implements a **HIPAA-Ready infrastructure** with 85% co
 
 ### Infrastructure Changes (Terraform)
 
-Terraform manages infrastructure configuration only, NOT application deployments:
+Terraform manages infrastructure configuration only, NOT application
+deployments:
 
 ```bash
 cd infra/environments/staging
@@ -63,7 +64,8 @@ terraform apply   # Apply ONLY infrastructure changes
 
 ### Application Deployments (CI/CD)
 
-Application deployments are handled by GitHub Actions (`.github/workflows/cd-staging.yml`):
+Application deployments are handled by GitHub Actions
+(`.github/workflows/cd-staging.yml`):
 
 - CI/CD builds and deploys images directly to Cloud Run
 - Terraform is NOT involved in image deployments
@@ -77,7 +79,8 @@ Terraform will always show drift in:
 - `template[0].labels["version"]` - Updated by CI/CD
 - `client` / `client_version` - Metadata from gcloud
 
-**This drift is expected and safe.** Do NOT apply Terraform to "fix" these differences.
+**This drift is expected and safe.** Do NOT apply Terraform to "fix" these
+differences.
 
 ### When to Apply Terraform
 
@@ -89,7 +92,8 @@ Only apply Terraform when you need to change:
 - Resource limits (CPU/memory)
 - Networking or load balancer settings
 
-**Important:** Never apply Terraform just to sync image versions. This is managed by CI/CD.
+**Important:** Never apply Terraform just to sync image versions. This is
+managed by CI/CD.
 
 ---
 
@@ -546,12 +550,10 @@ terraform apply -var="enable_cloud_nat=false"
 
 ## 🤝 Support
 
-**Issues**: Create a GitHub issue
-**Questions**: Contact DevOps team
+**Issues**: Create a GitHub issue **Questions**: Contact DevOps team
 **Documentation**: See `/docs` directory
 
 ---
 
-**Last Updated**: 2025-01-11
-**Version**: 1.0.0 (VPC Module)
-**Next Milestone**: Add Cloud Run module (Week 2)
+**Last Updated**: 2025-01-11 **Version**: 1.0.0 (VPC Module) **Next Milestone**:
+Add Cloud Run module (Week 2)

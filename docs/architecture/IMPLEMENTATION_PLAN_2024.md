@@ -11,9 +11,11 @@
 ### Objetivos Principales
 
 1. **Optimizar Costos**: Reducir 20% los costos de CDN ($8-9/mes ahorro)
-2. **Mejorar Performance**: Implementar Cloudflare CDN para mejor latencia global
+2. **Mejorar Performance**: Implementar Cloudflare CDN para mejor latencia
+   global
 3. **Completar IaC**: 100% Infrastructure as Code con Terraform
-4. **Resolver Issues**: Sincronizar assets, optimizar cache, implementar monitoring
+4. **Resolver Issues**: Sincronizar assets, optimizar cache, implementar
+   monitoring
 
 ### Impacto Esperado
 

@@ -21,11 +21,14 @@
 
 ## ⚠️ ADVERTENCIA: Google Analytics Habilitado
 
-Tu proyecto Firebase tiene Google Analytics habilitado (`measurementId: G-J0DJS84V8G`).
+Tu proyecto Firebase tiene Google Analytics habilitado
+(`measurementId: G-J0DJS84V8G`).
 
-**PROBLEMA:** Google Analytics NO es HIPAA compliant y puede causar violaciones legales si se envía PHI.
+**PROBLEMA:** Google Analytics NO es HIPAA compliant y puede causar violaciones
+legales si se envía PHI.
 
-**Recomendación:** Desactivar Google Analytics. Ver `docs/GOOGLE_ANALYTICS_IMPLICATIONS.md`
+**Recomendación:** Desactivar Google Analytics. Ver
+`docs/GOOGLE_ANALYTICS_IMPLICATIONS.md`
 
 ## ⏳ Pendiente: Autenticación de gcloud y Secretos de GCP
 
@@ -78,9 +81,11 @@ gcloud secrets list --project=adyela-staging
 
 ### 2. Actualizar Secretos de Firebase en GitHub
 
-Los secretos de GitHub están configurados con **valores placeholder**. Necesitas actualizarlos con los valores reales de Firebase Console:
+Los secretos de GitHub están configurados con **valores placeholder**. Necesitas
+actualizarlos con los valores reales de Firebase Console:
 
-**Ve a:** https://console.firebase.google.com/project/adyela-staging/settings/general
+**Ve a:**
+https://console.firebase.google.com/project/adyela-staging/settings/general
 
 **Si no tienes una app web:**
 
@@ -110,7 +115,8 @@ gh workflow run cd-staging.yml \
   -f skip_e2e=true
 ```
 
-**Nota:** El build del frontend fallará porque los secretos de Firebase son placeholders.
+**Nota:** El build del frontend fallará porque los secretos de Firebase son
+placeholders.
 
 ### 4. Obtener API URL y Actualizar Secret
 
@@ -201,5 +207,5 @@ curl $API_URL/health
 
 ---
 
-**Generado el:** 2025-10-07
-**API Secret Key generada:** 1786c41493658800373afd6c3dbdd6a4d791fb2b1567acab119d0980fed9a0b1
+**Generado el:** 2025-10-07 **API Secret Key generada:**
+1786c41493658800373afd6c3dbdd6a4d791fb2b1567acab119d0980fed9a0b1

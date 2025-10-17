@@ -1,8 +1,7 @@
 # 💰 Análisis de Costos: HIPAA Compliance en GCP
 
-**Fecha**: 11 de Octubre, 2025
-**Proyecto**: Adyela Health System
-**Propósito**: Determinar costos reales de compliance HIPAA/BAA para MVP vs Producción
+**Fecha**: 11 de Octubre, 2025 **Proyecto**: Adyela Health System **Propósito**:
+Determinar costos reales de compliance HIPAA/BAA para MVP vs Producción
 
 ---
 
@@ -10,9 +9,8 @@
 
 ### ✅ RESULTADO: Compliance HIPAA NO aumenta costos significativamente para MVP
 
-**Costo adicional estimado**: **$0-5/mes** para MVP
-**Componentes gratis**: 85% de los requerimientos HIPAA
-**Recomendación**: **Implementar desde el inicio**
+**Costo adicional estimado**: **$0-5/mes** para MVP **Componentes gratis**: 85%
+de los requerimientos HIPAA **Recomendación**: **Implementar desde el inicio**
 
 ---
 
@@ -348,9 +346,8 @@
 - Tareas 9-14: Async, Observability, Budgets
 - Tareas 16, 18: Audit Logging
 
-**Costo**: $1.20/mes
-**Tiempo**: 4 semanas
-**Estado**: HIPAA-Ready (no puede procesar PHI aún)
+**Costo**: $1.20/mes **Tiempo**: 4 semanas **Estado**: HIPAA-Ready (no puede
+procesar PHI aún)
 
 ---
 
@@ -375,9 +372,8 @@
 3. Firmar BAA con Google:
    - https://cloud.google.com/terms/hipaa
 
-**Costo adicional**: +$5.29/mes
-**Tiempo**: 4-8 horas
-**Estado**: HIPAA Completo ✅
+**Costo adicional**: +$5.29/mes **Tiempo**: 4-8 horas **Estado**: HIPAA Completo
+✅
 
 ---
 
@@ -465,6 +461,5 @@
 
 ---
 
-**Documento creado**: 11 de Octubre, 2025
-**Actualizado por**: Claude Code + DevOps Team
-**Próxima revisión**: Antes de go-live con usuarios reales
+**Documento creado**: 11 de Octubre, 2025 **Actualizado por**: Claude Code +
+DevOps Team **Próxima revisión**: Antes de go-live con usuarios reales

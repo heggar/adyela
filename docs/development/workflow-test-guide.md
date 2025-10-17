@@ -2,7 +2,8 @@
 
 ## Objetivo
 
-Esta guía te ayudará a probar el workflow completo de desarrollo de features con nombres descriptivos de branches basados en títulos de tareas.
+Esta guía te ayudará a probar el workflow completo de desarrollo de features con
+nombres descriptivos de branches basados en títulos de tareas.
 
 ## Pre-requisitos
 
@@ -29,7 +30,8 @@ ls -la scripts/task-*.sh scripts/dev-setup.sh
 head -20 scripts/task-start.sh
 ```
 
-**Esperado**: Ver el script con la lógica de generación de nombres descriptivos (líneas 15-19)
+**Esperado**: Ver el script con la lógica de generación de nombres descriptivos
+(líneas 15-19)
 
 ## Prueba 2: Ver Tareas Disponibles
 
@@ -140,7 +142,8 @@ docs: add workflow test file
 Task #31
 ```
 
-**Nota**: El hook debe haber añadido "Task #31" automáticamente, **sin** buscar el número en el nombre de la branch.
+**Nota**: El hook debe haber añadido "Task #31" automáticamente, **sin** buscar
+el número en el nombre de la branch.
 
 ### 3.8 Probar Quality Checks (Opcional)
 
@@ -149,7 +152,8 @@ Task #31
 make quality-local
 ```
 
-**Esperado**: Ver 10 pasos de validación (puede fallar por problemas existentes en el proyecto)
+**Esperado**: Ver 10 pasos de validación (puede fallar por problemas existentes
+en el proyecto)
 
 ### 3.9 Completar Tarea (Simulación)
 
@@ -283,7 +287,8 @@ git add test.txt
 git commit -m "test: verify hook"
 ```
 
-**Esperado**: El hook debe encontrar "Task #99" del directorio `.task-context/task-99/` y agregarlo al commit.
+**Esperado**: El hook debe encontrar "Task #99" del directorio
+`.task-context/task-99/` y agregarlo al commit.
 
 ### 5.3 Verificar
 

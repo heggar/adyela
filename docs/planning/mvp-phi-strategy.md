@@ -1,15 +1,14 @@
 # Estrategia de MVP: PHI Mínimo con Infraestructura HIPAA-Ready
 
-**Fecha**: 11 de Enero, 2025
-**Versión**: 1.0
-**Proyecto**: Adyela Health System
+**Fecha**: 11 de Enero, 2025 **Versión**: 1.0 **Proyecto**: Adyela Health System
 **Estado**: Recomendación Final
 
 ---
 
 ## 🎯 Resumen Ejecutivo
 
-**Decisión estratégica**: Implementar MVP con **infraestructura HIPAA-Ready** desde el día 1, manejando solo **PHI mínimo** necesario para operación básica.
+**Decisión estratégica**: Implementar MVP con **infraestructura HIPAA-Ready**
+desde el día 1, manejando solo **PHI mínimo** necesario para operación básica.
 
 **Costo adicional**: Solo **$1.20/mes** (60% incremental sobre $2/mes base)
 
@@ -85,8 +84,8 @@ Según HIPAA Privacy Rule, PHI incluye **18 identificadores**:
 * reason = PHI sensible (ej: "consulta diabetes")
 ```
 
-**Total colecciones con PHI: 2** (Users, Appointments)
-**Total documentos estimados mes 1: <1,000**
+**Total colecciones con PHI: 2** (Users, Appointments) **Total documentos
+estimados mes 1: <1,000**
 
 ### Post-MVP: PHI Expandido (EMR + Labs)
 
@@ -114,8 +113,7 @@ Según HIPAA Privacy Rule, PHI incluye **18 identificadores**:
                                       └──────────────────┘
 ```
 
-**Total colecciones con PHI: 6+**
-**Total documentos estimados: 10,000+**
+**Total colecciones con PHI: 6+** **Total documentos estimados: 10,000+**
 **Requiere**: CMEK ($0.12/mes), Cloud Armor ($5.17/mes)
 
 ---
@@ -124,9 +122,7 @@ Según HIPAA Privacy Rule, PHI incluye **18 identificadores**:
 
 ### Nivel 1: PHI Básico (Identifiers)
 
-**Datos**: name, email, phone, dob
-**Sensibilidad**: Media
-**Medidas**:
+**Datos**: name, email, phone, dob **Sensibilidad**: Media **Medidas**:
 
 - ✅ Encriptación en tránsito: TLS 1.3
 - ✅ Encriptación en reposo: Google-managed (AES-256)
@@ -138,9 +134,8 @@ Según HIPAA Privacy Rule, PHI incluye **18 identificadores**:
 
 ### Nivel 2: PHI Sensible (Health Data)
 
-**Datos**: appointment reason, consultation notes (futuro)
-**Sensibilidad**: Alta
-**Medidas**:
+**Datos**: appointment reason, consultation notes (futuro) **Sensibilidad**:
+Alta **Medidas**:
 
 - ✅ Encriptación en tránsito: TLS 1.3
 - ✅ Encriptación en reposo: Google-managed (AES-256)
@@ -154,8 +149,7 @@ Según HIPAA Privacy Rule, PHI incluye **18 identificadores**:
 ### Nivel 3: PHI Muy Sensible (No en MVP)
 
 **Datos**: SSN, full medical records, lab results, prescriptions
-**Sensibilidad**: Crítica
-**Medidas**:
+**Sensibilidad**: Crítica **Medidas**:
 
 - ✅ Todo lo anterior +
 - ✅ CMEK (Customer-Managed Encryption)
@@ -223,8 +217,7 @@ Según HIPAA Privacy Rule, PHI incluye **18 identificadores**:
 - ✅ Perfil básico
 - ❌ NO: Recetas, EMR, Labs
 
-**Costo**: $3.20/mes total ($1.20 adicional por HIPAA)
-**Timeline**: 4 semanas
+**Costo**: $3.20/mes total ($1.20 adicional por HIPAA) **Timeline**: 4 semanas
 **Compliance**: 85% HIPAA
 
 **Métricas de éxito**:
@@ -259,8 +252,7 @@ Según HIPAA Privacy Rule, PHI incluye **18 identificadores**:
 - ✅ Pagos y facturación
 - ❌ NO: EMR completo, Labs
 
-**Costo**: $8.49/mes total ($5.29 adicional vs MVP)
-**Timeline**: 5-6 meses
+**Costo**: $8.49/mes total ($5.29 adicional vs MVP) **Timeline**: 5-6 meses
 **Compliance**: 95% HIPAA
 
 **Triggers para activación**:
@@ -290,8 +282,7 @@ Según HIPAA Privacy Rule, PHI incluye **18 identificadores**:
 - ✅ External security audit
 - ✅ SOC 2 Type II preparation
 
-**Costo**: $24.74/mes (scaled)
-**Compliance**: 100% HIPAA + SOC 2 prep
+**Costo**: $24.74/mes (scaled) **Compliance**: 100% HIPAA + SOC 2 prep
 
 ---
 
@@ -299,7 +290,8 @@ Según HIPAA Privacy Rule, PHI incluye **18 identificadores**:
 
 ### Principio: "Minimum Necessary"
 
-**HIPAA Privacy Rule 164.502(b)**: Solo acceder/usar/divulgar el mínimo PHI necesario para el propósito
+**HIPAA Privacy Rule 164.502(b)**: Solo acceder/usar/divulgar el mínimo PHI
+necesario para el propósito
 
 #### ❌ Datos que NO recolectamos en MVP:
 
@@ -327,9 +319,9 @@ interface UserProfile {
   date_of_birth: Date; // PHI
 
   // Non-PHI metadata
-  role: "patient" | "doctor";
+  role: 'patient' | 'doctor';
   timezone: string; // Para agendar citas
-  locale: "en" | "es";
+  locale: 'en' | 'es';
   created_at: Date;
 
   // Explicitly NOT collecting in MVP:
@@ -352,7 +344,7 @@ interface Appointment {
   scheduled_at: Date;
 
   // Non-PHI
-  status: "pending" | "confirmed" | "completed" | "cancelled";
+  status: 'pending' | 'confirmed' | 'completed' | 'cancelled';
   video_url?: string; // Jitsi room URL
   duration_minutes: number;
 
@@ -364,8 +356,8 @@ interface Appointment {
 }
 ```
 
-**Resultado**: Solo 8 campos PHI vs 30+ en sistema completo
-**Reducción**: 73% menos PHI en MVP
+**Resultado**: Solo 8 campos PHI vs 30+ en sistema completo **Reducción**: 73%
+menos PHI en MVP
 
 ---
 
@@ -453,9 +445,9 @@ service cloud.firestore {
 interface PHIAuditLog {
   timestamp: Date;
   user_id: string; // Who accessed
-  user_role: "patient" | "doctor" | "admin";
-  action: "VIEW" | "CREATE" | "UPDATE" | "DELETE";
-  resource_type: "USER_PROFILE" | "APPOINTMENT";
+  user_role: 'patient' | 'doctor' | 'admin';
+  action: 'VIEW' | 'CREATE' | 'UPDATE' | 'DELETE';
+  resource_type: 'USER_PROFILE' | 'APPOINTMENT';
   resource_id: string; // What was accessed
   patient_id: string; // Whose PHI
   ip_address: string; // From where
@@ -468,27 +460,27 @@ interface PHIAuditLog {
 // Example log entries
 [
   {
-    timestamp: "2025-01-11T10:30:00Z",
-    user_id: "dr_12345",
-    user_role: "doctor",
-    action: "VIEW",
-    resource_type: "APPOINTMENT",
-    resource_id: "apt_67890",
-    patient_id: "patient_11111",
-    ip_address: "192.168.1.100",
-    reason: "Reviewing appointment for scheduled consultation",
+    timestamp: '2025-01-11T10:30:00Z',
+    user_id: 'dr_12345',
+    user_role: 'doctor',
+    action: 'VIEW',
+    resource_type: 'APPOINTMENT',
+    resource_id: 'apt_67890',
+    patient_id: 'patient_11111',
+    ip_address: '192.168.1.100',
+    reason: 'Reviewing appointment for scheduled consultation',
     success: true,
   },
   {
-    timestamp: "2025-01-11T10:31:00Z",
-    user_id: "admin_99999",
-    user_role: "admin",
-    action: "VIEW",
-    resource_type: "USER_PROFILE",
-    resource_id: "patient_11111",
-    patient_id: "patient_11111",
-    ip_address: "192.168.1.200",
-    reason: "Break-glass access: patient support ticket #5678",
+    timestamp: '2025-01-11T10:31:00Z',
+    user_id: 'admin_99999',
+    user_role: 'admin',
+    action: 'VIEW',
+    resource_type: 'USER_PROFILE',
+    resource_id: 'patient_11111',
+    patient_id: 'patient_11111',
+    ip_address: '192.168.1.200',
+    reason: 'Break-glass access: patient support ticket #5678',
     success: true,
     break_glass: true, // Special flag for admin access
   },
@@ -506,7 +498,8 @@ interface PHIAuditLog {
 - ⚠️ Break-glass admin access → Email inmediato
 - ⚠️ Acceso a PHI fuera de horario laboral → Revisión diaria
 - 🚨 Acceso denegado repetido → Alerta inmediata (posible ataque)
-- 🚨 Patrón anormal de acceso → Investigación (ej: doctor accede 100 perfiles en 1 hora)
+- 🚨 Patrón anormal de acceso → Investigación (ej: doctor accede 100 perfiles en
+  1 hora)
 
 ---
 
@@ -639,7 +632,8 @@ interface PHIAuditLog {
 ### Inmediato (Esta semana)
 
 1. ✅ Aprobar esta estrategia con stakeholders
-2. ⏭️ Iniciar Sprint 1: Infraestructura HIPAA-Ready (docs/planning/mvp-task-prioritization.md)
+2. ⏭️ Iniciar Sprint 1: Infraestructura HIPAA-Ready
+   (docs/planning/mvp-task-prioritization.md)
 3. ⏭️ Firmar BAA con Google Cloud
 4. ⏭️ Actualizar Privacy Policy con handling de PHI
 
@@ -670,7 +664,6 @@ interface PHIAuditLog {
 
 ---
 
-**Última actualización**: 11 de Enero, 2025
-**Aprobado por**: [Pendiente]
-**Próxima revisión**: Al completar Sprint 1
-**Owner**: Product Owner + Security Officer
+**Última actualización**: 11 de Enero, 2025 **Aprobado por**: [Pendiente]
+**Próxima revisión**: Al completar Sprint 1 **Owner**: Product Owner + Security
+Officer

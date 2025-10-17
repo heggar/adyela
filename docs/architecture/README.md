@@ -2,7 +2,9 @@
 
 ## Overview
 
-This directory contains comprehensive architecture documentation for the Adyela health system, including GCP infrastructure diagrams, deployment guides, and technical specifications.
+This directory contains comprehensive architecture documentation for the Adyela
+health system, including GCP infrastructure diagrams, deployment guides, and
+technical specifications.
 
 ## Files
 
@@ -12,9 +14,12 @@ This directory contains comprehensive architecture documentation for the Adyela 
 
 **Complete GCP Architecture Diagram with Official Icons**
 
-Visual representation of the entire Google Cloud Platform infrastructure for both staging and production environments using **official GCP icons** (`mxgraph.gcp2` library).
+Visual representation of the entire Google Cloud Platform infrastructure for
+both staging and production environments using **official GCP icons**
+(`mxgraph.gcp2` library).
 
-⚠️ **IMPORTANTE**: Este archivo **debe abrirse en Draw.io** para visualizarse correctamente.
+⚠️ **IMPORTANTE**: Este archivo **debe abrirse en Draw.io** para visualizarse
+correctamente.
 
 **Visualización Rápida (5 segundos)**:
 
@@ -24,9 +29,12 @@ Visual representation of the entire Google Cloud Platform infrastructure for bot
 
 **📖 Guías de Ayuda**:
 
-- **[Instrucciones de Visualización](./VIEWING_INSTRUCTIONS.md)** - ⭐ **LÉEME PRIMERO** si no puedes ver el diagrama
-- **[Guía de Edición del Diagrama](./DIAGRAM_GUIDE.md)** - Para editar y exportar
-- **[Guía Técnica Completa](./GCP_ARCHITECTURE_GUIDE.md)** - 50+ páginas de documentación
+- **[Instrucciones de Visualización](./VIEWING_INSTRUCTIONS.md)** - ⭐ **LÉEME
+  PRIMERO** si no puedes ver el diagrama
+- **[Guía de Edición del Diagrama](./DIAGRAM_GUIDE.md)** - Para editar y
+  exportar
+- **[Guía Técnica Completa](./GCP_ARCHITECTURE_GUIDE.md)** - 50+ páginas de
+  documentación
 
 **What's Included:**
 

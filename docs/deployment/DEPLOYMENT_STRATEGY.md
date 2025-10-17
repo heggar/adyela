@@ -2,7 +2,8 @@
 
 ## Overview
 
-**Philosophy**: Optimize for developer velocity and cost while maintaining production quality.
+**Philosophy**: Optimize for developer velocity and cost while maintaining
+production quality.
 
 ```
 ┌─────────────┐     ┌──────────────┐     ┌──────────────┐
@@ -64,7 +65,7 @@ docker-compose -f docker-compose.dev.yml up
 **File:** `docker-compose.dev.yml`
 
 ```yaml
-version: "3.9"
+version: '3.9'
 
 services:
   api:
@@ -72,7 +73,7 @@ services:
       context: ./apps/api
       target: development
     ports:
-      - "8000:8000"
+      - '8000:8000'
     environment:
       - ENVIRONMENT=development
       - FIREBASE_EMULATOR_HOST=firebase:9099
@@ -91,7 +92,7 @@ services:
       context: ./apps/web
       target: development
     ports:
-      - "3000:3000"
+      - '3000:3000'
     environment:
       - VITE_API_URL=http://localhost:8000
       - VITE_FIREBASE_EMULATOR_HOST=localhost:9099
@@ -107,7 +108,7 @@ services:
         --host-port=0.0.0.0:8080
         --project=adyela-dev
     ports:
-      - "8080:8080"
+      - '8080:8080'
     environment:
       - FIRESTORE_PROJECT_ID=adyela-dev
 
@@ -118,15 +119,15 @@ services:
         --only auth
         --project adyela-dev
     ports:
-      - "9099:9099"
-      - "4000:4000" # Emulator UI
+      - '9099:9099'
+      - '4000:4000' # Emulator UI
     volumes:
       - ./firebase.json:/home/node/firebase.json
 
   redis:
     image: redis:7-alpine
     ports:
-      - "6379:6379"
+      - '6379:6379'
     command: redis-server --appendonly yes
     volumes:
       - redis_data:/data
@@ -213,7 +214,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Version to deploy"
+        description: 'Version to deploy'
         required: true
   push:
     branches:
@@ -348,7 +349,7 @@ name: CD - Production
 on:
   push:
     tags:
-      - "v*.*.*"
+      - 'v*.*.*'
   workflow_dispatch:
 
 jobs:

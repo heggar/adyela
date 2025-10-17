@@ -2,7 +2,8 @@
 
 **Fecha**: 11 de Octubre, 2025  
 **Proyecto**: Adyela Health System  
-**Propósito**: Validar qué está desplegado manualmente vs qué está en archivos (Terraform)
+**Propósito**: Validar qué está desplegado manualmente vs qué está en archivos
+(Terraform)
 
 ---
 
@@ -174,7 +175,8 @@ GitHub Actions → Cloud Run (manual)
 Terraform → VACÍO (no hay infraestructura)
 ```
 
-**Resultado**: Servicios funcionan pero sin infraestructura de soporte (VPC, Firestore, etc.)
+**Resultado**: Servicios funcionan pero sin infraestructura de soporte (VPC,
+Firestore, etc.)
 
 ---
 
@@ -452,11 +454,13 @@ cd infra/environments/staging
 
 ### **Problema Principal**:
 
-**Servicios funcionan pero sin infraestructura de soporte**. Es como tener una casa sin cimientos, plomería, o electricidad.
+**Servicios funcionan pero sin infraestructura de soporte**. Es como tener una
+casa sin cimientos, plomería, o electricidad.
 
 ### **Solución**:
 
-**Implementar Tareas 1-8 de Task Master AI** para crear la infraestructura base en Terraform, luego migrar los servicios existentes.
+**Implementar Tareas 1-8 de Task Master AI** para crear la infraestructura base
+en Terraform, luego migrar los servicios existentes.
 
 ### **Timeline Realista**:
 

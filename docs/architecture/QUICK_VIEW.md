@@ -86,17 +86,19 @@
 | **Cloud Trace**       | ⏳ PENDIENTE | APM avanzado                                                      | $0        |
 | **Error Reporting**   | ⏳ PENDIENTE | Errores automáticos                                               | $0        |
 
-**Costo Total Actual**: $34-53/mes
-**Cobertura Terraform**: 90% (53 recursos gestionados en 6 módulos)
-**Estado Crítico**: ⚠️ 4 issues críticos identificados - Correcciones listas para deployment
+**Costo Total Actual**: $34-53/mes **Cobertura Terraform**: 90% (53 recursos
+gestionados en 6 módulos) **Estado Crítico**: ⚠️ 4 issues críticos
+identificados - Correcciones listas para deployment
 
 ### 🔗 URLs Activas
 
 - **Load Balancer**: `https://34.96.108.162` (HTTP/HTTPS)
 - **Dominio Principal**: `https://staging.adyela.care` ✅ ACTIVO
 - **API Subdomain**: `https://api.staging.adyela.care` ✅ ACTIVO
-- **Cloud Run API**: `https://adyela-api-staging-717907307897.us-central1.run.app` (internal)
-- **Cloud Run Web**: `https://adyela-web-staging-717907307897.us-central1.run.app` (internal)
+- **Cloud Run API**:
+  `https://adyela-api-staging-717907307897.us-central1.run.app` (internal)
+- **Cloud Run Web**:
+  `https://adyela-web-staging-717907307897.us-central1.run.app` (internal)
 - **CDN Assets**: `https://staging.adyela.care/assets/*` → Cloud Storage CDN
 
 ### 🔐 Configuración de Seguridad
@@ -163,7 +165,8 @@
 
 #### 🔐 Security (ACTIVO)
 
-- **Service Account**: `adyela-staging-hipaa@adyela-staging.iam.gserviceaccount.com`
+- **Service Account**:
+  `adyela-staging-hipaa@adyela-staging.iam.gserviceaccount.com`
 - **IAM Roles**: HIPAA-compliant roles asignados
 - **VPC Egress**: `private-ranges-only`
 - **Ingress Control**: Bloqueado acceso directo
@@ -379,9 +382,8 @@ Cloud Run → Firestore (CMEK)
 - Plan simplificado para staging (no compliance estricto)
 - HIPAA 100% solo para production (futuro)
 
-**Tiempo**: 32 minutos total
-**Costo**: $0 adicional
-**Ver**: `docs/architecture/STAGING_PRAGMATIC_PLAN.md`
+**Tiempo**: 32 minutos total **Costo**: $0 adicional **Ver**:
+`docs/architecture/STAGING_PRAGMATIC_PLAN.md`
 
 ### **2. Implementar Cloudflare CDN (Prioridad Alta)** 🟠
 
@@ -409,9 +411,8 @@ Cloud Run → Firestore (CMEK)
 
 ---
 
-**Última Actualización**: 2025-10-15
-**Versión**: 5.0
-**Estado**: ✅ Staging 90% desplegado | ✅ API funcional | 🟠 Plan pragmático listo (32 min)
+**Última Actualización**: 2025-10-15 **Versión**: 5.0 **Estado**: ✅ Staging 90%
+desplegado | ✅ API funcional | 🟠 Plan pragmático listo (32 min)
 
 ---
 

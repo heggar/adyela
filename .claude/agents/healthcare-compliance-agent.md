@@ -1,19 +1,21 @@
 # 🏥 Healthcare Compliance Agent Specification
 
-**Agent Type:** Specialized SDLC Agent
-**Domain:** Healthcare Compliance & Privacy
-**Version:** 1.0.0
-**Last Updated:** 2025-10-05
+**Agent Type:** Specialized SDLC Agent **Domain:** Healthcare Compliance &
+Privacy **Version:** 1.0.0 **Last Updated:** 2025-10-05
 
 ---
 
 ## 🎯 Purpose & Scope
 
-The Healthcare Compliance Agent ensures the Adyela platform adheres to healthcare industry regulations including HIPAA, GDPR, and ISO 13485. This agent is critical for handling Protected Health Information (PHI) and maintaining patient privacy in a medical appointment system.
+The Healthcare Compliance Agent ensures the Adyela platform adheres to
+healthcare industry regulations including HIPAA, GDPR, and ISO 13485. This agent
+is critical for handling Protected Health Information (PHI) and maintaining
+patient privacy in a medical appointment system.
 
 ### Primary Responsibilities
 
-1. **HIPAA Compliance**: Ensure adherence to Health Insurance Portability and Accountability Act
+1. **HIPAA Compliance**: Ensure adherence to Health Insurance Portability and
+   Accountability Act
 2. **GDPR Compliance**: Implement data privacy and protection requirements
 3. **ISO 13485**: Medical device quality management (if applicable)
 4. **PHI Protection**: Safeguard Protected Health Information
@@ -86,18 +88,14 @@ The Healthcare Compliance Agent ensures the Adyela platform adheres to healthcar
 
 from enum import Enum
 
-class DataClassification(Enum):
-PUBLIC = "public" # No restrictions
-INTERNAL = "internal" # Internal use only
-CONFIDENTIAL = "confidential" # Business sensitive
-PHI = "phi" # Protected Health Information
-PII = "pii" # Personally Identifiable Information
+class DataClassification(Enum): PUBLIC = "public" # No restrictions INTERNAL =
+"internal" # Internal use only CONFIDENTIAL = "confidential" # Business
+sensitive PHI = "phi" # Protected Health Information PII = "pii" # Personally
+Identifiable Information
 
 # PHI data models must be tagged
 
-@dataclass
-class Patient:
-"""Patient entity containing PHI"""
+@dataclass class Patient: """Patient entity containing PHI"""
 **data_classification** = DataClassification.PHI
 
     id: str
@@ -121,35 +119,23 @@ class Patient:
 
 #### Minimum Necessary Rule
 
-**Implementation:**
-\`\`\`python
+**Implementation:** \`\`\`python
 
 # Only return necessary PHI fields based on user role
 
-class PatientSummaryDTO(BaseModel):
-"""Minimal patient info for appointment listing"""
-id: str
-full_name: str # Combined, not separate fields # NO email, phone, DOB unless explicitly needed
+class PatientSummaryDTO(BaseModel): """Minimal patient info for appointment
+listing""" id: str full_name: str # Combined, not separate fields # NO email,
+phone, DOB unless explicitly needed
 
-class PatientDetailsDTO(BaseModel):
-"""Complete patient info for authorized users only"""
-id: str
-first_name: str
-last_name: str
-email: str
-phone: str
-date_of_birth: date
-medical_record_number: str
+class PatientDetailsDTO(BaseModel): """Complete patient info for authorized
+users only""" id: str first_name: str last_name: str email: str phone: str
+date_of_birth: date medical_record_number: str
 
 # Role-based field filtering
 
-@router.get("/patients/{patient_id}")
-async def get_patient(
-patient_id: str,
-request: Request,
-current_user: User = Depends(get_current_user)
-):
-patient = await patient_repo.get_by_id(patient_id)
+@router.get("/patients/{patient_id}") async def get_patient( patient_id: str,
+request: Request, current_user: User = Depends(get_current_user) ): patient =
+await patient_repo.get_by_id(patient_id)
 
     # Practitioners get full details
     if current_user.role == Role.PRACTITIONER:
@@ -173,20 +159,13 @@ patient = await patient_repo.get_by_id(patient_id)
 
 **Required Implementations:**
 
-1.  **Right to Access** (45 CFR § 164.524)
-    \`\`\`python
-    @router.get("/patients/{patient_id}/phi-export")
-    async def export_phi(
-    patient_id: str,
-    format: str = "pdf", # pdf, json, or ccda (HL7)
-    current_user: Patient = Depends(get_current_patient)
-    ):
-    """
-    Export patient's complete PHI within 30 days of request
-    Must include: appointments, notes, diagnoses, treatments
-    """
-    if current_user.id != patient_id:
-    raise HTTPException(403, "Can only export own PHI")
+1.  **Right to Access** (45 CFR § 164.524) \`\`\`python
+    @router.get("/patients/{patient_id}/phi-export") async def export_phi(
+    patient_id: str, format: str = "pdf", # pdf, json, or ccda (HL7)
+    current_user: Patient = Depends(get_current_patient) ): """ Export patient's
+    complete PHI within 30 days of request Must include: appointments, notes,
+    diagnoses, treatments """ if current_user.id != patient_id: raise
+    HTTPException(403, "Can only export own PHI")
 
         phi_data = await phi_export_service.export_all(
             patient_id=patient_id,
@@ -205,25 +184,15 @@ patient = await patient_repo.get_by_id(patient_id)
 
     \`\`\`
 
-2.  **Right to Amend** (45 CFR § 164.526)
-    \`\`\`python
-    @router.post("/patients/{patient_id}/phi-amendment-request")
-    async def request_amendment(
-    patient_id: str,
-    amendment: PHIAmendmentRequest,
-    current_user: Patient = Depends(get_current_patient)
-    ):
-    """
-    Patients can request amendments to their PHI
-    Must respond within 60 days
-    """ # Create amendment request
-    request = await amendment_service.create_request(
-    patient_id=patient_id,
-    field=amendment.field,
+2.  **Right to Amend** (45 CFR § 164.526) \`\`\`python
+    @router.post("/patients/{patient_id}/phi-amendment-request") async def
+    request_amendment( patient_id: str, amendment: PHIAmendmentRequest,
+    current_user: Patient = Depends(get_current_patient) ): """ Patients can
+    request amendments to their PHI Must respond within 60 days """ # Create
+    amendment request request = await amendment_service.create_request(
+    patient_id=patient_id, field=amendment.field,
     current_value=amendment.current_value,
-    proposed_value=amendment.proposed_value,
-    reason=amendment.reason
-    )
+    proposed_value=amendment.proposed_value, reason=amendment.reason )
 
         # Notify practitioner for review
         await notification_service.notify_amendment_request(request)
@@ -232,24 +201,13 @@ patient = await patient_repo.get_by_id(patient_id)
 
     \`\`\`
 
-3.  **Right to Accounting of Disclosures** (45 CFR § 164.528)
-    \`\`\`python
-    @router.get("/patients/{patient_id}/phi-disclosures")
-    async def get_phi_disclosures(
-    patient_id: str,
-    start_date: date,
-    end_date: date,
-    current_user: Patient = Depends(get_current_patient)
-    ):
-    """
-    Provide 6-year history of PHI disclosures
-    (excluding treatment, payment, operations)
-    """
-    disclosures = await disclosure_log.get_disclosures(
-    patient_id=patient_id,
-    start_date=start_date,
-    end_date=end_date
-    )
+3.  **Right to Accounting of Disclosures** (45 CFR § 164.528) \`\`\`python
+    @router.get("/patients/{patient_id}/phi-disclosures") async def
+    get_phi_disclosures( patient_id: str, start_date: date, end_date: date,
+    current_user: Patient = Depends(get_current_patient) ): """ Provide 6-year
+    history of PHI disclosures (excluding treatment, payment, operations) """
+    disclosures = await disclosure_log.get_disclosures( patient_id=patient_id,
+    start_date=start_date, end_date=end_date )
 
         return {
             "disclosures": [
@@ -271,9 +229,7 @@ patient = await patient_repo.get_by_id(patient_id)
 
 #### Administrative Safeguards
 
-**Security Management Process (§164.308(a)(1))**
-\`\`\`yaml
-Risk Analysis:
+**Security Management Process (§164.308(a)(1))** \`\`\`yaml Risk Analysis:
 
 - Annual risk assessment
 - Identify threats to ePHI
@@ -296,41 +252,19 @@ Information System Activity Review:
 
 - Regular review of audit logs
 - Anomaly detection
-- Security incident investigation
-  \`\`\`
+- Security incident investigation \`\`\`
 
-**Workforce Security (§164.308(a)(3))**
-\`\`\`python
+**Workforce Security (§164.308(a)(3))** \`\`\`python
 
 # Authorization and supervision
 
-class UserAccessControl:
-def **init**(self):
-self.access_matrix = {
-Role.PRACTITIONER: [
-"read:phi",
-"write:phi",
-"read:appointments",
-"write:appointments",
-"read:notes",
-"write:notes"
-],
-Role.NURSE: [
-"read:phi",
-"read:appointments",
-"write:appointments"
-],
-Role.RECEPTIONIST: [
-"read:phi:limited", # Name, contact only
-"read:appointments",
-"write:appointments"
-],
-Role.PATIENT: [
-"read:own_phi",
-"read:own_appointments",
-"write:own_appointments:limited"
-]
-}
+class UserAccessControl: def **init**(self): self.access_matrix = {
+Role.PRACTITIONER: [ "read:phi", "write:phi", "read:appointments",
+"write:appointments", "read:notes", "write:notes" ], Role.NURSE: [ "read:phi",
+"read:appointments", "write:appointments" ], Role.RECEPTIONIST: [
+"read:phi:limited", # Name, contact only "read:appointments",
+"write:appointments" ], Role.PATIENT: [ "read:own_phi", "read:own_appointments",
+"write:own_appointments:limited" ] }
 
     async def check_permission(
         self,
@@ -372,34 +306,31 @@ Role.PATIENT: [
 
 \`\`\`
 
-**Workforce Training (§164.308(a)(5))**
-\`\`\`yaml
+**Workforce Training (§164.308(a)(5))** \`\`\`yaml
 
 # Required training modules
 
-Security_Awareness_Training:
-Frequency: Annual + onboarding
-Topics: - HIPAA overview - PHI identification - Password security - Phishing awareness - Physical security - Incident reporting
+Security_Awareness_Training: Frequency: Annual + onboarding Topics: - HIPAA
+overview - PHI identification - Password security - Phishing awareness -
+Physical security - Incident reporting
 
-Role-Specific_Training:
-Practitioner: - Clinical documentation - Minimum necessary rule - Patient rights
-Receptionist: - Front desk PHI handling - Visitor management - Phone etiquette
-IT_Staff: - Technical safeguards - Encryption requirements - Incident response
+Role-Specific_Training: Practitioner: - Clinical documentation - Minimum
+necessary rule - Patient rights Receptionist: - Front desk PHI handling -
+Visitor management - Phone etiquette IT_Staff: - Technical safeguards -
+Encryption requirements - Incident response
 
 Compliance_Tracking:
 
 - Training completion records
 - Test scores
 - Acknowledgment forms
-- Annual recertification
-  \`\`\`
+- Annual recertification \`\`\`
 
 ---
 
 #### Physical Safeguards (§164.310)
 
-**Facility Access Controls (§164.310(a)(1))**
-\`\`\`yaml
+**Facility Access Controls (§164.310(a)(1))** \`\`\`yaml
 
 # For on-premise equipment (if applicable)
 
@@ -417,37 +348,26 @@ Cloud_Security:
 - GCP security controls
 - No direct physical access needed
 - Audit logs for all access
-- Redundant data centers
-  \`\`\`
+- Redundant data centers \`\`\`
 
-**Workstation Use (§164.310(b))**
-\`\`\`yaml
-Workstation_Security_Policy:
+**Workstation Use (§164.310(b))** \`\`\`yaml Workstation_Security_Policy:
 
 - Screen lock after 10 minutes idle
 - No PHI on personal devices
 - Encrypted hard drives
 - Clean desk policy
 - Privacy screens required
-- No sharing credentials
-  \`\`\`
+- No sharing credentials \`\`\`
 
-**Device and Media Controls (§164.310(d)(1))**
-\`\`\`python
+**Device and Media Controls (§164.310(d)(1))** \`\`\`python
 
 # Media disposal procedure
 
-async def dispose_media(device_id: str, disposal_method: str):
-"""
-Securely dispose of media containing ePHI
-Methods: Shred (physical), Crypto-erase, DOD wipe
-""" # Log disposal
-await audit_log.log_media_disposal(
-device_id=device_id,
-method=disposal_method,
-certified_by=current_user.id,
-certificate_number=await get_disposal_certificate()
-)
+async def dispose_media(device_id: str, disposal_method: str): """ Securely
+dispose of media containing ePHI Methods: Shred (physical), Crypto-erase, DOD
+wipe """ # Log disposal await audit_log.log_media_disposal( device_id=device_id,
+method=disposal_method, certified_by=current_user.id, certificate_number=await
+get_disposal_certificate() )
 
     # Update asset inventory
     await asset_mgmt.mark_disposed(device_id)
@@ -461,8 +381,7 @@ certificate_number=await get_disposal_certificate()
 
 #### Technical Safeguards (§164.312)
 
-**Access Control (§164.312(a)(1))**
-\`\`\`python
+**Access Control (§164.312(a)(1))** \`\`\`python
 
 # Unique user identification (§164.312(a)(2)(i))
 
@@ -470,18 +389,11 @@ certificate_number=await get_disposal_certificate()
 
 # Emergency access procedure (§164.312(a)(2)(ii))
 
-@router.post("/emergency-access")
-async def emergency_access(
-patient_id: str,
-reason: str,
-current_user: User = Depends(get_current_user)
-):
-"""
-Break-glass emergency access to PHI
-Requires immediate notification and justification
-"""
-if current_user.role != Role.PRACTITIONER:
-raise HTTPException(403, "Emergency access: Practitioners only")
+@router.post("/emergency-access") async def emergency_access( patient_id: str,
+reason: str, current_user: User = Depends(get_current_user) ): """ Break-glass
+emergency access to PHI Requires immediate notification and justification """ if
+current_user.role != Role.PRACTITIONER: raise HTTPException(403, "Emergency
+access: Practitioners only")
 
     # Grant temporary access
     access_token = await emergency_access_service.grant_access(
@@ -523,13 +435,11 @@ raise HTTPException(403, "Emergency access: Practitioners only")
 
 \`\`\`
 
-**Audit Controls (§164.312(b))**
-\`\`\`python
+**Audit Controls (§164.312(b))** \`\`\`python
 
 # Comprehensive audit logging
 
-class PHIAuditLog:
-"""Log all PHI access, modifications, and disclosures"""
+class PHIAuditLog: """Log all PHI access, modifications, and disclosures"""
 
     async def log_access(
         self,
@@ -585,16 +495,13 @@ class PHIAuditLog:
 
 \`\`\`
 
-**Integrity (§164.312(c)(1))**
-\`\`\`python
+**Integrity (§164.312(c)(1))** \`\`\`python
 
 # Protect ePHI from improper alteration or destruction
 
-class DataIntegrityControl:
-async def calculate_checksum(self, data: dict) -> str:
-"""Calculate cryptographic hash for data integrity"""
-import hashlib
-import json
+class DataIntegrityControl: async def calculate_checksum(self, data: dict) ->
+str: """Calculate cryptographic hash for data integrity""" import hashlib import
+json
 
         data_json = json.dumps(data, sort_keys=True)
         return hashlib.sha256(data_json.encode()).hexdigest()
@@ -647,8 +554,7 @@ import json
 
 \`\`\`
 
-**Transmission Security (§164.312(e)(1))**
-\`\`\`python
+**Transmission Security (§164.312(e)(1))** \`\`\`python
 
 # Protect ePHI during transmission
 
@@ -672,12 +578,8 @@ import json
 
 #### Breach Assessment Process
 
-\`\`\`python
-class BreachAssessment:
-"""
-Determine if a privacy/security incident is a reportable breach
-per 45 CFR § 164.402
-"""
+\`\`\`python class BreachAssessment: """ Determine if a privacy/security
+incident is a reportable breach per 45 CFR § 164.402 """
 
     async def assess_incident(self, incident_id: str) -> dict:
         """
@@ -743,17 +645,11 @@ per 45 CFR § 164.402
 
 #### Incident Response & Notification
 
-\`\`\`python
-@router.post("/incidents/{incident_id}/notify-breach")
-async def notify_breach(
-incident_id: str,
-current_user: User = Depends(require_privacy_officer)
-):
-"""
-Execute breach notification process
-Only Privacy Officer can trigger
-"""
-incident = await incident_repo.get_by_id(incident_id)
+\`\`\`python @router.post("/incidents/{incident_id}/notify-breach") async def
+notify_breach( incident_id: str, current_user: User =
+Depends(require_privacy_officer) ): """ Execute breach notification process Only
+Privacy Officer can trigger """ incident = await
+incident_repo.get_by_id(incident_id)
 
     # Generate notification letters
     notifications = await notification_service.generate_breach_notifications(
@@ -798,26 +694,17 @@ incident = await incident_repo.get_by_id(incident_id)
 
 #### Legal Basis for Processing (Article 6)
 
-\`\`\`python
-class DataProcessingBasis(Enum):
-CONSENT = "consent" # Explicit consent
-CONTRACT = "contract" # Necessary for contract
-LEGAL_OBLIGATION = "legal_obligation" # Compliance with law
-VITAL_INTERESTS = "vital_interests" # Protect life/health
-PUBLIC_TASK = "public_task" # Public interest
+\`\`\`python class DataProcessingBasis(Enum): CONSENT = "consent" # Explicit
+consent CONTRACT = "contract" # Necessary for contract LEGAL_OBLIGATION =
+"legal_obligation" # Compliance with law VITAL_INTERESTS = "vital_interests" #
+Protect life/health PUBLIC_TASK = "public_task" # Public interest
 LEGITIMATE_INTEREST = "legitimate_interest" # Our interests
 
 # Track legal basis for each processing activity
 
-@dataclass
-class ProcessingActivity:
-purpose: str
-legal_basis: DataProcessingBasis
-data_categories: list[str]
-retention_period: str
-recipients: list[str]
-cross_border_transfers: bool
-\`\`\`
+@dataclass class ProcessingActivity: purpose: str legal_basis:
+DataProcessingBasis data_categories: list[str] retention_period: str recipients:
+list[str] cross_border_transfers: bool \`\`\`
 
 #### Individual Rights (Articles 15-22)
 
@@ -825,18 +712,12 @@ cross_border_transfers: bool
 
 # Right to erasure ("right to be forgotten") - Article 17
 
-@router.delete("/patients/{patient_id}/gdpr-erasure")
-async def gdpr_erasure_request(
-patient_id: str,
-reason: str,
-current_user: Patient = Depends(get_current_patient)
-):
-"""
-Delete all personal data when legally permitted
-Exceptions: Legal obligations, public health, archival purposes
-"""
-if current_user.id != patient_id:
-raise HTTPException(403, "Can only request own data erasure")
+@router.delete("/patients/{patient_id}/gdpr-erasure") async def
+gdpr_erasure_request( patient_id: str, reason: str, current_user: Patient =
+Depends(get_current_patient) ): """ Delete all personal data when legally
+permitted Exceptions: Legal obligations, public health, archival purposes """ if
+current_user.id != patient_id: raise HTTPException(403, "Can only request own
+data erasure")
 
     # Check if erasure is permitted
     can_erase, blocking_reasons = await gdpr_service.can_erase(patient_id)
@@ -866,17 +747,10 @@ raise HTTPException(403, "Can only request own data erasure")
 
 # Right to data portability - Article 20
 
-@router.get("/patients/{patient_id}/gdpr-export")
-async def gdpr_data_export(
-patient_id: str,
-format: str = "json", # json, xml, csv
-current_user: Patient = Depends(get_current_patient)
-):
-"""
-Export data in structured, machine-readable format
-Must be provided within 30 days
-"""
-if current_user.id != patient_id:
+@router.get("/patients/{patient_id}/gdpr-export") async def gdpr_data_export(
+patient_id: str, format: str = "json", # json, xml, csv current_user: Patient =
+Depends(get_current_patient) ): """ Export data in structured, machine-readable
+format Must be provided within 30 days """ if current_user.id != patient_id:
 raise HTTPException(403, "Can only export own data")
 
     # Export all personal data
@@ -902,15 +776,20 @@ raise HTTPException(403, "Can only export own data")
 
 # Required for high-risk processing
 
-DPIA_Assessment:
-Triggers: - Large-scale processing of sensitive data (health data = yes) - Systematic monitoring (appointment tracking = yes) - Automated decision-making (none currently)
+DPIA_Assessment: Triggers: - Large-scale processing of sensitive data (health
+data = yes) - Systematic monitoring (appointment tracking = yes) - Automated
+decision-making (none currently)
 
-Systematic_Evaluation: - Nature, scope, context, purposes of processing - Necessity and proportionality assessment - Risks to rights and freedoms - Measures to address risks
+Systematic_Evaluation: - Nature, scope, context, purposes of processing -
+Necessity and proportionality assessment - Risks to rights and freedoms -
+Measures to address risks
 
-Documentation: - DPIA report (annual review) - Consultation with DPO - Prior consultation with supervisory authority (if high risk)
+Documentation: - DPIA report (annual review) - Consultation with DPO - Prior
+consultation with supervisory authority (if high risk)
 
-Mitigation_Measures: - Encryption (ePHI at rest and in transit) - Pseudonymization where possible - Access controls and audit logs - Regular security testing - Incident response plan
-\`\`\`
+Mitigation_Measures: - Encryption (ePHI at rest and in transit) -
+Pseudonymization where possible - Access controls and audit logs - Regular
+security testing - Incident response plan \`\`\`
 
 ---
 
@@ -918,12 +797,15 @@ Mitigation_Measures: - Encryption (ePHI at rest and in transit) - Pseudonymizati
 
 #### Compliance Checklist
 
-\`\`\`yaml
-HIPAA_Compliance_Checklist:
-Privacy_Rule: - [ ] PHI identified and protected - [ ] Minimum necessary rule enforced - [ ] Patient rights implemented (access, amend, accounting) - [ ] Notice of Privacy Practices provided - [ ] Authorization forms for disclosures - [ ] Business Associate Agreements (BAAs) in place
+\`\`\`yaml HIPAA_Compliance_Checklist: Privacy_Rule: - [ ] PHI identified and
+protected - [ ] Minimum necessary rule enforced - [ ] Patient rights implemented
+(access, amend, accounting) - [ ] Notice of Privacy Practices provided - [ ]
+Authorization forms for disclosures - [ ] Business Associate Agreements (BAAs)
+in place
 
-Security_Rule:
-Administrative: - [ ] Risk analysis completed annually - [ ] Security policies documented - [ ] Workforce training completed - [ ] Sanction policy enforced - [ ] Contingency plan tested
+Security_Rule: Administrative: - [ ] Risk analysis completed annually - [ ]
+Security policies documented - [ ] Workforce training completed - [ ] Sanction
+policy enforced - [ ] Contingency plan tested
 
     Physical:
       - [ ] Facility access controls (if applicable)
@@ -937,15 +819,21 @@ Administrative: - [ ] Risk analysis completed annually - [ ] Security policies d
       - [ ] Data integrity controls
       - [ ] Transmission encryption (TLS 1.3)
 
-Breach_Notification: - [ ] Breach assessment process - [ ] Notification procedures (< 60 days) - [ ] HHS reporting (>= 500 affected) - [ ] Media notification (>= 500 affected)
+Breach_Notification: - [ ] Breach assessment process - [ ] Notification
+procedures (< 60 days) - [ ] HHS reporting (>= 500 affected) - [ ] Media
+notification (>= 500 affected)
 
-GDPR_Compliance_Checklist:
-Legal_Basis: - [ ] Legal basis documented for all processing - [ ] Consent mechanisms implemented - [ ] Legitimate interest assessments
+GDPR_Compliance_Checklist: Legal_Basis: - [ ] Legal basis documented for all
+processing - [ ] Consent mechanisms implemented - [ ] Legitimate interest
+assessments
 
-Individual_Rights: - [ ] Right to access (data export) - [ ] Right to rectification - [ ] Right to erasure - [ ] Right to restrict processing - [ ] Right to data portability - [ ] Right to object
+Individual_Rights: - [ ] Right to access (data export) - [ ] Right to
+rectification - [ ] Right to erasure - [ ] Right to restrict processing - [ ]
+Right to data portability - [ ] Right to object
 
-Accountability: - [ ] Data Protection Officer appointed - [ ] Data processing records maintained - [ ] DPIA completed for high-risk processing - [ ] Data breach notification (< 72 hours) - [ ] Privacy by design & default
-\`\`\`
+Accountability: - [ ] Data Protection Officer appointed - [ ] Data processing
+records maintained - [ ] DPIA completed for high-risk processing - [ ] Data
+breach notification (< 72 hours) - [ ] Privacy by design & default \`\`\`
 
 ---
 

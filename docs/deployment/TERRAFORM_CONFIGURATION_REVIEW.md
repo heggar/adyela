@@ -1,8 +1,6 @@
 # Revisión de Configuración de Terraform - adyela-staging
 
-**Fecha**: 2025-10-17
-**Proyecto**: adyela-staging
-**Región**: us-central1
+**Fecha**: 2025-10-17 **Proyecto**: adyela-staging **Región**: us-central1
 **Reviewer**: Claude Code
 
 ---
@@ -11,7 +9,10 @@
 
 **Estado General**: ✅ **COHERENTE** con advertencias menores
 
-El proyecto tiene una configuración de Terraform **bien estructurada y funcional** que está mayormente alineada con el despliegue actual en GCP. Los recursos principales (Cloud Run, Load Balancer, VPC, Monitoring) están correctamente definidos y gestionados.
+El proyecto tiene una configuración de Terraform **bien estructurada y
+funcional** que está mayormente alineada con el despliegue actual en GCP. Los
+recursos principales (Cloud Run, Load Balancer, VPC, Monitoring) están
+correctamente definidos y gestionados.
 
 ### Métricas Clave
 
@@ -128,11 +129,15 @@ IAM: allUsers → roles/run.invoker ✅
 
 #### ✅ Fortalezas
 
-1. **IAM Bindings Correctos**: Los bindings `allUsers` están en Terraform (agregados recientemente)
-2. **Documentación Excelente**: Comentarios explican el patrón de despliegue CI/CD vs Terraform
-3. **Image Drift Esperado**: Terraform usa imágenes placeholder, CI/CD despliega imágenes reales (patrón correcto)
+1. **IAM Bindings Correctos**: Los bindings `allUsers` están en Terraform
+   (agregados recientemente)
+2. **Documentación Excelente**: Comentarios explican el patrón de despliegue
+   CI/CD vs Terraform
+3. **Image Drift Esperado**: Terraform usa imágenes placeholder, CI/CD despliega
+   imágenes reales (patrón correcto)
 4. **HIPAA Secrets**: 14 secrets configurados correctamente vía Secret Manager
-5. **Ingress Security**: Restricción `internal-and-cloud-load-balancing` implementada
+5. **Ingress Security**: Restricción `internal-and-cloud-load-balancing`
+   implementada
 
 #### ⚠️ Advertencias
 
@@ -146,9 +151,8 @@ env {
 }
 ```
 
-**Problema**: Valor hardcodeado en lugar de variable
-**Impacto**: Cambios requieren editar el módulo
-**Recomendación**: Convertir a variable:
+**Problema**: Valor hardcodeado en lugar de variable **Impacto**: Cambios
+requieren editar el módulo **Recomendación**: Convertir a variable:
 
 ```hcl
 # variables.tf
@@ -172,7 +176,8 @@ env {
 version = "latest"
 ```
 
-**Estado**: Esto es correcto para staging, pero considere versiones específicas en producción para reproducibilidad.
+**Estado**: Esto es correcto para staging, pero considere versiones específicas
+en producción para reproducibilidad.
 
 ### 2. Load Balancer Module (`modules/load-balancer/`)
 
@@ -205,9 +210,11 @@ Default: → Web backend
 
 #### ✅ Fortalezas
 
-1. **SSL Managed Certificate**: Auto-renovación para `staging.adyela.care` y `api.staging.adyela.care`
+1. **SSL Managed Certificate**: Auto-renovación para `staging.adyela.care` y
+   `api.staging.adyela.care`
 2. **HTTP → HTTPS Redirect**: Implementado correctamente
-3. **CDN Configuration**: Backend bucket configurado con caché óptimo (1 día default, 1 año max)
+3. **CDN Configuration**: Backend bucket configurado con caché óptimo (1 día
+   default, 1 año max)
 4. **Logging**: Habilitado en backend services (sample_rate: 1.0)
 5. **Static Assets Security**: CORS configurado correctamente
 
@@ -224,11 +231,12 @@ Default: → Web backend
 # }
 ```
 
-**Estado Actual**: Comentado temporalmente
-**Razón**: Posiblemente por problemas de deployment o configuración
-**Impacto**: Los assets estáticos se sirven desde Cloud Run en lugar de CDN (menos eficiente, mayor costo)
+**Estado Actual**: Comentado temporalmente **Razón**: Posiblemente por problemas
+de deployment o configuración **Impacto**: Los assets estáticos se sirven desde
+Cloud Run en lugar de CDN (menos eficiente, mayor costo)
 
-**Pregunta para Validar**: ¿Se está utilizando el CDN actualmente? Si no, ¿por qué fue deshabilitado?
+**Pregunta para Validar**: ¿Se está utilizando el CDN actualmente? Si no, ¿por
+qué fue deshabilitado?
 
 **2. Cloud Armor Deshabilitado** (Severidad: MEDIA - Mencionado en comentarios)
 
@@ -237,9 +245,9 @@ Default: → Web backend
 security_policy = null # No Cloud Armor for cost optimization
 ```
 
-**Estado**: Deshabilitado para optimizar costos
-**Impacto**: Sin WAF (Web Application Firewall)
-**Justificación**: Válido para staging, considerar habilitar en producción
+**Estado**: Deshabilitado para optimizar costos **Impacto**: Sin WAF (Web
+Application Firewall) **Justificación**: Válido para staging, considerar
+habilitar en producción
 
 **3. Health Checks No Usados** (Severidad: BAJA)
 
@@ -250,8 +258,8 @@ security_policy = null # No Cloud Armor for cost optimization
 ```
 
 **Estado**: Health checks definidos pero no vinculados a backend services
-**Razón**: Serverless NEGs no requieren health checks
-**Impacto**: Ninguno (correcto para Cloud Run)
+**Razón**: Serverless NEGs no requieren health checks **Impacto**: Ninguno
+(correcto para Cloud Run)
 
 ### 3. VPC Module (`modules/vpc/`)
 
@@ -291,8 +299,8 @@ resource "google_vpc_access_connector" "connector" {
 }
 ```
 
-**Problema**: No usa variable, inconsistente con pattern de naming
-**Debería ser**: `"${var.network_name}-connector"`
+**Problema**: No usa variable, inconsistente con pattern de naming **Debería
+ser**: `"${var.network_name}-connector"`
 
 **Validación del Subnet**:
 
@@ -339,13 +347,15 @@ Display Name: Adyela Staging HIPAA Service Account
 
 **GitHub Actions Service Account No Gestionado** (Severidad: MEDIA)
 
-El service account `github-actions-staging@adyela-staging.iam.gserviceaccount.com` **NO** está en Terraform.
+El service account
+`github-actions-staging@adyela-staging.iam.gserviceaccount.com` **NO** está en
+Terraform.
 
-**Estado Actual**: Creado manualmente
-**Roles Asignados** (manualmente):
+**Estado Actual**: Creado manualmente **Roles Asignados** (manualmente):
 
 - `roles/run.admin`
-- `roles/compute.loadBalancerAdmin` (agregado recientemente para CDN invalidation)
+- `roles/compute.loadBalancerAdmin` (agregado recientemente para CDN
+  invalidation)
 - Workload Identity binding
 
 **Recomendación**: Agregar este service account al módulo Terraform:
@@ -431,7 +441,8 @@ Metric: API request success rate (2xx responses)
 host = "api.${var.domain}"  # = api.staging.adyela.care
 ```
 
-**Problema**: El monitoreo verifica `api.staging.adyela.care` pero el Load Balancer **NO** tiene un backend separado para este dominio.
+**Problema**: El monitoreo verifica `api.staging.adyela.care` pero el Load
+Balancer **NO** tiene un backend separado para este dominio.
 
 **Configuración Actual del Load Balancer**:
 
@@ -452,7 +463,8 @@ host = var.domain  # staging.adyela.care
 path = "/api/v1/health"  # o /health si está configurado en Load Balancer
 ```
 
-**Opción 2: Agregar `api.staging.adyela.care` al SSL Certificate y Load Balancer**
+**Opción 2: Agregar `api.staging.adyela.care` al SSL Certificate y Load
+Balancer**
 
 ```hcl
 # En modules/load-balancer/main.tf
@@ -466,13 +478,15 @@ managed {
 # Agregar host_rule para api.staging.adyela.care
 ```
 
-**Recomendación**: **Opción 1** (cambiar uptime check) es más simple y mantiene la arquitectura actual.
+**Recomendación**: **Opción 1** (cambiar uptime check) es más simple y mantiene
+la arquitectura actual.
 
 ### 6. Identity Platform Module (`modules/identity/`)
 
 **Estado**: ✅ Implementado (no revisado en detalle)
 
-Este módulo existe en `infra/modules/identity/` y está en el state con 3 recursos:
+Este módulo existe en `infra/modules/identity/` y está en el state con 3
+recursos:
 
 - `google_project_iam_audit_config.identity_platform_audit[0]`
 - `google_project_iam_member.identity_platform_admin`
@@ -533,7 +547,8 @@ Este módulo existe en `infra/modules/identity/` y está en el state con 3 recur
 
 **1. API Domain Monitoring Mismatch** (severidad: ALTA)
 
-- **Problema**: Uptime check verifica `api.staging.adyela.care` que no existe en Load Balancer
+- **Problema**: Uptime check verifica `api.staging.adyela.care` que no existe en
+  Load Balancer
 - **Impacto**: Falsos positivos en alertas de downtime
 - **Solución**: Cambiar uptime check a `staging.adyela.care/api/v1/health`
 
@@ -719,7 +734,8 @@ terraform import ...
 
 ## 📋 Checklist de Validación Manual
 
-Debido a la expiración de autenticación de gcloud, algunos checks requieren validación manual:
+Debido a la expiración de autenticación de gcloud, algunos checks requieren
+validación manual:
 
 ### Cloud Run Services
 
@@ -850,14 +866,17 @@ e0e7b19 fix(ops): add IAM allUsers bindings to Cloud Run services
 
 - `/Users/.../adyela/CLAUDE.md` - Project overview
 - `/Users/.../adyela/docs/deployment/gcp-setup.md` - GCP configuration
-- `/Users/.../adyela/docs/deployment/architecture-validation.md` - Architecture gaps
+- `/Users/.../adyela/docs/deployment/architecture-validation.md` - Architecture
+  gaps
 - `/Users/.../adyela/.github/workflows/cd-staging.yml` - CI/CD workflow
 
 ---
 
 ## 🎯 Conclusión
 
-La configuración de Terraform está **bien estructurada y mayormente coherente** con el deployment actual en GCP. No hay discrepancias críticas que bloqueen el funcionamiento del sistema.
+La configuración de Terraform está **bien estructurada y mayormente coherente**
+con el deployment actual en GCP. No hay discrepancias críticas que bloqueen el
+funcionamiento del sistema.
 
 ### Principales Hallazgos
 
@@ -879,12 +898,13 @@ La configuración de Terraform está **bien estructurada y mayormente coherente*
 
 ### Recomendación Final
 
-**APROBAR** la configuración actual con plan de mejora para resolver los gaps P1 en las próximas 2 semanas.
+**APROBAR** la configuración actual con plan de mejora para resolver los gaps P1
+en las próximas 2 semanas.
 
-El sistema está funcionando correctamente en producción. Los issues identificados son de mantenibilidad y optimización, no de funcionalidad crítica.
+El sistema está funcionando correctamente en producción. Los issues
+identificados son de mantenibilidad y optimización, no de funcionalidad crítica.
 
 ---
 
-**Revisado por**: Claude Code
-**Fecha**: 2025-10-17
-**Estado**: ✅ **APROBADO CON MEJORAS**
+**Revisado por**: Claude Code **Fecha**: 2025-10-17 **Estado**: ✅ **APROBADO
+CON MEJORAS**

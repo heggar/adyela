@@ -1,19 +1,21 @@
 # 🔒 Cybersecurity Agent Specification
 
-**Agent Type:** Specialized SDLC Agent
-**Domain:** Application & Infrastructure Security
-**Version:** 1.0.0
-**Last Updated:** 2025-10-05
+**Agent Type:** Specialized SDLC Agent **Domain:** Application & Infrastructure
+Security **Version:** 1.0.0 **Last Updated:** 2025-10-05
 
 ---
 
 ## 🎯 Purpose & Scope
 
-The Cybersecurity Agent is responsible for ensuring the security of the Adyela platform across all layers - application code, infrastructure, data, and operations. This agent implements industry-standard security frameworks including OWASP, ISO 27001, and NIST Cybersecurity Framework.
+The Cybersecurity Agent is responsible for ensuring the security of the Adyela
+platform across all layers - application code, infrastructure, data, and
+operations. This agent implements industry-standard security frameworks
+including OWASP, ISO 27001, and NIST Cybersecurity Framework.
 
 ### Primary Responsibilities
 
-1. **Vulnerability Management**: Identify, assess, and remediate security vulnerabilities
+1. **Vulnerability Management**: Identify, assess, and remediate security
+   vulnerabilities
 2. **Security Testing**: Implement SAST, DAST, and penetration testing
 3. **Secure SDLC**: Integrate security into every phase of development
 4. **Incident Response**: Detect and respond to security incidents
@@ -76,19 +78,17 @@ The Cybersecurity Agent is responsible for ensuring the security of the Adyela p
 
 #### A01:2021 – Broken Access Control
 
-**Current State**: ✅ Multi-tenancy implemented
-**Location**: `apps/api/adyela_api/presentation/middleware/tenant_middleware.py`
+**Current State**: ✅ Multi-tenancy implemented **Location**:
+`apps/api/adyela_api/presentation/middleware/tenant_middleware.py`
 
-**Security Controls:**
-\`\`\`python
+**Security Controls:** \`\`\`python
 
 # Tenant isolation middleware
 
-@app.middleware("http")
-async def tenant_middleware(request: Request, call_next):
-tenant_id = request.headers.get("X-Tenant-ID")
-if not tenant_id and request.url.path not in EXCLUDED_PATHS:
-raise HTTPException(status_code=400, detail="X-Tenant-ID header required")
+@app.middleware("http") async def tenant_middleware(request: Request,
+call_next): tenant_id = request.headers.get("X-Tenant-ID") if not tenant_id and
+request.url.path not in EXCLUDED_PATHS: raise HTTPException(status_code=400,
+detail="X-Tenant-ID header required")
 
     request.state.tenant_id = tenant_id
 
@@ -112,28 +112,19 @@ raise HTTPException(status_code=400, detail="X-Tenant-ID header required")
 
 **Current State**: ⚠️ Needs hardening
 
-**Security Controls:**
-\`\`\`python
+**Security Controls:** \`\`\`python
 
 # Password hashing (apps/api/adyela_api/infrastructure/services/auth/)
 
 from passlib.context import CryptContext
 
-pwd_context = CryptContext(
-schemes=["bcrypt"],
-deprecated="auto",
-bcrypt\_\_rounds=12, # Increase to 14 for production
-)
+pwd_context = CryptContext( schemes=["bcrypt"], deprecated="auto",
+bcrypt\_\_rounds=12, # Increase to 14 for production )
 
 # Upgrade to Argon2 (recommended)
 
-pwd_context_v2 = CryptContext(
-schemes=["argon2"],
-argon2**memory_cost=65536, # 64 MB
-argon2**time_cost=3,
-argon2\_\_parallelism=4,
-)
-\`\`\`
+pwd_context_v2 = CryptContext( schemes=["argon2"], argon2**memory_cost=65536, #
+64 MB argon2**time_cost=3, argon2\_\_parallelism=4, ) \`\`\`
 
 **Required Actions:**
 
@@ -149,15 +140,14 @@ argon2\_\_parallelism=4,
 
 **Current State**: ✅ Firestore (NoSQL) - low SQL injection risk
 
-**Security Controls:**
-\`\`\`python
+**Security Controls:** \`\`\`python
 
 # Pydantic validation prevents most injection attacks
 
 from pydantic import BaseModel, validator, Field
 
-class AppointmentCreate(BaseModel):
-patient*id: str = Field(..., regex=r'^[a-zA-Z0-9*-]+$')
+class AppointmentCreate(BaseModel): patient*id: str = Field(...,
+regex=r'^[a-zA-Z0-9*-]+$')
     practitioner_id: str = Field(..., regex=r'^[a-zA-Z0-9_-]+$')
 
     @validator('patient_id', 'practitioner_id')
@@ -205,53 +195,39 @@ patient*id: str = Field(..., regex=r'^[a-zA-Z0-9*-]+$')
 
 **Current State**: ⚠️ Needs security hardening
 
-**Configuration Checklist:**
-\`\`\`yaml
+**Configuration Checklist:** \`\`\`yaml
 
 # Security Headers (to implement)
 
-X-Frame-Options: DENY
-X-Content-Type-Options: nosniff
-X-XSS-Protection: 1; mode=block
-Strict-Transport-Security: max-age=31536000; includeSubDomains
+X-Frame-Options: DENY X-Content-Type-Options: nosniff X-XSS-Protection: 1;
+mode=block Strict-Transport-Security: max-age=31536000; includeSubDomains
 Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'
-Permissions-Policy: geolocation=(), microphone=(), camera=()
-\`\`\`
+Permissions-Policy: geolocation=(), microphone=(), camera=() \`\`\`
 
-**FastAPI Security Headers:**
-\`\`\`python
-from fastapi.middleware.cors import CORSMiddleware
-from starlette.middleware.trustedhost import TrustedHostMiddleware
+**FastAPI Security Headers:** \`\`\`python from fastapi.middleware.cors import
+CORSMiddleware from starlette.middleware.trustedhost import
+TrustedHostMiddleware
 
 # Add security headers middleware
 
-@app.middleware("http")
-async def add_security_headers(request: Request, call_next):
-response = await call_next(request)
+@app.middleware("http") async def add_security_headers(request: Request,
+call_next): response = await call_next(request)
 response.headers["X-Frame-Options"] = "DENY"
 response.headers["X-Content-Type-Options"] = "nosniff"
 response.headers["X-XSS-Protection"] = "1; mode=block"
-response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
-return response
+response.headers["Strict-Transport-Security"] = "max-age=31536000;
+includeSubDomains" return response
 
 # Restrict CORS
 
-app.add_middleware(
-CORSMiddleware,
-allow_origins=settings.cors_origins, # Specific origins only
-allow_credentials=True,
-allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH"],
-allow_headers=["*"],
-max_age=600, # 10 minutes
-)
+app.add_middleware( CORSMiddleware, allow_origins=settings.cors_origins, #
+Specific origins only allow_credentials=True, allow_methods=["GET", "POST",
+"PUT", "DELETE", "PATCH"], allow_headers=["*"], max_age=600, # 10 minutes )
 
 # Trusted hosts only
 
-app.add_middleware(
-TrustedHostMiddleware,
-allowed_hosts=settings.allowed_hosts
-)
-\`\`\`
+app.add_middleware( TrustedHostMiddleware, allowed_hosts=settings.allowed_hosts
+) \`\`\`
 
 **Required Actions:**
 
@@ -267,31 +243,23 @@ allowed_hosts=settings.allowed_hosts
 
 **Current State**: ✅ Automated dependency scanning (Dependabot)
 
-**Dependency Management:**
-\`\`\`bash
+**Dependency Management:** \`\`\`bash
 
 # Python dependencies
 
-pip-audit # Vulnerability scanning
-safety check # Alternative scanner
+pip-audit # Vulnerability scanning safety check # Alternative scanner
 
 # Node.js dependencies
 
-npm audit
-pnpm audit
+npm audit pnpm audit
 
 # Container scanning
 
-trivy image adyela-api:latest
-\`\`\`
+trivy image adyela-api:latest \`\`\`
 
-**Update Policy:**
-\`\`\`yaml
-Critical vulnerabilities: Patch within 24 hours
-High vulnerabilities: Patch within 7 days
-Medium vulnerabilities: Patch within 30 days
-Low vulnerabilities: Patch in next sprint
-\`\`\`
+**Update Policy:** \`\`\`yaml Critical vulnerabilities: Patch within 24 hours
+High vulnerabilities: Patch within 7 days Medium vulnerabilities: Patch within
+30 days Low vulnerabilities: Patch in next sprint \`\`\`
 
 **Required Actions:**
 
@@ -307,22 +275,17 @@ Low vulnerabilities: Patch in next sprint
 
 **Current State**: ✅ Firebase Authentication (industry-standard)
 
-**Authentication Controls:**
-\`\`\`python
+**Authentication Controls:** \`\`\`python
 
 # Firebase Auth verification
 
 from firebase_admin import auth
 
-async def verify_token(token: str) -> dict:
-try:
-decoded_token = auth.verify_id_token(token)
-return decoded_token
-except auth.InvalidIdTokenError:
-raise HTTPException(status_code=401, detail="Invalid token")
-except auth.ExpiredIdTokenError:
-raise HTTPException(status_code=401, detail="Token expired")
-\`\`\`
+async def verify_token(token: str) -> dict: try: decoded_token =
+auth.verify_id_token(token) return decoded_token except
+auth.InvalidIdTokenError: raise HTTPException(status_code=401, detail="Invalid
+token") except auth.ExpiredIdTokenError: raise HTTPException(status_code=401,
+detail="Token expired") \`\`\`
 
 **Required Improvements:**
 
@@ -339,24 +302,17 @@ raise HTTPException(status_code=401, detail="Token expired")
 
 **Current State**: ✅ Container signing with Cosign
 
-**Integrity Controls:**
-\`\`\`yaml
+**Integrity Controls:** \`\`\`yaml
 
 # Container Image Signing (GitHub Actions)
 
-- name: Sign container image
-  run: |
-  cosign sign --key env://COSIGN_PRIVATE_KEY \\
-  ${{ env.IMAGE_NAME }}@${{ steps.build.outputs.digest }}
+- name: Sign container image run: | cosign sign --key env://COSIGN_PRIVATE_KEY
+  \\ ${{ env.IMAGE_NAME }}@${{ steps.build.outputs.digest }}
 
 # SBOM generation
 
-- name: Generate SBOM
-  uses: anchore/sbom-action@v0
-  with:
-  image: ${{ env.IMAGE_NAME }}
-  format: cyclonedx
-  \`\`\`
+- name: Generate SBOM uses: anchore/sbom-action@v0 with: image:
+  ${{ env.IMAGE_NAME }} format: cyclonedx \`\`\`
 
 **Required Actions:**
 
@@ -372,8 +328,7 @@ raise HTTPException(status_code=401, detail="Token expired")
 
 **Current State**: ⚠️ Basic logging, needs security monitoring
 
-**Security Logging Requirements:**
-\`\`\`python
+**Security Logging Requirements:** \`\`\`python
 
 # Structured logging with security events
 
@@ -383,11 +338,12 @@ logger = structlog.get_logger()
 
 # Log security events
 
-logger.info("authentication_success", user_id=user_id, ip=client_ip, tenant_id=tenant_id)
-logger.warning("authentication_failure", attempted_username=username, ip=client_ip, reason="invalid_password")
-logger.error("authorization_failure", user_id=user_id, resource=resource, action=action, tenant_id=tenant_id)
-logger.critical("potential_attack", attack_type="sql_injection", ip=client_ip, user_agent=user_agent)
-\`\`\`
+logger.info("authentication_success", user_id=user_id, ip=client_ip,
+tenant_id=tenant_id) logger.warning("authentication_failure",
+attempted_username=username, ip=client_ip, reason="invalid_password")
+logger.error("authorization_failure", user_id=user_id, resource=resource,
+action=action, tenant_id=tenant_id) logger.critical("potential_attack",
+attack_type="sql_injection", ip=client_ip, user_agent=user_agent) \`\`\`
 
 **Security Events to Monitor:**
 
@@ -399,26 +355,18 @@ logger.critical("potential_attack", attack_type="sql_injection", ip=client_ip, u
 6. Configuration changes
 7. Admin actions
 
-**Alerting Rules:**
-\`\`\`yaml
+**Alerting Rules:** \`\`\`yaml
 
 # Cloud Monitoring Alert Policies
 
-- name: Multiple Failed Logins
-  condition: failed_login_count > 5 in 5 minutes
-  severity: WARNING
-  notification: slack, email
+- name: Multiple Failed Logins condition: failed_login_count > 5 in 5 minutes
+  severity: WARNING notification: slack, email
 
-- name: Privilege Escalation Attempt
-  condition: unauthorized_admin_access
-  severity: CRITICAL
-  notification: pagerduty, slack, email
+- name: Privilege Escalation Attempt condition: unauthorized_admin_access
+  severity: CRITICAL notification: pagerduty, slack, email
 
-- name: Unusual Data Access Pattern
-  condition: data_access_count > 1000 in 1 minute
-  severity: WARNING
-  notification: slack
-  \`\`\`
+- name: Unusual Data Access Pattern condition: data_access_count > 1000 in 1
+  minute severity: WARNING notification: slack \`\`\`
 
 **Required Actions:**
 
@@ -434,24 +382,19 @@ logger.critical("potential_attack", attack_type="sql_injection", ip=client_ip, u
 
 **Current State**: ✅ Low risk (no user-provided URLs)
 
-**SSRF Prevention:**
-\`\`\`python
+**SSRF Prevention:** \`\`\`python
 
 # If implementing webhooks or URL fetching
 
-import ipaddress
-from urllib.parse import urlparse
+import ipaddress from urllib.parse import urlparse
 
-ALLOWED_PROTOCOLS = ['https']
-BLOCKED_IP_RANGES = [
+ALLOWED_PROTOCOLS = ['https'] BLOCKED_IP_RANGES = [
 ipaddress.ip_network('10.0.0.0/8'), # Private
 ipaddress.ip_network('172.16.0.0/12'), # Private
 ipaddress.ip_network('192.168.0.0/16'), # Private
-ipaddress.ip_network('127.0.0.0/8'), # Localhost
-]
+ipaddress.ip_network('127.0.0.0/8'), # Localhost ]
 
-def validate_url(url: str) -> bool:
-parsed = urlparse(url)
+def validate_url(url: str) -> bool: parsed = urlparse(url)
 
     # Check protocol
     if parsed.scheme not in ALLOWED_PROTOCOLS:
@@ -633,11 +576,8 @@ name: Security Scanning
 
 on: [push, pull_request]
 
-jobs:
-sast:
-name: Static Analysis
-runs-on: ubuntu-latest
-steps: - uses: actions/checkout@v3
+jobs: sast: name: Static Analysis runs-on: ubuntu-latest steps: - uses:
+actions/checkout@v3
 
       # Python SAST
       - name: Bandit Security Scan
@@ -653,41 +593,23 @@ steps: - uses: actions/checkout@v3
         with:
           config: p/owasp-top-ten
 
-sca:
-name: Dependency Scan
-runs-on: ubuntu-latest
-steps: # Python dependencies - name: pip-audit
-run: pip-audit --desc
+sca: name: Dependency Scan runs-on: ubuntu-latest steps: # Python dependencies -
+name: pip-audit run: pip-audit --desc
 
       # Node.js dependencies
       - name: npm audit
         run: pnpm audit --audit-level=moderate
 
-secrets:
-name: Secret Detection
-runs-on: ubuntu-latest
-steps: - name: Gitleaks
+secrets: name: Secret Detection runs-on: ubuntu-latest steps: - name: Gitleaks
 uses: gitleaks/gitleaks-action@v2
 
-container:
-name: Container Security
-runs-on: ubuntu-latest
-steps: - name: Trivy Scan
-uses: aquasecurity/trivy-action@master
-with:
-image-ref: ${{ env.IMAGE_NAME }}
-severity: CRITICAL,HIGH
-exit-code: 1
+container: name: Container Security runs-on: ubuntu-latest steps: - name: Trivy
+Scan uses: aquasecurity/trivy-action@master with: image-ref:
+${{ env.IMAGE_NAME }} severity: CRITICAL,HIGH exit-code: 1
 
-iac:
-name: Infrastructure Scan
-runs-on: ubuntu-latest
-steps: - name: Checkov
-uses: bridgecrewio/checkov-action@master
-with:
-directory: infra/
-framework: terraform
-\`\`\`
+iac: name: Infrastructure Scan runs-on: ubuntu-latest steps: - name: Checkov
+uses: bridgecrewio/checkov-action@master with: directory: infra/ framework:
+terraform \`\`\`
 
 #### Penetration Testing Schedule
 
@@ -717,8 +639,7 @@ framework: terraform
 - [ ] Tools and access pre-configured
 - [ ] Communication channels established
 
-**2. Detection and Analysis**
-\`\`\`python
+**2. Detection and Analysis** \`\`\`python
 
 # Automated detection via Cloud Monitoring
 
@@ -728,12 +649,9 @@ framework: terraform
 
 # Example: Brute force detection
 
-SELECT COUNT(\*) as failed_attempts, user_id, ip_address
-FROM auth_logs
-WHERE event_type = 'login_failed'
-AND timestamp > TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 5 MINUTE)
-GROUP BY user_id, ip_address
-HAVING failed_attempts > 10
+SELECT COUNT(\*) as failed_attempts, user_id, ip_address FROM auth_logs WHERE
+event_type = 'login_failed' AND timestamp > TIMESTAMP_SUB(CURRENT_TIMESTAMP(),
+INTERVAL 5 MINUTE) GROUP BY user_id, ip_address HAVING failed_attempts > 10
 \`\`\`
 
 **3. Containment, Eradication, and Recovery**
@@ -811,9 +729,12 @@ HAVING failed_attempts > 10
 
 ### Project-Specific
 
-- [Security Best Practices](../docs/security/best-practices.md) _(to be created)_
-- [Incident Response Runbook](../docs/security/incident-response.md) _(to be created)_
-- [Security Architecture](../docs/architecture/security-architecture.md) _(to be created)_
+- [Security Best Practices](../docs/security/best-practices.md) _(to be
+  created)_
+- [Incident Response Runbook](../docs/security/incident-response.md) _(to be
+  created)_
+- [Security Architecture](../docs/architecture/security-architecture.md) _(to be
+  created)_
 
 ---
 

@@ -9,7 +9,8 @@
 - **Failed (non-blocking)**: 4 ❌
 - **Waiting**: 2 ⏳
 
-All failing checks have `continue-on-error: true` and don't block merge. However, these issues should be addressed for production readiness.
+All failing checks have `continue-on-error: true` and don't block merge.
+However, these issues should be addressed for production readiness.
 
 ---
 
@@ -17,10 +18,10 @@ All failing checks have `continue-on-error: true` and don't block merge. However
 
 ### 1. 🔴 **Accessibility Check** (FAILURE)
 
-**Priority**: HIGH
-**Location**: `apps/web/src/features/auth/components/LoginPage.tsx`
-**Workflow**: CI - Web Frontend → Accessibility Check job
-**Impact**: Affects UX, WCAG 2.1 compliance, and SEO
+**Priority**: HIGH **Location**:
+`apps/web/src/features/auth/components/LoginPage.tsx` **Workflow**: CI - Web
+Frontend → Accessibility Check job **Impact**: Affects UX, WCAG 2.1 compliance,
+and SEO
 
 #### Error Details
 
@@ -57,76 +58,76 @@ Wrap LoginPage content in semantic HTML landmarks:
 export function LoginPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const login = useAuthStore((state) => state.login);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const login = useAuthStore(state => state.login);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     login(
       {
-        id: "1",
+        id: '1',
         email,
-        name: "Demo User",
-        role: "doctor",
-        tenantId: "tenant-1",
+        name: 'Demo User',
+        role: 'doctor',
+        tenantId: 'tenant-1',
       },
-      "mock-token",
+      'mock-token'
     );
-    navigate("/dashboard");
+    navigate('/dashboard');
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-secondary-50">
+    <div className='flex min-h-screen items-center justify-center bg-secondary-50'>
       {/* Add <main> landmark */}
-      <main className="card w-full max-w-md p-8">
+      <main className='card w-full max-w-md p-8'>
         {/* Wrap heading and description in <header> region */}
-        <header className="mb-8">
-          <h1 className="mb-6 text-center text-3xl font-bold text-secondary-900">
-            {t("auth.welcomeBack")}
+        <header className='mb-8'>
+          <h1 className='mb-6 text-center text-3xl font-bold text-secondary-900'>
+            {t('auth.welcomeBack')}
           </h1>
-          <p className="text-center text-secondary-600">
-            {t("auth.loginToContinue")}
+          <p className='text-center text-secondary-600'>
+            {t('auth.loginToContinue')}
           </p>
         </header>
 
         {/* Form is already semantic, but wrap in <section> for clarity */}
         <section>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className='space-y-4'>
             <div>
               <label
-                htmlFor="email"
-                className="mb-2 block text-sm font-medium text-secondary-700"
+                htmlFor='email'
+                className='mb-2 block text-sm font-medium text-secondary-700'
               >
-                {t("auth.email")}
+                {t('auth.email')}
               </label>
               <input
-                id="email"
-                type="email"
+                id='email'
+                type='email'
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="input"
+                onChange={e => setEmail(e.target.value)}
+                className='input'
                 required
               />
             </div>
             <div>
               <label
-                htmlFor="password"
-                className="mb-2 block text-sm font-medium text-secondary-700"
+                htmlFor='password'
+                className='mb-2 block text-sm font-medium text-secondary-700'
               >
-                {t("auth.password")}
+                {t('auth.password')}
               </label>
               <input
-                id="password"
-                type="password"
+                id='password'
+                type='password'
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="input"
+                onChange={e => setPassword(e.target.value)}
+                className='input'
                 required
               />
             </div>
-            <button type="submit" className="btn-primary w-full py-3">
-              {t("auth.login")}
+            <button type='submit' className='btn-primary w-full py-3'>
+              {t('auth.login')}
             </button>
           </form>
         </section>
@@ -155,9 +156,8 @@ npx @axe-core/cli http://localhost:4173/login --exit
 
 ### 2. 🟡 **Contract Tests (Schemathesis)** (FAILURE)
 
-**Priority**: MEDIUM
-**Location**: `.github/workflows/ci-api.yml` (lines 270-322)
-**Impact**: Workflow design issue, not code quality problem
+**Priority**: MEDIUM **Location**: `.github/workflows/ci-api.yml` (lines
+270-322) **Impact**: Workflow design issue, not code quality problem
 
 #### Error Details
 
@@ -169,7 +169,8 @@ denied: requested access to the resource is denied
 
 #### Root Cause
 
-The `contract-tests` job tries to use `adyela-api:${{ github.sha }}` as a service container, but:
+The `contract-tests` job tries to use `adyela-api:${{ github.sha }}` as a
+service container, but:
 
 1. The image is built locally in the `docker-build` job
 2. It's never pushed to a container registry (Docker Hub, GCR, etc.)
@@ -262,18 +263,20 @@ contract-tests:
 
 **Option C: Move to CD pipeline (Future Enhancement)**
 
-Contract tests are more valuable in deployment pipelines where the actual Docker image is published. Consider moving this to `cd-dev.yml` or `cd-staging.yml` where the image is available in GCR.
+Contract tests are more valuable in deployment pipelines where the actual Docker
+image is published. Consider moving this to `cd-dev.yml` or `cd-staging.yml`
+where the image is available in GCR.
 
 #### Recommended Action
 
-Implement **Option B** to fix contract tests in CI, and plan **Option C** for the CD pipeline.
+Implement **Option B** to fix contract tests in CI, and plan **Option C** for
+the CD pipeline.
 
 ---
 
 ### 3. 🟢 **Security Scan (Terrascan)** (FAILURE)
 
-**Priority**: LOW
-**Location**: `.github/workflows/ci-infra.yml` (lines 102-108)
+**Priority**: LOW **Location**: `.github/workflows/ci-infra.yml` (lines 102-108)
 **Impact**: Informational, expected with minimal Terraform
 
 #### Root Cause
@@ -302,9 +305,9 @@ Add error handling to match tfsec and Checkov:
   uses: tenable/terrascan-action@main
   continue-on-error: true # ← Add this
   with:
-    iac_type: "terraform"
+    iac_type: 'terraform'
     iac_dir: ${{ env.WORKING_DIR }}
-    policy_type: "gcp"
+    policy_type: 'gcp'
     sarif_upload: true
     non_recursive: false
     verbose: true
@@ -325,8 +328,7 @@ Alternatively, add `soft_fail` if the action supports it (check action docs).
 
 ### 4. 🟢 **Terraform Plan (Dev)** (FAILURE)
 
-**Priority**: LOW
-**Location**: `.github/workflows/ci-infra.yml` (lines 110-183)
+**Priority**: LOW **Location**: `.github/workflows/ci-infra.yml` (lines 110-183)
 **Impact**: Expected behavior for fork PRs, requires GCP secrets
 
 #### Error Details
@@ -356,7 +358,9 @@ plan-dev:
   runs-on: ubuntu-latest
   needs: [validate, security-scan]
   # Only run if secrets are available (not on forks)
-  if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+  if:
+    github.event_name == 'pull_request' &&
+    github.event.pull_request.head.repo.full_name == github.repository
   environment: development
   steps:
     # ... rest of the steps
@@ -366,7 +370,8 @@ Apply the same condition to `plan-staging` and `plan-production`.
 
 #### Alternative: Skip authentication for validation-only
 
-If you only want to validate Terraform syntax (not plan actual changes), you can skip the GCP auth steps:
+If you only want to validate Terraform syntax (not plan actual changes), you can
+skip the GCP auth steps:
 
 ```yaml
 plan-dev:
@@ -398,7 +403,8 @@ plan-dev:
 
 #### Recommended Action
 
-Implement the conditional check to skip Terraform plans on fork PRs while keeping full validation.
+Implement the conditional check to skip Terraform plans on fork PRs while
+keeping full validation.
 
 ---
 
@@ -580,7 +586,5 @@ After pushing PR:
 
 ---
 
-**Document Version**: 1.0
-**Last Updated**: 2025-10-04
-**Author**: Claude Code
+**Document Version**: 1.0 **Last Updated**: 2025-10-04 **Author**: Claude Code
 **Status**: Ready for Implementation

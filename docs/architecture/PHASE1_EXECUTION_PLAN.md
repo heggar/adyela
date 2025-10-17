@@ -2,7 +2,9 @@
 
 ## 📋 **Resumen de la Fase 1**
 
-Esta fase se enfoca en resolver los problemas críticos identificados en el diagnóstico, comenzando por el backend que no responde y siguiendo con la verificación completa de todos los componentes.
+Esta fase se enfoca en resolver los problemas críticos identificados en el
+diagnóstico, comenzando por el backend que no responde y siguiendo con la
+verificación completa de todos los componentes.
 
 ---
 
