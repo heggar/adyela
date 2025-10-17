@@ -22,7 +22,7 @@ export function OAuthButtons() {
       name: t("auth.continueWithFacebook"),
       icon: FacebookIcon,
       className:
-        "bg-[#1877F2] text-white hover:bg-[#166FE5] focus:ring-2 focus:ring-[#1877F2] focus:ring-offset-2",
+        "bg-[#0D47A1] text-white hover:bg-[#1565C0] focus:ring-2 focus:ring-[#0D47A1] focus:ring-offset-2",
     },
     {
       id: "apple" as const,

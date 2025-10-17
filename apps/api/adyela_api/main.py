@@ -60,7 +60,7 @@ async def lifespan(app: FastAPI):
     try:
         import firebase_admin
         from firebase_admin import credentials
-        
+
         # Check if Firebase is already initialized
         if not firebase_admin._apps:
             if settings.firebase_credentials_path:
@@ -69,10 +69,13 @@ async def lifespan(app: FastAPI):
             else:
                 # Use default credentials (GCP service account)
                 cred = credentials.ApplicationDefault()
-            
-            firebase_admin.initialize_app(cred, {
-                'projectId': settings.firebase_project_id,
-            })
+
+            firebase_admin.initialize_app(
+                cred,
+                {
+                    "projectId": settings.firebase_project_id,
+                },
+            )
             logger.info("firebase_admin_initialized", project_id=settings.firebase_project_id)
         else:
             logger.info("firebase_admin_already_initialized")
@@ -114,7 +117,7 @@ async def rate_limit_exceeded_handler(request: Request, exc: RateLimitExceeded) 
     )
 
 
-app.add_exception_handler(RateLimitExceeded, rate_limit_exceeded_handler)
+app.add_exception_handler(RateLimitExceeded, rate_limit_exceeded_handler)  # type: ignore[arg-type]
 
 # Add CORS middleware
 app.add_middleware(
@@ -163,6 +166,7 @@ async def global_exception_handler(request: Request, exc: Exception) -> JSONResp
 
 # Include health check routes directly (no prefix)
 from adyela_api.presentation.api.v1.endpoints import health
+
 app.include_router(health.router, tags=["health"])
 
 # Include other routers with /api prefix

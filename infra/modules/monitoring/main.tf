@@ -380,7 +380,7 @@ resource "google_monitoring_dashboard" "main_dashboard" {
                       }
                     }
                   }
-                  plotType = "LINE"
+                  plotType   = "LINE"
                   targetAxis = "Y1"
                 },
                 {
@@ -394,7 +394,7 @@ resource "google_monitoring_dashboard" "main_dashboard" {
                       }
                     }
                   }
-                  plotType = "LINE"
+                  plotType   = "LINE"
                   targetAxis = "Y1"
                 },
                 {
@@ -408,7 +408,7 @@ resource "google_monitoring_dashboard" "main_dashboard" {
                       }
                     }
                   }
-                  plotType = "LINE"
+                  plotType   = "LINE"
                   targetAxis = "Y1"
                 }
               ]
