@@ -82,7 +82,7 @@ export const useAuthStore = create<AuthState>()(
               Authorization: `Bearer ${firebaseToken}`,
               "Content-Type": "application/json",
             },
-            body: JSON.stringify(oauthData),
+            body: JSON.stringify({ user_data: oauthData }),
           });
 
           if (!response.ok) {
