@@ -13,15 +13,15 @@ from .ports import (
 from .use_cases.appointments import CreateAppointmentUseCase
 
 __all__ = [
-    # Ports
-    "TenantRepository",
-    "PatientRepository",
-    "PractitionerRepository",
     "AppointmentRepository",
     "AuthenticationService",
-    "NotificationService",
-    "VideoCallService",
     "CacheService",
     # Use Cases
     "CreateAppointmentUseCase",
+    "NotificationService",
+    "PatientRepository",
+    "PractitionerRepository",
+    # Ports
+    "TenantRepository",
+    "VideoCallService",
 ]

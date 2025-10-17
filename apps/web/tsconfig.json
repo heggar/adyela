@@ -37,6 +37,6 @@
       "@/i18n/*": ["./src/i18n/*"]
     }
   },
-  "include": ["src"],
+  "include": ["src", "tests", "vitest.config.ts"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

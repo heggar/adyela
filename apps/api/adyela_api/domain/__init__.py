@@ -13,23 +13,23 @@ from .exceptions import (
 from .value_objects import Address, DateTimeRange, Email, PhoneNumber, TenantId
 
 __all__ = [
-    # Entities
-    "Tenant",
-    "Patient",
-    "Practitioner",
-    "Appointment",
-    # Value Objects
-    "Email",
-    "PhoneNumber",
-    "TenantId",
     "Address",
+    "Appointment",
+    "AuthenticationError",
+    "AuthorizationError",
+    "BusinessRuleViolationError",
+    "ConflictError",
     "DateTimeRange",
     # Exceptions
     "DomainException",
+    # Value Objects
+    "Email",
     "EntityNotFoundError",
+    "Patient",
+    "PhoneNumber",
+    "Practitioner",
+    # Entities
+    "Tenant",
+    "TenantId",
     "ValidationError",
-    "AuthenticationError",
-    "AuthorizationError",
-    "ConflictError",
-    "BusinessRuleViolationError",
 ]

@@ -101,6 +101,7 @@ target-version = "py312"
 
 [tool.ruff.lint]
 select = [
+    # Core rules
     "E",  # pycodestyle errors
     "W",  # pycodestyle warnings
     "F",  # pyflakes
@@ -108,11 +109,57 @@ select = [
     "B",  # flake8-bugbear
     "C4", # flake8-comprehensions
     "UP", # pyupgrade
+    
+    # Security
+    "S",  # flake8-bandit (security)
+    "TCH", # flake8-type-checking
+    
+    # Performance
+    "PERF", # perflint
+    
+    # Code quality
+    "SIM", # flake8-simplify
+    "FURB", # refurb (modernization)
+    "RUF", # ruff-specific rules
+    
+    # Documentation
+    "D",  # pydocstyle
+    
+    # Additional quality rules
+    "ARG001", # unused-function-args
+    "PTH", # flake8-use-pathlib
+    "ERA", # eradicate (remove commented code)
+    "TRY", # tryceratops (better exception handling)
+    "FLY", # flynt (f-string conversion)
+    "PL",  # pylint
+    "NPY", # numpy
+    "AIR", # airflow
 ]
 ignore = [
     "E501", # line too long, handled by black
     "B008", # do not perform function calls in argument defaults
     "C901", # too complex
+    "W191", # indentation contains tabs
+    "PLR0913", # too many arguments
+    "PLR0912", # too many branches
+    "PLR0915", # too many statements
+    "TRY003", # avoid specifying long messages outside exception class
+    "D100", # Missing docstring in public module
+    "D104", # Missing docstring in public package
+    "D105", # Missing docstring in magic method
+    "D107", # Missing docstring in __init__
+    "S101", # Use of assert detected
+    "S311", # Standard pseudo-random generators are not suitable for cryptographic purposes
+    "S603", # subprocess call - check for execution of untrusted input
+    "S607", # Starting a process with a partial executable path
+    "ARG001", # unused function argument (common in framework callbacks/handlers)
+    "TRY300", # consider moving statement to else block (stylistic preference)
+    "TRY301", # abstract raise to inner function (overly strict)
+    "TRY401", # redundant exception in logging.exception (stylistic preference)
+    "PLR2004", # magic value in comparison (acceptable for simple validations)
+    "D200", # one-line docstring should fit on one line (formatting preference)
+    "D205", # 1 blank line required between summary and description (formatting preference)
+    "S104", # binding to all interfaces (required for Docker/Cloud Run)
 ]
 
 [tool.ruff.lint.per-file-ignores]
@@ -123,11 +170,29 @@ python_version = "3.12"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+strict_equality = true
+show_error_codes = true
 plugins = ["pydantic.mypy"]
 
 [[tool.mypy.overrides]]
 module = "tests.*"
 disallow_untyped_defs = false
+
+[[tool.mypy.overrides]]
+module = "google.cloud.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "firebase_admin.*"
+ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 minversion = "8.0"
@@ -157,6 +222,9 @@ exclude_lines = [
     "class .*\\bProtocol\\):",
     "@(abc\\.)?abstractmethod",
 ]
+fail_under = 80
+show_missing = true
+precision = 2
 
 [build-system]
 requires = ["poetry-core"]

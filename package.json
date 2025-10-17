@@ -32,7 +32,13 @@
     "version-packages": "changeset version",
     "release": "turbo run build && changeset publish",
     "quality": "bash scripts/quality-checks.sh",
+    "quality:quick": "pnpm lint && pnpm type-check && pnpm format:check",
+    "quality:security": "gitleaks detect --source . --config .gitleaks.toml && pnpm audit --audit-level=moderate",
+    "quality:coverage": "pnpm test:coverage && echo 'Coverage reports generated in apps/*/coverage and apps/*/htmlcov'",
     "lighthouse": "bash scripts/lighthouse-audit.sh",
+    "audit:fix": "pnpm audit --fix",
+    "deps:update": "pnpm update --interactive",
+    "deps:check": "pnpm outdated",
     "api-contract": "bash scripts/api-contract-tests.sh"
   },
   "devDependencies": {
@@ -58,7 +64,21 @@
     }
   },
   "lint-staged": {
-    "*.{ts,tsx,js,jsx,json,md,yaml,yml}": [
+    "apps/web/**/*.{ts,tsx,js,jsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "apps/api/**/*.py": [
+      "bash -c 'cd apps/api && poetry run ruff check --fix .'",
+      "bash -c 'cd apps/api && poetry run black .'"
+    ],
+    "infra/**/*.tf": [
+      "terraform fmt"
+    ],
+    "*.{json,md,yaml,yml}": [
+      "prettier --write"
+    ],
+    "*.{ts,tsx,js,jsx}": [
       "prettier --write"
     ]
   }

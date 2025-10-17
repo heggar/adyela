@@ -1,9 +1,9 @@
-import { useTranslation } from "react-i18next";
-import { useOAuthLogin } from "../hooks/useOAuthLogin";
-import { GoogleIcon } from "@/components/ui/icons/GoogleIcon";
-import { FacebookIcon } from "@/components/ui/icons/FacebookIcon";
-import { AppleIcon } from "@/components/ui/icons/AppleIcon";
-import { MicrosoftIcon } from "@/components/ui/icons/MicrosoftIcon";
+import { useTranslation } from 'react-i18next';
+import { useOAuthLogin } from '../hooks/useOAuthLogin';
+import { GoogleIcon } from '@/components/ui/icons/GoogleIcon';
+import { FacebookIcon } from '@/components/ui/icons/FacebookIcon';
+import { AppleIcon } from '@/components/ui/icons/AppleIcon';
+import { MicrosoftIcon } from '@/components/ui/icons/MicrosoftIcon';
 
 export function OAuthButtons() {
   const { t } = useTranslation();
@@ -11,37 +11,36 @@ export function OAuthButtons() {
 
   const providers = [
     {
-      id: "google" as const,
-      name: t("auth.continueWithGoogle"),
+      id: 'google' as const,
+      name: t('auth.continueWithGoogle'),
       icon: GoogleIcon,
-      className:
-        "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50",
+      className: 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50',
     },
     {
-      id: "facebook" as const,
-      name: t("auth.continueWithFacebook"),
+      id: 'facebook' as const,
+      name: t('auth.continueWithFacebook'),
       icon: FacebookIcon,
       className:
-        "bg-[#0D47A1] text-white hover:bg-[#1565C0] focus:ring-2 focus:ring-[#0D47A1] focus:ring-offset-2",
+        'bg-[#0D47A1] text-white hover:bg-[#1565C0] focus:ring-2 focus:ring-[#0D47A1] focus:ring-offset-2',
     },
     {
-      id: "apple" as const,
-      name: t("auth.continueWithApple"),
+      id: 'apple' as const,
+      name: t('auth.continueWithApple'),
       icon: AppleIcon,
-      className: "bg-black text-white hover:bg-gray-800",
+      className: 'bg-black text-white hover:bg-gray-800',
     },
     {
-      id: "microsoft" as const,
-      name: t("auth.continueWithMicrosoft"),
+      id: 'microsoft' as const,
+      name: t('auth.continueWithMicrosoft'),
       icon: MicrosoftIcon,
       className:
-        "bg-[#0078D4] text-white hover:bg-[#106EBE] focus:ring-2 focus:ring-[#0078D4] focus:ring-offset-2",
+        'bg-[#0078D4] text-white hover:bg-[#106EBE] focus:ring-2 focus:ring-[#0078D4] focus:ring-offset-2',
     },
   ];
 
   return (
-    <div className="space-y-3">
-      {providers.map((provider) => {
+    <div className='space-y-3'>
+      {providers.map(provider => {
         const IconComponent = provider.icon;
         return (
           <button
@@ -55,16 +54,16 @@ export function OAuthButtons() {
             `}
             data-testid={`oauth-${provider.id}-button`}
           >
-            <IconComponent className="w-5 h-5" />
-            {loading ? t("auth.signingIn") : provider.name}
+            <IconComponent className='w-5 h-5' />
+            {loading ? t('auth.signingIn') : provider.name}
           </button>
         );
       })}
 
       {error && (
-        <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
-          <p className="text-sm text-red-600" data-testid="oauth-error">
-            {t("auth.oauthError")}
+        <div className='mt-3 p-3 bg-red-50 border border-red-200 rounded-lg'>
+          <p className='text-sm text-red-600' data-testid='oauth-error'>
+            {t('auth.oauthError')}
           </p>
         </div>
       )}

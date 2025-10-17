@@ -7,10 +7,10 @@ import {
   OAuthProvider,
   UserCredential,
   User,
-} from "firebase/auth";
-import { auth } from "@/config/firebase";
+} from 'firebase/auth';
+import { auth } from '@/config/firebase';
 
-export type OAuthProviderType = "google" | "facebook" | "apple" | "microsoft";
+export type OAuthProviderType = 'google' | 'facebook' | 'apple' | 'microsoft';
 
 export interface OAuthUserData {
   uid: string;
@@ -23,14 +23,14 @@ export interface OAuthUserData {
 
 // Helper function to check if error is a Firebase auth error
 const isFirebaseAuthError = (error: unknown): error is { code: string } => {
-  return error !== null && typeof error === "object" && "code" in error;
+  return error !== null && typeof error === 'object' && 'code' in error;
 };
 
 export const authService = {
   signInWithGoogle: async (): Promise<UserCredential> => {
     const provider = new GoogleAuthProvider();
-    provider.addScope("email");
-    provider.addScope("profile");
+    provider.addScope('email');
+    provider.addScope('profile');
 
     try {
       // Try popup first, fallback to redirect if blocked
@@ -38,13 +38,12 @@ export const authService = {
     } catch (error: unknown) {
       if (
         isFirebaseAuthError(error) &&
-        (error.code === "auth/popup-blocked" ||
-          error.code === "auth/popup-closed-by-user")
+        (error.code === 'auth/popup-blocked' || error.code === 'auth/popup-closed-by-user')
       ) {
         // Fallback to redirect if popup is blocked
         await signInWithRedirect(auth, provider);
         // This will redirect the page, so we won't reach here
-        throw new Error("Redirecting to authentication...");
+        throw new Error('Redirecting to authentication...');
       }
       throw error;
     }
@@ -52,59 +51,56 @@ export const authService = {
 
   signInWithFacebook: async (): Promise<UserCredential> => {
     const provider = new FacebookAuthProvider();
-    provider.addScope("email");
-    provider.addScope("public_profile");
+    provider.addScope('email');
+    provider.addScope('public_profile');
 
     try {
       return await signInWithPopup(auth, provider);
     } catch (error: unknown) {
       if (
         isFirebaseAuthError(error) &&
-        (error.code === "auth/popup-blocked" ||
-          error.code === "auth/popup-closed-by-user")
+        (error.code === 'auth/popup-blocked' || error.code === 'auth/popup-closed-by-user')
       ) {
         await signInWithRedirect(auth, provider);
-        throw new Error("Redirecting to authentication...");
+        throw new Error('Redirecting to authentication...');
       }
       throw error;
     }
   },
 
   signInWithApple: async (): Promise<UserCredential> => {
-    const provider = new OAuthProvider("apple.com");
-    provider.addScope("email");
-    provider.addScope("name");
+    const provider = new OAuthProvider('apple.com');
+    provider.addScope('email');
+    provider.addScope('name');
 
     try {
       return await signInWithPopup(auth, provider);
     } catch (error: unknown) {
       if (
         isFirebaseAuthError(error) &&
-        (error.code === "auth/popup-blocked" ||
-          error.code === "auth/popup-closed-by-user")
+        (error.code === 'auth/popup-blocked' || error.code === 'auth/popup-closed-by-user')
       ) {
         await signInWithRedirect(auth, provider);
-        throw new Error("Redirecting to authentication...");
+        throw new Error('Redirecting to authentication...');
       }
       throw error;
     }
   },
 
   signInWithMicrosoft: async (): Promise<UserCredential> => {
-    const provider = new OAuthProvider("microsoft.com");
-    provider.addScope("email");
-    provider.addScope("profile");
+    const provider = new OAuthProvider('microsoft.com');
+    provider.addScope('email');
+    provider.addScope('profile');
 
     try {
       return await signInWithPopup(auth, provider);
     } catch (error: unknown) {
       if (
         isFirebaseAuthError(error) &&
-        (error.code === "auth/popup-blocked" ||
-          error.code === "auth/popup-closed-by-user")
+        (error.code === 'auth/popup-blocked' || error.code === 'auth/popup-closed-by-user')
       ) {
         await signInWithRedirect(auth, provider);
-        throw new Error("Redirecting to authentication...");
+        throw new Error('Redirecting to authentication...');
       }
       throw error;
     }
@@ -115,7 +111,7 @@ export const authService = {
     try {
       return await getRedirectResult(auth);
     } catch (error) {
-      console.error("Error handling redirect result:", error);
+      console.error('Error handling redirect result:', error);
       return null;
     }
   },

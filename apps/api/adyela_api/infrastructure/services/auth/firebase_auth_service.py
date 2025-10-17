@@ -23,7 +23,7 @@ class FirebaseAuthService(AuthenticationService):
                 "roles": decoded_token.get("roles", []),
             }
         except Exception as e:
-            raise AuthenticationError(f"Invalid or expired token: {str(e)}") from e
+            raise AuthenticationError(f"Invalid or expired token: {e!s}") from e
 
     async def create_custom_token(self, user_id: str) -> str:
         """Create a custom Firebase token for a user."""
@@ -31,4 +31,4 @@ class FirebaseAuthService(AuthenticationService):
             custom_token = auth.create_custom_token(user_id)
             return str(custom_token.decode("utf-8"))
         except Exception as e:
-            raise AuthenticationError(f"Failed to create custom token: {str(e)}") from e
+            raise AuthenticationError(f"Failed to create custom token: {e!s}") from e

@@ -79,7 +79,7 @@ async def lifespan(app: FastAPI):
         else:
             logger.info("firebase_admin_already_initialized")
     except Exception as e:
-        logger.error("firebase_admin_initialization_failed", error=str(e))
+        logger.exception("firebase_admin_initialization_failed", error=str(e))
         raise
 
     # Initialize database connections

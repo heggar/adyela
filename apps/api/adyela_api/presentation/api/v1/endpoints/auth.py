@@ -22,8 +22,7 @@ async def sync_oauth_user(
     authorization: str = Header(..., description="Firebase ID token"),
     auth_service: FirebaseAuthService = Depends(),
 ) -> OAuthSyncResponse:
-    """
-    Sync OAuth user with backend and create/update user profile.
+    """Sync OAuth user with backend and create/update user profile.
 
     This endpoint:
     1. Verifies the Firebase ID token
@@ -77,11 +76,11 @@ async def sync_oauth_user(
         )
 
     except Exception as e:
-        logger.error(
+        logger.exception(
             "Error syncing OAuth user", extra={"error": str(e), "uid": request.user_data.uid}
         )
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail=f"Authentication failed: {str(e)}"
+            status_code=status.HTTP_401_UNAUTHORIZED, detail=f"Authentication failed: {e!s}"
         ) from e
 
 
@@ -90,9 +89,7 @@ async def get_user_profile(
     authorization: str = Header(..., description="Firebase ID token"),
     auth_service: FirebaseAuthService = Depends(),
 ) -> UserProfile:
-    """
-    Get current user profile.
-    """
+    """Get current user profile."""
     try:
         token = authorization.replace("Bearer ", "")
         claims = await auth_service.verify_token(token)
@@ -112,9 +109,9 @@ async def get_user_profile(
         )
 
     except Exception as e:
-        logger.error("Error getting user profile", extra={"error": str(e)})
+        logger.exception("Error getting user profile", extra={"error": str(e)})
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail=f"Authentication failed: {str(e)}"
+            status_code=status.HTTP_401_UNAUTHORIZED, detail=f"Authentication failed: {e!s}"
         ) from e
 
 
@@ -122,8 +119,7 @@ async def get_user_profile(
 async def logout_user(
     authorization: str = Header(..., description="Firebase ID token")
 ) -> dict[str, str]:
-    """
-    Logout user (client-side token invalidation).
+    """Logout user (client-side token invalidation).
 
     Note: Firebase tokens are stateless, so logout is primarily handled
     on the client side by removing the token from storage.
@@ -139,7 +135,7 @@ async def logout_user(
         return {"message": "Logged out successfully"}
 
     except Exception as e:
-        logger.error("Error during logout", extra={"error": str(e)})
+        logger.exception("Error during logout", extra={"error": str(e)})
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Logout failed"
         ) from e

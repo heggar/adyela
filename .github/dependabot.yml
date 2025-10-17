@@ -1,0 +1,188 @@
+version: 2
+updates:
+  # Root package.json (monorepo)
+  - package-ecosystem: 'npm'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+      day: 'monday'
+      time: '09:00'
+    open-pull-requests-limit: 10
+    reviewers:
+      - 'hevergonzalezgarcia'
+    assignees:
+      - 'hevergonzalezgarcia'
+    commit-message:
+      prefix: 'chore'
+      include: 'scope'
+    groups:
+      # Group all non-major updates together
+      non-major-updates:
+        patterns:
+          - '*'
+        update-types:
+          - 'minor'
+          - 'patch'
+      # Group major updates separately
+      major-updates:
+        patterns:
+          - '*'
+        update-types:
+          - 'major'
+    ignore:
+      # Ignore major version updates for critical dependencies
+      - dependency-name: 'react'
+        update-types: ['version-update:semver-major']
+      - dependency-name: 'react-dom'
+        update-types: ['version-update:semver-major']
+      - dependency-name: 'typescript'
+        update-types: ['version-update:semver-major']
+
+  # Web app package.json
+  - package-ecosystem: 'npm'
+    directory: '/apps/web'
+    schedule:
+      interval: 'weekly'
+      day: 'monday'
+      time: '09:00'
+    open-pull-requests-limit: 5
+    reviewers:
+      - 'hevergonzalezgarcia'
+    assignees:
+      - 'hevergonzalezgarcia'
+    commit-message:
+      prefix: 'chore'
+      include: 'scope'
+    groups:
+      # Group testing dependencies
+      testing:
+        patterns:
+          - '@testing-library/*'
+          - '@vitest/*'
+          - 'vitest'
+          - 'jsdom'
+      # Group build tools
+      build-tools:
+        patterns:
+          - 'vite*'
+          - '@vitejs/*'
+          - 'esbuild'
+          - 'rollup'
+      # Group linting tools
+      linting:
+        patterns:
+          - 'eslint*'
+          - '@typescript-eslint/*'
+          - 'prettier'
+          - 'husky'
+          - 'lint-staged'
+    ignore:
+      # Ignore major updates for critical frontend dependencies
+      - dependency-name: 'react'
+        update-types: ['version-update:semver-major']
+      - dependency-name: 'react-dom'
+        update-types: ['version-update:semver-major']
+      - dependency-name: 'react-router-dom'
+        update-types: ['version-update:semver-major']
+
+  # API Python dependencies
+  - package-ecosystem: 'pip'
+    directory: '/apps/api'
+    schedule:
+      interval: 'weekly'
+      day: 'monday'
+      time: '09:00'
+    open-pull-requests-limit: 5
+    reviewers:
+      - 'hevergonzalezgarcia'
+    assignees:
+      - 'hevergonzalezgarcia'
+    commit-message:
+      prefix: 'chore'
+      include: 'scope'
+    groups:
+      # Group FastAPI ecosystem
+      fastapi:
+        patterns:
+          - 'fastapi'
+          - 'uvicorn'
+          - 'pydantic'
+          - 'pydantic-settings'
+      # Group testing dependencies
+      testing:
+        patterns:
+          - 'pytest*'
+          - 'httpx'
+          - 'pytest-asyncio'
+          - 'pytest-cov'
+      # Group linting and formatting
+      code-quality:
+        patterns:
+          - 'ruff'
+          - 'black'
+          - 'mypy'
+          - 'pre-commit'
+      # Group security and monitoring
+      security:
+        patterns:
+          - 'bandit'
+          - 'safety'
+          - 'structlog'
+    ignore:
+      # Ignore major updates for critical Python dependencies
+      - dependency-name: 'fastapi'
+        update-types: ['version-update:semver-major']
+      - dependency-name: 'pydantic'
+        update-types: ['version-update:semver-major']
+      - dependency-name: 'python'
+        update-types: ['version-update:semver-major']
+
+  # GitHub Actions
+  - package-ecosystem: 'github-actions'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+      day: 'monday'
+      time: '09:00'
+    open-pull-requests-limit: 3
+    reviewers:
+      - 'hevergonzalezgarcia'
+    assignees:
+      - 'hevergonzalezgarcia'
+    commit-message:
+      prefix: 'ci'
+      include: 'scope'
+    groups:
+      # Group all GitHub Actions updates
+      github-actions:
+        patterns:
+          - '*'
+        update-types:
+          - 'minor'
+          - 'patch'
+          - 'major'
+
+  # Terraform modules (if using Terraform registry)
+  - package-ecosystem: 'terraform'
+    directory: '/infra'
+    schedule:
+      interval: 'monthly'
+      day: 'monday'
+      time: '09:00'
+    open-pull-requests-limit: 3
+    reviewers:
+      - 'hevergonzalezgarcia'
+    assignees:
+      - 'hevergonzalezgarcia'
+    commit-message:
+      prefix: 'infra'
+      include: 'scope'
+    groups:
+      # Group all Terraform updates
+      terraform:
+        patterns:
+          - '*'
+        update-types:
+          - 'minor'
+          - 'patch'
+          - 'major'

@@ -2,13 +2,16 @@
 
 from __future__ import annotations
 
-import builtins
-
-from google.cloud import firestore  # type: ignore
+from typing import TYPE_CHECKING
 
 from adyela_api.application.ports import AppointmentRepository
 from adyela_api.config import COLLECTIONS
 from adyela_api.domain import Appointment
+
+if TYPE_CHECKING:
+    import builtins
+
+    from google.cloud import firestore  # type: ignore
 
 
 class FirestoreAppointmentRepository(AppointmentRepository):

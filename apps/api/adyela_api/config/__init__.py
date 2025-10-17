@@ -12,13 +12,13 @@ from .constants import (
 from .settings import Settings, get_settings
 
 __all__ = [
-    "Settings",
-    "get_settings",
+    "CACHE_KEYS",
+    "CACHE_TTL",
+    "COLLECTIONS",
     "AppointmentStatus",
     "AppointmentType",
     "NotificationType",
+    "Settings",
     "UserRole",
-    "COLLECTIONS",
-    "CACHE_KEYS",
-    "CACHE_TTL",
+    "get_settings",
 ]

@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { useAuthStore } from "@/store/authStore";
-import { authService, OAuthProviderType } from "../services/authService";
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuthStore } from '@/store/authStore';
+import { authService, OAuthProviderType } from '../services/authService';
 
 export const useOAuthLogin = () => {
   const [loading, setLoading] = useState(false);
@@ -16,12 +16,12 @@ export const useOAuthLogin = () => {
         const result = await authService.handleRedirectResult();
         if (result) {
           const token = await authService.getIdToken(result.user);
-          const userData = authService.extractUserData(result.user, "google"); // Default to google, could be improved
+          const userData = authService.extractUserData(result.user, 'google'); // Default to google, could be improved
           await syncWithBackend(token, userData);
-          navigate("/dashboard");
+          navigate('/dashboard');
         }
       } catch (err) {
-        console.error("Error handling redirect result:", err);
+        console.error('Error handling redirect result:', err);
       }
     };
 
@@ -35,16 +35,16 @@ export const useOAuthLogin = () => {
     try {
       let result;
       switch (provider) {
-        case "google":
+        case 'google':
           result = await authService.signInWithGoogle();
           break;
-        case "facebook":
+        case 'facebook':
           result = await authService.signInWithFacebook();
           break;
-        case "apple":
+        case 'apple':
           result = await authService.signInWithApple();
           break;
-        case "microsoft":
+        case 'microsoft':
           result = await authService.signInWithMicrosoft();
           break;
         default:
@@ -55,11 +55,10 @@ export const useOAuthLogin = () => {
       const userData = authService.extractUserData(result.user, provider);
 
       await syncWithBackend(token, userData);
-      navigate("/dashboard");
+      navigate('/dashboard');
     } catch (err: unknown) {
-      console.error("OAuth login error:", err);
-      const errorMessage =
-        err instanceof Error ? err.message : "Error during authentication";
+      console.error('OAuth login error:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Error during authentication';
       setError(errorMessage);
     } finally {
       setLoading(false);

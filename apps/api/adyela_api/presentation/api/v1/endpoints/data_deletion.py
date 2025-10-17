@@ -24,15 +24,14 @@ deletion_requests: dict[str, dict[str, str | DataDeletionStatus]] = {}
 
 
 async def process_data_deletion(request_id: str, email: str, user_id: str | None = None) -> None:
-    """
-    Background task to process data deletion.
+    """Background task to process data deletion.
     This is a placeholder implementation - in production, this would:
     1. Delete user data from Firestore
     2. Delete user data from Cloud Storage
     3. Delete audit logs (with retention policy)
     4. Delete user from Firebase Auth
     5. Send confirmation email
-    6. Log the deletion for compliance
+    6. Log the deletion for compliance.
     """
     try:
         logger.info(f"Starting data deletion process for request {request_id}")
@@ -63,12 +62,12 @@ async def process_data_deletion(request_id: str, email: str, user_id: str | None
             deletion_requests[request_id]["message"] = "Data deletion completed successfully"
 
     except Exception as e:
-        logger.error(f"Data deletion failed for request {request_id}: {str(e)}")
+        logger.exception(f"Data deletion failed for request {request_id}: {e!s}")
 
         # Update status to failed
         if request_id in deletion_requests:
             deletion_requests[request_id]["status"] = DataDeletionStatus.FAILED
-            deletion_requests[request_id]["message"] = f"Data deletion failed: {str(e)}"
+            deletion_requests[request_id]["message"] = f"Data deletion failed: {e!s}"
 
 
 @router.post("/request", response_model=DataDeletionResponse, status_code=status.HTTP_201_CREATED)
@@ -77,8 +76,7 @@ async def request_data_deletion(
     background_tasks: BackgroundTasks,
     auth_service: AuthenticationService = Depends(FirebaseAuthService),
 ) -> DataDeletionResponse:
-    """
-    Request deletion of user data.
+    """Request deletion of user data.
 
     This endpoint allows users to request deletion of their personal data
     in compliance with GDPR, CCPA, and other privacy regulations.
@@ -112,18 +110,16 @@ async def request_data_deletion(
         )
 
     except Exception as e:
-        logger.error(f"Failed to create data deletion request: {str(e)}")
+        logger.exception(f"Failed to create data deletion request: {e!s}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to process data deletion request: {str(e)}",
+            detail=f"Failed to process data deletion request: {e!s}",
         ) from e
 
 
 @router.get("/status/{request_id}", response_model=DataDeletionStatusResponse)
 async def get_deletion_status(request_id: str) -> DataDeletionStatusResponse:
-    """
-    Get the status of a data deletion request.
-    """
+    """Get the status of a data deletion request."""
     if request_id not in deletion_requests:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Data deletion request not found"
@@ -144,8 +140,7 @@ async def get_deletion_status(request_id: str) -> DataDeletionStatusResponse:
 async def confirm_data_deletion(
     request_id: str, auth_service: AuthenticationService = Depends(FirebaseAuthService)
 ) -> dict[str, str]:
-    """
-    Confirm data deletion request (requires authentication).
+    """Confirm data deletion request (requires authentication).
     This endpoint is used when the user needs to authenticate to confirm deletion.
     """
     try:
@@ -178,17 +173,16 @@ async def confirm_data_deletion(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Failed to confirm data deletion: {str(e)}")
+        logger.exception(f"Failed to confirm data deletion: {e!s}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to confirm data deletion: {str(e)}",
+            detail=f"Failed to confirm data deletion: {e!s}",
         ) from e
 
 
 @router.get("/info", status_code=status.HTTP_200_OK)
 async def get_deletion_info() -> dict[str, str | list[str] | dict[str, str]]:
-    """
-    Get information about data deletion process.
+    """Get information about data deletion process.
     This is a public endpoint that provides information about how data deletion works.
     """
     return {

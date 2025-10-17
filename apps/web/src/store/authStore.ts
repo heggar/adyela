@@ -1,6 +1,6 @@
-import { create } from "zustand";
-import { persist } from "zustand/middleware";
-import { OAuthUserData } from "@/features/auth/services/authService";
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
+import { OAuthUserData } from '@/features/auth/services/authService';
 
 interface User {
   id: string;
@@ -19,10 +19,7 @@ interface AuthState {
   isAuthenticated: boolean;
   login: (user: User, token: string) => void;
   logout: () => void;
-  syncWithBackend: (
-    firebaseToken: string,
-    oauthData: OAuthUserData,
-  ) => Promise<void>;
+  syncWithBackend: (firebaseToken: string, oauthData: OAuthUserData) => Promise<void>;
 }
 
 /**
@@ -44,7 +41,7 @@ interface AuthState {
 const getApiBaseUrl = (): string => {
   // In development, use localhost
   if (import.meta.env.DEV) {
-    return "http://localhost:8000";
+    return 'http://localhost:8000';
   }
 
   // In production/staging, use the same origin
@@ -54,7 +51,7 @@ const getApiBaseUrl = (): string => {
 
 export const useAuthStore = create<AuthState>()(
   persist(
-    (set) => ({
+    set => ({
       user: null,
       token: null,
       isAuthenticated: false,
@@ -70,17 +67,14 @@ export const useAuthStore = create<AuthState>()(
           token: null,
           isAuthenticated: false,
         }),
-      syncWithBackend: async (
-        firebaseToken: string,
-        oauthData: OAuthUserData,
-      ) => {
+      syncWithBackend: async (firebaseToken: string, oauthData: OAuthUserData) => {
         try {
           const apiBaseUrl = getApiBaseUrl();
           const response = await fetch(`${apiBaseUrl}/api/v1/auth/sync`, {
-            method: "POST",
+            method: 'POST',
             headers: {
               Authorization: `Bearer ${firebaseToken}`,
-              "Content-Type": "application/json",
+              'Content-Type': 'application/json',
             },
             body: JSON.stringify({ user_data: oauthData }),
           });
@@ -95,9 +89,9 @@ export const useAuthStore = create<AuthState>()(
             user: {
               id: data.user.uid,
               email: data.user.email,
-              name: data.user.displayName || data.user.email,
-              role: data.user.roles?.[0] || "patient",
-              tenantId: data.user.tenant_id || "default",
+              name: data.user.displayName ?? data.user.email,
+              role: data.user.roles?.[0] ?? 'patient',
+              tenantId: data.user.tenant_id ?? 'default',
               photoURL: data.user.photoURL,
               provider: data.user.provider,
               emailVerified: data.user.emailVerified,
@@ -106,13 +100,13 @@ export const useAuthStore = create<AuthState>()(
             isAuthenticated: true,
           });
         } catch (error) {
-          console.error("Error syncing with backend:", error);
+          console.error('Error syncing with backend:', error);
           throw error;
         }
       },
     }),
     {
-      name: "auth-storage",
-    },
-  ),
+      name: 'auth-storage',
+    }
+  )
 );

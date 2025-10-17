@@ -10,13 +10,13 @@ from .repositories import (
 from .services import AuthenticationService, CacheService, NotificationService, VideoCallService
 
 __all__ = [
-    "BaseRepository",
-    "TenantRepository",
-    "PatientRepository",
-    "PractitionerRepository",
     "AppointmentRepository",
     "AuthenticationService",
-    "NotificationService",
-    "VideoCallService",
+    "BaseRepository",
     "CacheService",
+    "NotificationService",
+    "PatientRepository",
+    "PractitionerRepository",
+    "TenantRepository",
+    "VideoCallService",
 ]

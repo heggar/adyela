@@ -1,0 +1,92 @@
+[gitleaks]
+    # Global regex patterns for common secrets
+    regexes = [
+        # API Keys (various lengths)
+        { regex = '''(?i)(['"]*[a-z0-9]{32,}['"]*)''', tags = ["generic", "api-key"] },
+        { regex = '''(?i)(['"]*[a-z0-9]{40,}['"]*)''', tags = ["generic", "api-key"] },
+        { regex = '''(?i)(['"]*[a-z0-9]{64,}['"]*)''', tags = ["generic", "api-key"] },
+        
+        # Firebase
+        { regex = '''(?i)(firebase.*['"]*[a-z0-9]{28,}['"]*)''', tags = ["firebase", "api-key"] },
+        { regex = '''(?i)(['"]*AIza[0-9A-Za-z\\-_]{35}['"]*)''', tags = ["firebase", "google", "api-key"] },
+        
+        # Google Cloud
+        { regex = '''(?i)(['"]*[0-9]+-[0-9A-Za-z_]{32}\\.apps\\.googleusercontent\\.com['"]*)''', tags = ["google", "oauth"] },
+        { regex = '''(?i)(['"]*[0-9A-Za-z\\-_]{24}\\.[0-9A-Za-z\\-_]{6}\\.[0-9A-Za-z\\-_]{27}['"]*)''', tags = ["google", "jwt"] },
+        
+        # JWT Tokens
+        { regex = '''(?i)(['"]*eyJ[A-Za-z0-9_/+-]*\\.eyJ[A-Za-z0-9_/+-]*\\.[A-Za-z0-9_/+-]*['"]*)''', tags = ["jwt", "token"] },
+        
+        # AWS
+        { regex = '''(?i)(['"]*AKIA[0-9A-Z]{16}['"]*)''', tags = ["aws", "access-key"] },
+        { regex = '''(?i)(['"]*[0-9a-zA-Z/+]{40}['"]*)''', tags = ["aws", "secret-key"] },
+        
+        # GitHub
+        { regex = '''(?i)(['"]*ghp_[0-9a-zA-Z]{36}['"]*)''', tags = ["github", "token"] },
+        { regex = '''(?i)(['"]*gho_[0-9a-zA-Z]{36}['"]*)''', tags = ["github", "token"] },
+        { regex = '''(?i)(['"]*ghu_[0-9a-zA-Z]{36}['"]*)''', tags = ["github", "token"] },
+        { regex = '''(?i)(['"]*ghs_[0-9a-zA-Z]{36}['"]*)''', tags = ["github", "token"] },
+        { regex = '''(?i)(['"]*ghr_[0-9a-zA-Z]{36}['"]*)''', tags = ["github", "token"] },
+        
+        # Twilio
+        { regex = '''(?i)(['"]*SK[0-9a-fA-F]{32}['"]*)''', tags = ["twilio", "api-key"] },
+        { regex = '''(?i)(['"]*AC[0-9a-fA-F]{32}['"]*)''', tags = ["twilio", "account-sid"] },
+        
+        # SendGrid
+        { regex = '''(?i)(['"]*SG\\.[0-9A-Za-z\\-_]{22}\\.[0-9A-Za-z\\-_]{43}['"]*)''', tags = ["sendgrid", "api-key"] },
+        
+        # Database URLs
+        { regex = '''(?i)(['"]*postgres://[^'"]*['"]*)''', tags = ["database", "postgres"] },
+        { regex = '''(?i)(['"]*mysql://[^'"]*['"]*)''', tags = ["database", "mysql"] },
+        { regex = '''(?i)(['"]*mongodb://[^'"]*['"]*)''', tags = ["database", "mongodb"] },
+        
+        # Redis
+        { regex = '''(?i)(['"]*redis://[^'"]*['"]*)''', tags = ["redis", "database"] },
+        
+        # Generic secrets
+        { regex = '''(?i)(['"]*secret['"]*\\s*[:=]\\s*['"]*[^'"]{8,}['"]*)''', tags = ["generic", "secret"] },
+        { regex = '''(?i)(['"]*password['"]*\\s*[:=]\\s*['"]*[^'"]{8,}['"]*)''', tags = ["generic", "password"] },
+        { regex = '''(?i)(['"]*token['"]*\\s*[:=]\\s*['"]*[^'"]{8,}['"]*)''', tags = ["generic", "token"] },
+        { regex = '''(?i)(['"]*key['"]*\\s*[:=]\\s*['"]*[^'"]{8,}['"]*)''', tags = ["generic", "key"] },
+    ]
+    
+    # Allowlist patterns (exclude these from detection)
+    allowlist = [
+        # Common false positives
+        { regex = '''(?i)(example|test|demo|sample)['"]*[a-z0-9]{32,}['"]*''', tags = ["false-positive"] },
+        { regex = '''(?i)(['"]*[a-z0-9]{32,}['"]*\\s*#\\s*(example|test|demo|sample))''', tags = ["false-positive"] },
+        
+        # Documentation examples
+        { regex = '''(?i)(README|docs|documentation)''', tags = ["documentation"] },
+        
+        # Test files
+        { regex = '''(?i)(\\.test\\.|\\.spec\\.|__tests__|tests/)''', tags = ["test"] },
+        
+        # Package files
+        { regex = '''(?i)(package\\.json|package-lock\\.json|yarn\\.lock)''', tags = ["package"] },
+        
+        # Configuration examples
+        { regex = '''(?i)(\\.example|\\.template|\\.sample)''', tags = ["template"] },
+    ]
+    
+    # File patterns to scan
+    files = [
+        { regex = '''.*\\.(js|ts|tsx|jsx|py|json|yaml|yml|toml|env|ini|cfg|conf)$''', tags = ["config"] },
+        { regex = '''.*\\.(md|txt|rst)$''', tags = ["documentation"] },
+        { regex = '''.*Dockerfile.*''', tags = ["docker"] },
+        { regex = '''.*\\.(sh|bash|zsh)$''', tags = ["script"] },
+    ]
+    
+    # File patterns to ignore
+    ignore = [
+        { regex = '''.*\\.(png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot)$''', tags = ["binary"] },
+        { regex = '''.*\\.(mp4|avi|mov|wmv|flv|webm)$''', tags = ["video"] },
+        { regex = '''.*\\.(mp3|wav|flac|aac|ogg)$''', tags = ["audio"] },
+        { regex = '''.*\\.(zip|tar|gz|rar|7z)$''', tags = ["archive"] },
+        { regex = '''.*node_modules/.*''', tags = ["dependencies"] },
+        { regex = '''.*\\.git/.*''', tags = ["git"] },
+        { regex = '''.*dist/.*''', tags = ["build"] },
+        { regex = '''.*build/.*''', tags = ["build"] },
+        { regex = '''.*coverage/.*''', tags = ["coverage"] },
+        { regex = '''.*\\.turbo/.*''', tags = ["cache"] },
+    ]

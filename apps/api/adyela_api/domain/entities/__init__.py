@@ -5,4 +5,4 @@ from .patient import Patient
 from .practitioner import Practitioner
 from .tenant import Tenant
 
-__all__ = ["Tenant", "Patient", "Practitioner", "Appointment"]
+__all__ = ["Appointment", "Patient", "Practitioner", "Tenant"]
