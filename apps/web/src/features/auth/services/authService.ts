@@ -21,6 +21,11 @@ export interface OAuthUserData {
   emailVerified: boolean;
 }
 
+// Helper function to check if error is a Firebase auth error
+const isFirebaseAuthError = (error: unknown): error is { code: string } => {
+  return error !== null && typeof error === "object" && "code" in error;
+};
+
 export const authService = {
   signInWithGoogle: async (): Promise<UserCredential> => {
     const provider = new GoogleAuthProvider();
@@ -30,10 +35,11 @@ export const authService = {
     try {
       // Try popup first, fallback to redirect if blocked
       return await signInWithPopup(auth, provider);
-    } catch (error: any) {
+    } catch (error: unknown) {
       if (
-        error.code === "auth/popup-blocked" ||
-        error.code === "auth/popup-closed-by-user"
+        isFirebaseAuthError(error) &&
+        (error.code === "auth/popup-blocked" ||
+          error.code === "auth/popup-closed-by-user")
       ) {
         // Fallback to redirect if popup is blocked
         await signInWithRedirect(auth, provider);
@@ -51,10 +57,11 @@ export const authService = {
 
     try {
       return await signInWithPopup(auth, provider);
-    } catch (error: any) {
+    } catch (error: unknown) {
       if (
-        error.code === "auth/popup-blocked" ||
-        error.code === "auth/popup-closed-by-user"
+        isFirebaseAuthError(error) &&
+        (error.code === "auth/popup-blocked" ||
+          error.code === "auth/popup-closed-by-user")
       ) {
         await signInWithRedirect(auth, provider);
         throw new Error("Redirecting to authentication...");
@@ -70,10 +77,11 @@ export const authService = {
 
     try {
       return await signInWithPopup(auth, provider);
-    } catch (error: any) {
+    } catch (error: unknown) {
       if (
-        error.code === "auth/popup-blocked" ||
-        error.code === "auth/popup-closed-by-user"
+        isFirebaseAuthError(error) &&
+        (error.code === "auth/popup-blocked" ||
+          error.code === "auth/popup-closed-by-user")
       ) {
         await signInWithRedirect(auth, provider);
         throw new Error("Redirecting to authentication...");
@@ -89,10 +97,11 @@ export const authService = {
 
     try {
       return await signInWithPopup(auth, provider);
-    } catch (error: any) {
+    } catch (error: unknown) {
       if (
-        error.code === "auth/popup-blocked" ||
-        error.code === "auth/popup-closed-by-user"
+        isFirebaseAuthError(error) &&
+        (error.code === "auth/popup-blocked" ||
+          error.code === "auth/popup-closed-by-user")
       ) {
         await signInWithRedirect(auth, provider);
         throw new Error("Redirecting to authentication...");
