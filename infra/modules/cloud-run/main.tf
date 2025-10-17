@@ -1,6 +1,26 @@
 # ================================================================================
 # Cloud Run Module - HIPAA-Compliant Services
 # ================================================================================
+#
+# IMPORTANT: Image versions are managed by CI/CD, not Terraform
+# 
+# Terraform creates and configures the Cloud Run service infrastructure:
+# - CPU, memory, scaling configuration
+# - Environment variables and secrets
+# - VPC connectivity and ingress rules
+# - Service account permissions
+#
+# CI/CD (GitHub Actions) handles image deployments:
+# - Builds Docker images with specific versions
+# - Deploys directly to Cloud Run using gcloud
+# - Updates the service without touching Terraform state
+#
+# Expected workflow:
+# 1. Terraform applies infrastructure changes (networking, scaling, secrets)
+# 2. CI/CD deploys new images independently
+# 3. Terraform plan will show "image" differences - THIS IS EXPECTED AND SAFE
+# 4. Only apply Terraform when infrastructure configuration changes
+# ================================================================================
 
 # Cloud Run API Service
 resource "google_cloud_run_v2_service" "api" {

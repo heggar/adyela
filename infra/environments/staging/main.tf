@@ -119,12 +119,14 @@ module "cloud_run" {
   # API URL for frontend (through load balancer)
   api_url = "https://staging.adyela.care"
 
-  # Docker images - these will be updated by CI/CD
-  api_image = "us-central1-docker.pkg.dev/${var.project_id}/adyela/adyela-api-staging:v1.0.1-oauth-fix"
-  web_image = "us-central1-docker.pkg.dev/${var.project_id}/adyela/adyela-web-staging:v1.0.1-oauth-fix"
-  
-  # Application version
-  app_version = "v1.0.1-oauth-fix"
+  # Docker images - CI/CD deploys directly, Terraform only for initial setup
+  # These values are used ONLY for initial resource creation
+  # CI/CD updates images directly via gcloud/Cloud Run API
+  api_image = "us-central1-docker.pkg.dev/${var.project_id}/adyela/adyela-api-staging:terraform-managed"
+  web_image = "us-central1-docker.pkg.dev/${var.project_id}/adyela/adyela-web-staging:terraform-managed"
+
+  # Application version - placeholder for Terraform
+  app_version = "terraform-managed"
 
   # Scaling configuration - Staging: scale-to-zero for cost savings
   min_instances = 0
