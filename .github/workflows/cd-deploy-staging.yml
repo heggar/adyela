@@ -1,0 +1,201 @@
+name: CD - Deploy to Staging
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      services:
+        description: 'Services to deploy (comma-separated: api-auth,api-appointments,api-payments,api-notifications,api-admin,api-analytics or "all")'
+        required: true
+        default: 'all'
+
+env:
+  PROJECT_ID: 'adyela-staging'
+  REGION: 'us-central1'
+  ARTIFACT_REGISTRY: 'us-central1-docker.pkg.dev'
+
+jobs:
+  determine-services:
+    name: Determine Services to Deploy
+    runs-on: ubuntu-latest
+    outputs:
+      services: ${{ steps.set-matrix.outputs.services }}
+    steps:
+      - id: set-matrix
+        run: |
+          if [ "${{ github.event.inputs.services }}" == "all" ] || [ -z "${{ github.event.inputs.services }}" ]; then
+            echo 'services=["api-auth","api-appointments","api-payments","api-notifications","api-admin","api-analytics"]' >> $GITHUB_OUTPUT
+          else
+            # Convert comma-separated string to JSON array
+            SERVICES=$(echo '${{ github.event.inputs.services }}' | jq -R 'split(",") | map(gsub("^\\s+|\\s+$";""))')
+            echo "services=$SERVICES" >> $GITHUB_OUTPUT
+          fi
+
+  build-and-push:
+    name: Build & Push ${{ matrix.service }}
+    runs-on: ubuntu-latest
+    needs: determine-services
+    strategy:
+      matrix:
+        service: ${{ fromJson(needs.determine-services.outputs.services) }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY_STAGING }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker ${{ env.ARTIFACT_REGISTRY }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Determine service path
+        id: service-path
+        run: |
+          case "${{ matrix.service }}" in
+            api-auth|api-appointments|api-admin|api-analytics)
+              echo "path=apps/${{ matrix.service }}" >> $GITHUB_OUTPUT
+              echo "port=8000" >> $GITHUB_OUTPUT
+              ;;
+            api-payments|api-notifications)
+              echo "path=apps/${{ matrix.service }}" >> $GITHUB_OUTPUT
+              echo "port=3000" >> $GITHUB_OUTPUT
+              ;;
+            *)
+              echo "Unknown service: ${{ matrix.service }}"
+              exit 1
+              ;;
+          esac
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./${{ steps.service-path.outputs.path }}
+          push: true
+          tags: |
+            ${{ env.ARTIFACT_REGISTRY }}/${{ env.PROJECT_ID }}/adyela/${{ matrix.service }}:${{ github.sha }}
+            ${{ env.ARTIFACT_REGISTRY }}/${{ env.PROJECT_ID }}/adyela/${{ matrix.service }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            PORT=${{ steps.service-path.outputs.port }}
+
+  deploy:
+    name: Deploy ${{ matrix.service }} to Cloud Run
+    runs-on: ubuntu-latest
+    needs: [determine-services, build-and-push]
+    strategy:
+      matrix:
+        service: ${{ fromJson(needs.determine-services.outputs.services) }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY_STAGING }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy ${{ matrix.service }}-staging \
+            --image=${{ env.ARTIFACT_REGISTRY }}/${{ env.PROJECT_ID }}/adyela/${{ matrix.service }}:${{ github.sha }} \
+            --region=${{ env.REGION }} \
+            --platform=managed \
+            --allow-unauthenticated \
+            --max-instances=10 \
+            --min-instances=0 \
+            --cpu=1 \
+            --memory=512Mi \
+            --timeout=60 \
+            --set-env-vars="ENVIRONMENT=staging,PROJECT_ID=${{ env.PROJECT_ID }},REGION=${{ env.REGION }}" \
+            --labels="environment=staging,service=${{ matrix.service }},deployed-by=github-actions" \
+            --tag=${{ github.sha }}
+
+      - name: Get service URL
+        id: service-url
+        run: |
+          URL=$(gcloud run services describe ${{ matrix.service }}-staging \
+            --region=${{ env.REGION }} \
+            --format='value(status.url)')
+          echo "url=$URL" >> $GITHUB_OUTPUT
+          echo "Service URL: $URL"
+
+      - name: Health check
+        run: |
+          MAX_RETRIES=10
+          RETRY_COUNT=0
+
+          while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+            HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" ${{ steps.service-url.outputs.url }}/health || echo "000")
+
+            if [ "$HTTP_STATUS" == "200" ]; then
+              echo "✅ Health check passed!"
+              exit 0
+            fi
+
+            RETRY_COUNT=$((RETRY_COUNT + 1))
+            echo "Health check attempt $RETRY_COUNT/$MAX_RETRIES failed (HTTP $HTTP_STATUS). Retrying in 10s..."
+            sleep 10
+          done
+
+          echo "❌ Health check failed after $MAX_RETRIES attempts"
+          exit 1
+
+  post-deployment:
+    name: Post-Deployment Tasks
+    runs-on: ubuntu-latest
+    needs: [determine-services, deploy]
+    steps:
+      - name: Send Slack notification
+        if: always()
+        uses: slackapi/slack-github-action@v1
+        with:
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            {
+              "text": "🚀 Deployment to Staging",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Deployment Status:* ${{ needs.deploy.result == 'success' && '✅ Success' || '❌ Failed' }}"
+                  }
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Environment:*\nStaging"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Commit:*\n<https://github.com/${{ github.repository }}/commit/${{ github.sha }}|${{ github.sha }}>"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Deployed by:*\n${{ github.actor }}"
+                    }
+                  ]
+                }
+              ]
+            }
+        continue-on-error: true
+
+      - name: Update deployment status
+        if: success()
+        run: |
+          echo "✅ All services deployed successfully to staging!"
+          echo "Deployment completed at $(date -u '+%Y-%m-%d %H:%M:%S UTC')"

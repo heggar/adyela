@@ -1,0 +1,273 @@
+name: Security Scan
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  schedule:
+    # Run weekly on Mondays at 00:00 UTC
+    - cron: '0 0 * * 1'
+  workflow_dispatch:
+
+jobs:
+  secret-scanning:
+    name: Secret Scanning with Gitleaks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for better detection
+
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
+
+  dependency-scanning-python:
+    name: Python Dependency Scanning
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [api-auth, api-appointments, api-admin, api-analytics]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Check for known vulnerabilities (Safety)
+        working-directory: apps/${{ matrix.service }}
+        run: |
+          poetry export -f requirements.txt --output requirements.txt --without-hashes
+          pip install safety
+          safety check --file=requirements.txt --json --output safety-report.json || true
+
+      - name: Upload Safety report
+        uses: actions/upload-artifact@v4
+        with:
+          name: safety-report-${{ matrix.service }}
+          path: apps/${{ matrix.service }}/safety-report.json
+
+      - name: Run Snyk Python scan
+        uses: snyk/actions/python@master
+        continue-on-error: true
+        with:
+          args: --file=apps/${{ matrix.service }}/pyproject.toml --severity-threshold=high
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+
+  dependency-scanning-nodejs:
+    name: Node.js Dependency Scanning
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [api-payments, api-notifications]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        working-directory: apps/${{ matrix.service }}
+        run: npm ci
+
+      - name: Run npm audit
+        working-directory: apps/${{ matrix.service }}
+        run: |
+          npm audit --json > npm-audit-report.json || true
+
+      - name: Upload npm audit report
+        uses: actions/upload-artifact@v4
+        with:
+          name: npm-audit-report-${{ matrix.service }}
+          path: apps/${{ matrix.service }}/npm-audit-report.json
+
+      - name: Run Snyk Node.js scan
+        uses: snyk/actions/node@master
+        continue-on-error: true
+        with:
+          args: --file=apps/${{ matrix.service }}/package.json --severity-threshold=high
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+
+  sast-scanning-python:
+    name: SAST - Python (Bandit)
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [api-auth, api-appointments, api-admin, api-analytics]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Install dependencies
+        working-directory: apps/${{ matrix.service }}
+        run: poetry install --no-interaction
+
+      - name: Run Bandit
+        working-directory: apps/${{ matrix.service }}
+        run: |
+          poetry run bandit -r . \
+            -f json \
+            -o bandit-report.json \
+            -ll \
+            --exclude tests,__pycache__,.venv || true
+
+      - name: Upload Bandit report
+        uses: actions/upload-artifact@v4
+        with:
+          name: bandit-report-${{ matrix.service }}
+          path: apps/${{ matrix.service }}/bandit-report.json
+
+  sast-scanning-nodejs:
+    name: SAST - Node.js (ESLint Security)
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [api-payments, api-notifications]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        working-directory: apps/${{ matrix.service }}
+        run: |
+          npm ci
+          npm install --save-dev eslint-plugin-security
+
+      - name: Run ESLint with security plugin
+        working-directory: apps/${{ matrix.service }}
+        run: |
+          npx eslint . \
+            --plugin security \
+            --format json \
+            --output-file eslint-security-report.json || true
+
+      - name: Upload ESLint security report
+        uses: actions/upload-artifact@v4
+        with:
+          name: eslint-security-report-${{ matrix.service }}
+          path: apps/${{ matrix.service }}/eslint-security-report.json
+
+  container-scanning:
+    name: Container Image Scanning (Trivy)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    strategy:
+      matrix:
+        service: [api-auth, api-appointments, api-payments, api-notifications, api-admin, api-analytics]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: |
+          case "${{ matrix.service }}" in
+            api-auth|api-appointments|api-admin|api-analytics)
+              docker build -t ${{ matrix.service }}:${{ github.sha }} apps/${{ matrix.service }}
+              ;;
+            api-payments|api-notifications)
+              docker build -t ${{ matrix.service }}:${{ github.sha }} apps/${{ matrix.service }}
+              ;;
+          esac
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ matrix.service }}:${{ github.sha }}
+          format: 'sarif'
+          output: 'trivy-results-${{ matrix.service }}.sarif'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Upload Trivy results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: 'trivy-results-${{ matrix.service }}.sarif'
+
+  iac-scanning:
+    name: Infrastructure as Code Scanning
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Checkov (Terraform)
+        uses: bridgecrewio/checkov-action@master
+        with:
+          directory: infra/
+          framework: terraform
+          output_format: sarif
+          output_file_path: checkov-results.sarif
+          soft_fail: true
+
+      - name: Upload Checkov results
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: checkov-results.sarif
+
+      - name: Run tfsec
+        uses: aquasecurity/tfsec-action@v1.0.0
+        with:
+          working_directory: infra/
+          format: sarif
+          soft_fail: true
+
+  security-report:
+    name: Generate Security Report
+    runs-on: ubuntu-latest
+    needs: [secret-scanning, dependency-scanning-python, dependency-scanning-nodejs, sast-scanning-python, sast-scanning-nodejs, container-scanning, iac-scanning]
+    if: always()
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+
+      - name: Generate summary report
+        run: |
+          echo "# 🔒 Security Scan Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Scan Date:** $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          echo "## Scan Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Check | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Secret Scanning | ${{ needs.secret-scanning.result == 'success' && '✅ Pass' || '❌ Fail' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Python Dependencies | ${{ needs.dependency-scanning-python.result == 'success' && '✅ Pass' || '⚠️ Review' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Node.js Dependencies | ${{ needs.dependency-scanning-nodejs.result == 'success' && '✅ Pass' || '⚠️ Review' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Python SAST | ${{ needs.sast-scanning-python.result == 'success' && '✅ Pass' || '⚠️ Review' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Node.js SAST | ${{ needs.sast-scanning-nodejs.result == 'success' && '✅ Pass' || '⚠️ Review' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Container Scanning | ${{ needs.container-scanning.result == 'success' && '✅ Pass' || '⚠️ Review' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| IaC Scanning | ${{ needs.iac-scanning.result == 'success' && '✅ Pass' || '⚠️ Review' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          echo "📊 **Full reports available in artifacts**" >> $GITHUB_STEP_SUMMARY
+
+      - name: Send notification
+        if: failure()
+        run: |
+          echo "🚨 Security vulnerabilities detected! Check the reports for details."

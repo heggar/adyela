@@ -20,3 +20,14 @@ variable "alert_email" {
   type        = string
   default     = "hever_gonzalezg@adyela.care"
 }
+
+variable "billing_account" {
+  description = "GCP billing account ID for budget alerts"
+  type        = string
+}
+
+variable "budget_alert_emails" {
+  description = "List of email addresses to receive budget alerts"
+  type        = list(string)
+  default     = ["hever_gonzalezg@adyela.care"]
+}
