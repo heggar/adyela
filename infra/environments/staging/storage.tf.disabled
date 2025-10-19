@@ -1,0 +1,300 @@
+# ============================================================================
+# DATA STORAGE MODULES - Staging Environment
+# ============================================================================
+
+# ============================================================================
+# CLOUD STORAGE - File Storage Buckets
+# ============================================================================
+
+# Bucket for user uploads (patient documents, images, etc.)
+module "uploads_bucket" {
+  source = "../../modules/cloud-storage"
+
+  project_id  = var.project_id
+  bucket_name = "${var.project_id}-uploads"
+  location    = var.region
+  environment = var.environment
+
+  # Standard storage for frequently accessed files
+  storage_class = "STANDARD"
+
+  # Security
+  uniform_bucket_level_access = true
+  public_access_prevention    = "enforced"
+
+  # CORS for web uploads
+  cors_config = {
+    origin = [
+      "https://staging.adyela.care",
+      "https://admin.staging.adyela.care"
+    ]
+    method = ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+    response_header = ["Content-Type", "Content-Length"]
+    max_age_seconds = 3600
+  }
+
+  # Lifecycle: Delete incomplete uploads after 7 days
+  lifecycle_rules = [
+    {
+      action = {
+        type = "Delete"
+      }
+      condition = {
+        age = 7
+        with_state = "LIVE"
+        matches_prefix = ["temp/", "incomplete/"]
+      }
+    }
+  ]
+
+  # IAM: Grant Cloud Run services access
+  reader_members = [
+    "serviceAccount:${module.api_auth.service_account_email}",
+    "serviceAccount:${module.api_appointments.service_account_email}"
+  ]
+
+  writer_members = [
+    "serviceAccount:${module.api_auth.service_account_email}"
+  ]
+
+  labels = module.labels.storage_labels
+}
+
+# Bucket for application backups
+module "backups_bucket" {
+  source = "../../modules/cloud-storage"
+
+  project_id  = var.project_id
+  bucket_name = "${var.project_id}-backups"
+  location    = "us"  # Multi-region for durability
+  environment = var.environment
+
+  # Nearline for infrequent access (cheaper)
+  storage_class = "NEARLINE"
+
+  # Enable versioning
+  versioning_enabled = true
+
+  # Lifecycle: Transition to cheaper storage classes over time
+  lifecycle_rules = [
+    # Move to COLDLINE after 90 days
+    {
+      action = {
+        type = "SetStorageClass"
+        storage_class = "COLDLINE"
+      }
+      condition = {
+        age = 90
+      }
+    },
+    # Move to ARCHIVE after 365 days
+    {
+      action = {
+        type = "SetStorageClass"
+        storage_class = "ARCHIVE"
+      }
+      condition = {
+        age = 365
+      }
+    },
+    # Delete backups older than 2 years
+    {
+      action = {
+        type = "Delete"
+      }
+      condition = {
+        age = 730
+      }
+    }
+  ]
+
+  # IAM: Only backup service can write
+  admin_members = [
+    "serviceAccount:${module.service_account.service_account_email}"
+  ]
+
+  labels = module.labels.storage_labels
+}
+
+# Bucket for static assets (if needed)
+module "static_assets_bucket" {
+  source = "../../modules/cloud-storage"
+
+  project_id  = var.project_id
+  bucket_name = "${var.project_id}-static-assets"
+  location    = var.region
+  environment = var.environment
+
+  storage_class = "STANDARD"
+
+  # CORS for CDN
+  cors_config = {
+    origin = ["*"]  # Allow all origins for public assets
+    method = ["GET", "HEAD", "OPTIONS"]
+    response_header = ["Content-Type"]
+    max_age_seconds = 86400  # 24 hours
+  }
+
+  # Lifecycle: Keep only 5 versions
+  lifecycle_rules = [
+    {
+      action = {
+        type = "Delete"
+      }
+      condition = {
+        num_newer_versions = 5
+      }
+    }
+  ]
+
+  # Optionally make public for static assets
+  # make_public = true
+
+  labels = module.labels.storage_labels
+}
+
+# ============================================================================
+# FIRESTORE - NoSQL Database
+# ============================================================================
+
+module "firestore" {
+  source = "../../modules/firestore"
+
+  project_id    = var.project_id
+  database_name = "(default)"
+  location      = "nam5"  # North America multi-region
+
+  # Enable PITR for 7-day recovery
+  enable_pitr = true
+
+  # Daily backups with 30-day retention
+  enable_backups        = true
+  backup_retention_days = 30
+
+  # Protect from accidental deletion
+  delete_protection = true
+
+  # Deploy security rules (create this file)
+  # security_rules_file = "${path.module}/firestore.rules"
+
+  # Composite indexes for multi-tenant queries
+  indexes = [
+    # Tenant-scoped appointments by date
+    {
+      name       = "appointments-tenant-date-status"
+      collection = "appointments"
+      fields = [
+        { field_path = "tenant_id", order = "ASC" },
+        { field_path = "appointment_date", order = "ASC" },
+        { field_path = "status", order = "ASC" }
+      ]
+    },
+    # Tenant-scoped patients by creation date
+    {
+      name       = "patients-tenant-created"
+      collection = "patients"
+      fields = [
+        { field_path = "tenant_id", order = "ASC" },
+        { field_path = "created_at", order = "DESC" }
+      ]
+    }
+  ]
+
+  # IAM: Grant Cloud Run services access
+  firestore_users = [
+    "serviceAccount:${module.api_auth.service_account_email}",
+    "serviceAccount:${module.api_appointments.service_account_email}",
+    "serviceAccount:${module.api_admin.service_account_email}",
+    "serviceAccount:${module.api_analytics.service_account_email}"
+  ]
+
+  # Create export bucket for data migration
+  create_export_bucket = true
+
+  labels = module.labels.storage_labels
+}
+
+# ============================================================================
+# CLOUD SQL - PostgreSQL for Analytics (Optional)
+# ============================================================================
+
+# Uncomment to enable Cloud SQL for analytics
+# Note: Adds ~$100-150/month to staging costs
+
+# module "analytics_db" {
+#   source = "../../modules/cloud-sql"
+#
+#   project_id    = var.project_id
+#   instance_name = "analytics-db"
+#   region        = var.region
+#   environment   = var.environment
+#
+#   # PostgreSQL 15
+#   database_version = "POSTGRES_15"
+#
+#   # Small tier for staging
+#   tier = "db-custom-2-7680"  # 2 vCPU, 7.5 GB RAM
+#
+#   # Storage
+#   disk_type       = "PD_SSD"
+#   disk_size       = 20
+#   disk_autoresize = true
+#
+#   # Backups
+#   enable_backups = true
+#   enable_pitr    = true
+#
+#   # Private IP only (requires VPC)
+#   enable_public_ip = false
+#   private_network  = module.vpc.network_self_link
+#   require_ssl      = true
+#
+#   # Databases
+#   databases = ["analytics", "reporting"]
+#
+#   # Admin user with Secret Manager
+#   create_admin_user                = true
+#   store_password_in_secret_manager = true
+#
+#   # IAM
+#   sql_client_members = [
+#     "serviceAccount:${module.api_analytics.service_account_email}"
+#   ]
+#
+#   labels = module.labels.storage_labels
+# }
+
+# ============================================================================
+# OUTPUTS
+# ============================================================================
+
+output "uploads_bucket_name" {
+  description = "Name of the uploads bucket"
+  value       = module.uploads_bucket.bucket_name
+}
+
+output "uploads_bucket_url" {
+  description = "URL of the uploads bucket"
+  value       = module.uploads_bucket.public_url
+}
+
+output "backups_bucket_name" {
+  description = "Name of the backups bucket"
+  value       = module.backups_bucket.bucket_name
+}
+
+output "firestore_database_name" {
+  description = "Firestore database name"
+  value       = module.firestore.database_name
+}
+
+output "firestore_export_bucket" {
+  description = "Firestore export bucket name"
+  value       = module.firestore.export_bucket_name
+}
+
+# output "analytics_db_connection" {
+#   description = "Analytics database connection name"
+#   value       = module.analytics_db.instance_connection_name
+#   sensitive   = true
+# }

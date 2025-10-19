@@ -1,0 +1,225 @@
+// Firestore Security Rules Example
+// Multi-Tenant Healthcare Application (HIPAA Compliant)
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ========================================================================
+    // HELPER FUNCTIONS
+    // ========================================================================
+
+    // Check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Check if user belongs to a tenant
+    function belongsToTenant(tenantId) {
+      return isAuthenticated() &&
+             request.auth.token.tenant_id == tenantId;
+    }
+
+    // Check if user has a specific role
+    function hasRole(role) {
+      return isAuthenticated() &&
+             request.auth.token.role == role;
+    }
+
+    // Check if user is admin or super admin
+    function isAdmin() {
+      return hasRole('admin') || hasRole('super_admin');
+    }
+
+    // Check if user is healthcare professional
+    function isPractitioner() {
+      return hasRole('practitioner') || hasRole('doctor') || hasRole('nurse');
+    }
+
+    // Check if user owns the resource
+    function isOwner(userId) {
+      return isAuthenticated() &&
+             request.auth.uid == userId;
+    }
+
+    // Validate tenant_id in request data
+    function validateTenantId() {
+      return request.resource.data.tenant_id == request.auth.token.tenant_id;
+    }
+
+    // ========================================================================
+    // TENANT-SCOPED COLLECTIONS
+    // ========================================================================
+
+    // Root tenants collection (tenant management)
+    match /tenants/{tenantId} {
+      // Only admins and super admins can read/write tenant documents
+      allow read: if belongsToTenant(tenantId) && isAdmin();
+      allow create: if hasRole('super_admin');
+      allow update: if belongsToTenant(tenantId) && isAdmin();
+      allow delete: if hasRole('super_admin');
+
+      // Tenant-scoped appointments
+      match /appointments/{appointmentId} {
+        // Practitioners and patients can read their own appointments
+        allow read: if belongsToTenant(tenantId) && (
+          isPractitioner() ||
+          isOwner(resource.data.patient_id) ||
+          isOwner(resource.data.practitioner_id)
+        );
+
+        // Practitioners can create appointments
+        allow create: if belongsToTenant(tenantId) &&
+                         isPractitioner() &&
+                         validateTenantId();
+
+        // Practitioners and patients can update their own appointments
+        allow update: if belongsToTenant(tenantId) && (
+          isOwner(resource.data.practitioner_id) ||
+          isOwner(resource.data.patient_id)
+        ) && validateTenantId();
+
+        // Only practitioners can delete
+        allow delete: if belongsToTenant(tenantId) &&
+                         isPractitioner();
+      }
+
+      // Tenant-scoped patients
+      match /patients/{patientId} {
+        // Patients can read their own data, practitioners can read all
+        allow read: if belongsToTenant(tenantId) && (
+          isOwner(patientId) ||
+          isPractitioner() ||
+          isAdmin()
+        );
+
+        // Practitioners and admins can create patient records
+        allow create: if belongsToTenant(tenantId) &&
+                         (isPractitioner() || isAdmin()) &&
+                         validateTenantId();
+
+        // Patients can update their own data, practitioners can update all
+        allow update: if belongsToTenant(tenantId) && (
+          isOwner(patientId) ||
+          isPractitioner() ||
+          isAdmin()
+        ) && validateTenantId();
+
+        // Only admins can delete patient records
+        allow delete: if belongsToTenant(tenantId) && isAdmin();
+      }
+
+      // Tenant-scoped practitioners
+      match /practitioners/{practitionerId} {
+        // All authenticated users in tenant can read practitioners
+        allow read: if belongsToTenant(tenantId);
+
+        // Only admins can create/update/delete practitioners
+        allow create: if belongsToTenant(tenantId) &&
+                         isAdmin() &&
+                         validateTenantId();
+        allow update: if belongsToTenant(tenantId) &&
+                         (isAdmin() || isOwner(practitionerId)) &&
+                         validateTenantId();
+        allow delete: if belongsToTenant(tenantId) && isAdmin();
+      }
+
+      // Tenant-scoped medical records (highly sensitive - PHI)
+      match /medical_records/{recordId} {
+        // Only patient and their assigned practitioners can read
+        allow read: if belongsToTenant(tenantId) && (
+          isOwner(resource.data.patient_id) ||
+          (isPractitioner() && resource.data.practitioner_id == request.auth.uid) ||
+          isAdmin()
+        );
+
+        // Only practitioners can create medical records
+        allow create: if belongsToTenant(tenantId) &&
+                         isPractitioner() &&
+                         validateTenantId();
+
+        // Only the assigned practitioner can update
+        allow update: if belongsToTenant(tenantId) &&
+                         isPractitioner() &&
+                         resource.data.practitioner_id == request.auth.uid &&
+                         validateTenantId();
+
+        // Medical records cannot be deleted (HIPAA requirement)
+        allow delete: if false;
+      }
+
+      // Tenant-scoped prescriptions
+      match /prescriptions/{prescriptionId} {
+        allow read: if belongsToTenant(tenantId) && (
+          isOwner(resource.data.patient_id) ||
+          isOwner(resource.data.practitioner_id) ||
+          isAdmin()
+        );
+
+        allow create: if belongsToTenant(tenantId) &&
+                         isPractitioner() &&
+                         validateTenantId();
+
+        allow update: if belongsToTenant(tenantId) &&
+                         isOwner(resource.data.practitioner_id) &&
+                         validateTenantId();
+
+        // Prescriptions cannot be deleted (HIPAA requirement)
+        allow delete: if false;
+      }
+    }
+
+    // ========================================================================
+    // GLOBAL COLLECTIONS (Cross-Tenant)
+    // ========================================================================
+
+    // Analytics events (global, but filtered by tenant_id in application)
+    match /analytics_events/{eventId} {
+      // Only admins can read analytics
+      allow read: if isAdmin();
+
+      // Applications can write analytics (with tenant_id)
+      allow create: if isAuthenticated() &&
+                       request.resource.data.tenant_id == request.auth.token.tenant_id;
+
+      // Analytics cannot be modified or deleted
+      allow update, delete: if false;
+    }
+
+    // Audit logs (immutable, global)
+    match /audit_logs/{logId} {
+      // Only super admins can read audit logs
+      allow read: if hasRole('super_admin');
+
+      // System can write audit logs
+      allow create: if isAuthenticated();
+
+      // Audit logs are immutable
+      allow update, delete: if false;
+    }
+
+    // ========================================================================
+    // USER PROFILES
+    // ========================================================================
+
+    match /users/{userId} {
+      // Users can read their own profile
+      allow read: if isOwner(userId) || isAdmin();
+
+      // Users can create/update their own profile
+      allow create, update: if isOwner(userId);
+
+      // Only admins can delete users
+      allow delete: if isAdmin();
+    }
+
+    // ========================================================================
+    // DENY ALL OTHER ACCESS
+    // ========================================================================
+
+    // Explicitly deny access to any other collection
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

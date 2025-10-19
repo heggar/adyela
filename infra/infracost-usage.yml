@@ -1,0 +1,121 @@
+# Infracost Usage File
+# Defines usage estimates for GCP resources to improve cost accuracy
+# https://www.infracost.io/docs/features/usage_based_resources/
+
+version: 0.1
+
+# Cloud Run Services
+resource_type_default_usage:
+  google_cloud_run_service:
+    monthly_cpu_seconds: 2592000 # 1 vCPU for 30 days
+    monthly_memory_gb_seconds: 1296000 # 512MB for 30 days
+    monthly_requests: 1000000 # 1M requests/month
+
+  # Cloud SQL Database Instances
+  google_sql_database_instance:
+    monthly_backup_size_gb: 100 # Average backup size
+    monthly_cpu_utilization: 50 # 50% CPU utilization
+    monthly_db_size_gb: 50 # Average database size
+
+  # Cloud Storage Buckets
+  google_storage_bucket:
+    monthly_storage_gb: 100 # Average storage per bucket
+    monthly_class_a_operations: 10000 # Write operations
+    monthly_class_b_operations: 100000 # Read operations
+    monthly_egress_gb: 50 # Data egress
+
+  # Cloud Load Balancer
+  google_compute_backend_service:
+    monthly_lb_data_processed_gb: 500 # Data processed
+    monthly_lb_rules: 5 # Forwarding rules
+
+  # Secret Manager
+  google_secret_manager_secret:
+    monthly_access_operations: 10000 # Secret access operations
+
+  # Cloud Armor (WAF)
+  google_compute_security_policy:
+    monthly_policy_rules: 10 # Security rules
+    monthly_requests: 1000000 # Requests evaluated
+
+  # VPC
+  google_compute_network:
+    monthly_egress_intra_region_gb: 100
+    monthly_egress_inter_region_gb: 50
+
+  # Cloud Build
+  google_cloudbuild_trigger:
+    monthly_build_minutes: 1000 # Build time per month
+
+  # Artifact Registry
+  google_artifact_registry_repository:
+    monthly_storage_gb: 50 # Container image storage
+
+# Environment-specific overrides
+resource_usage:
+  # Staging - Lower usage estimates
+  module.cloud_run_service["adyela-web-staging"]:
+    monthly_requests: 100000 # Lower traffic in staging
+    monthly_cpu_seconds: 864000 # ~10 days of usage
+    monthly_memory_gb_seconds: 432000
+
+  module.cloud_run_service["adyela-api-staging"]:
+    monthly_requests: 500000
+    monthly_cpu_seconds: 1728000 # ~20 days
+    monthly_memory_gb_seconds: 1728000 # 1GB memory
+
+  module.cloud_sql["staging"]:
+    monthly_db_size_gb: 20 # Smaller database in staging
+    monthly_backup_size_gb: 20
+    monthly_cpu_utilization: 30 # Lower utilization
+
+  module.cloud_storage["staging-uploads"]:
+    monthly_storage_gb: 50
+    monthly_class_a_operations: 5000
+    monthly_class_b_operations: 50000
+    monthly_egress_gb: 20
+
+  # Production - Higher usage estimates
+  module.cloud_run_service["adyela-web-production"]:
+    monthly_requests: 5000000 # 5M requests/month
+    monthly_cpu_seconds: 5184000 # ~60 days (2 instances)
+    monthly_memory_gb_seconds: 5184000 # 1GB memory
+
+  module.cloud_run_service["adyela-api-production"]:
+    monthly_requests: 10000000 # 10M API requests
+    monthly_cpu_seconds: 10368000 # ~120 days (4 instances)
+    monthly_memory_gb_seconds: 20736000 # 2GB memory
+
+  module.cloud_sql["production"]:
+    monthly_db_size_gb: 200 # Larger production database
+    monthly_backup_size_gb: 200
+    monthly_cpu_utilization: 70 # Higher utilization
+
+  module.cloud_storage["production-uploads"]:
+    monthly_storage_gb: 500
+    monthly_class_a_operations: 50000
+    monthly_class_b_operations: 500000
+    monthly_egress_gb: 200
+
+  # Disaster Recovery Resources (when enabled)
+  module.disaster_recovery.module.multi_region_cloud_run["adyela-web-production-dr"]:
+    monthly_requests: 0 # Cold standby - no traffic normally
+    monthly_cpu_seconds: 0 # No CPU when not running
+    monthly_memory_gb_seconds: 0
+
+  module.disaster_recovery.module.cloud_sql_dr:
+    monthly_db_size_gb: 200 # Matches primary
+    monthly_backup_size_gb: 100 # Fewer backups on replica
+    monthly_cpu_utilization: 10 # Minimal read replica usage
+
+  module.disaster_recovery.module.cross_region_storage["production-uploads"]:
+    monthly_storage_gb: 500 # Same as primary
+    monthly_class_a_operations: 10000 # Replication writes
+    monthly_class_b_operations: 50000 # Verification reads
+    monthly_egress_gb: 50 # Cross-region replication
+
+# Notes:
+# - These are ESTIMATES for more accurate cost projections
+# - Actual usage may vary significantly based on real traffic
+# - Update these values quarterly based on actual metrics
+# - Use GCP monitoring dashboards to get real usage data

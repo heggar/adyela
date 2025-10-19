@@ -1,0 +1,93 @@
+# ============================================================================
+# ARTIFACT REGISTRY - Docker Container Registry
+# Cost: ~$1-5/month (storage + egress)
+# Purpose: Centralized Docker image storage for all microservices
+# ============================================================================
+
+module "container_registry" {
+  source = "../../modules/artifact-registry"
+
+  project_id    = var.project_id
+  repository_id = var.artifact_registry_repository
+  location      = var.region
+  environment   = var.environment
+
+  description = "Docker images for Adyela microservices (${var.environment})"
+  format      = "DOCKER"
+
+  # Cleanup policies for cost optimization
+  cleanup_policies = [
+    # Keep only recent 10 versions per image (staging doesn't need long history)
+    {
+      id     = "keep-recent-10-versions"
+      action = "KEEP"
+      most_recent_versions = {
+        keep_count = 10
+      }
+    },
+    # Delete untagged images after 7 days
+    {
+      id     = "delete-old-untagged"
+      action = "DELETE"
+      condition = {
+        tag_state  = "UNTAGGED"
+        older_than = "604800s" # 7 days
+      }
+    },
+    # Delete old staging/preview tags after 14 days
+    {
+      id     = "delete-old-staging-tags"
+      action = "DELETE"
+      condition = {
+        tag_prefixes = ["staging-", "preview-", "pr-"]
+        older_than   = "1209600s" # 14 days
+      }
+    }
+  ]
+
+  # Staging allows tag overwrites (production will use immutable_tags = true)
+  immutable_tags = false
+
+  # Create dedicated service account for GitHub Actions CI/CD
+  create_cicd_service_account = true
+  grant_storage_admin         = false # Only writer access needed
+
+  # IAM: Grant read access to Cloud Run service accounts
+  reader_members = [
+    "serviceAccount:${module.api_auth.service_account_email}",
+    "serviceAccount:${module.api_appointments.service_account_email}",
+    "serviceAccount:${module.api_payments.service_account_email}",
+    "serviceAccount:${module.api_notifications.service_account_email}",
+    "serviceAccount:${module.api_admin.service_account_email}",
+    "serviceAccount:${module.api_analytics.service_account_email}",
+  ]
+
+  # IAM: Grant write access to CI/CD (GitHub Actions)
+  writer_members = [
+    # CI/CD service account will be added via create_cicd_service_account
+    # Additional CI/CD tools can be added here if needed
+  ]
+
+  # Apply standard labels from common module
+  labels = module.labels.cicd_labels
+}
+
+# ============================================================================
+# OUTPUTS
+# ============================================================================
+
+output "container_registry_url" {
+  description = "Full URL for pushing/pulling Docker images"
+  value       = module.container_registry.repository_url
+  # Example: us-central1-docker.pkg.dev/adyela-staging/adyela
+}
+
+output "container_registry_id" {
+  description = "Repository ID for Artifact Registry"
+  value       = module.container_registry.repository_id
+}
+
+output "cicd_service_account_email" {
+  description = "Service account for CI/CD (use in GitHub Actions)"
+  value       = module.container_registry.cicd_service_account_email
+}

@@ -1,0 +1,275 @@
+# ================================================================================
+# Cloud Armor Security Policy - HIPAA & OWASP Top 10 Protection
+# Cost: $7/month base + $1/rule/month = ~$17/month
+# ================================================================================
+#
+# This module provides WAF protection for the load balancer with:
+# - OWASP Top 10 protection
+# - SQL Injection, XSS, RCE protection
+# - DDoS mitigation
+# - Rate limiting
+# - Geographic access control (optional)
+# ================================================================================
+
+module "cloud_armor" {
+  source = "../../modules/cloud-armor"
+
+  project_id  = var.project_id
+  policy_name = "${var.project_name}-${var.environment}-waf-policy"
+  description = "HIPAA-compliant WAF policy for ${var.environment} environment"
+
+  # Default rule action (allow for staging, deny for production)
+  default_rule_action = "allow"
+
+  # Enable Adaptive Protection (DDoS defense)
+  enable_adaptive_protection           = true
+  adaptive_protection_rule_visibility  = "STANDARD"
+
+  # Advanced options
+  enable_advanced_options = true
+  json_parsing            = "STANDARD"
+  log_level               = "VERBOSE" # VERBOSE for staging, NORMAL for production
+  json_content_types      = ["application/json", "application/vnd.api+json"]
+
+  # OWASP Top 10 Protection Rules
+  enable_owasp_rules = true
+  owasp_rules = [
+    {
+      priority    = 1000
+      rule_id     = "owasp-crs-v030301-id942110-sqli"
+      expression  = "evaluatePreconfiguredExpr('sqli-v33-stable')"
+      description = "SQL Injection Protection (OWASP CRS 942110)"
+    },
+    {
+      priority    = 1001
+      rule_id     = "owasp-crs-v030301-id941100-xss"
+      expression  = "evaluatePreconfiguredExpr('xss-v33-stable')"
+      description = "Cross-Site Scripting (XSS) Protection (OWASP CRS 941100)"
+    },
+    {
+      priority    = 1002
+      rule_id     = "owasp-crs-v030301-id930120-lfi"
+      expression  = "evaluatePreconfiguredExpr('lfi-v33-stable')"
+      description = "Local File Inclusion (LFI) Protection (OWASP CRS 930120)"
+    },
+    {
+      priority    = 1003
+      rule_id     = "owasp-crs-v030301-id931120-rfi"
+      expression  = "evaluatePreconfiguredExpr('rfi-v33-stable')"
+      description = "Remote File Inclusion (RFI) Protection (OWASP CRS 931120)"
+    },
+    {
+      priority    = 1004
+      rule_id     = "owasp-crs-v030301-id932120-rce"
+      expression  = "evaluatePreconfiguredExpr('rce-v33-stable')"
+      description = "Remote Code Execution (RCE) Protection (OWASP CRS 932120)"
+    }
+  ]
+
+  # SQL Injection Protection
+  enable_sqli_protection = true
+  sqli_protection_priority = 2000
+  sqli_protection_expression = <<-EOT
+    evaluatePreconfiguredExpr('sqli-v33-stable',
+      ['owasp-crs-v030301-id942251-sqli',
+       'owasp-crs-v030301-id942420-sqli',
+       'owasp-crs-v030301-id942431-sqli',
+       'owasp-crs-v030301-id942460-sqli'])
+  EOT
+
+  # XSS Protection
+  enable_xss_protection = true
+  xss_protection_priority = 2001
+  xss_protection_expression = <<-EOT
+    evaluatePreconfiguredExpr('xss-v33-stable',
+      ['owasp-crs-v030301-id941150-xss',
+       'owasp-crs-v030301-id941320-xss',
+       'owasp-crs-v030301-id941330-xss',
+       'owasp-crs-v030301-id941340-xss'])
+  EOT
+
+  # LFI/RFI Protection
+  enable_lfi_protection = true
+  lfi_protection_priority = 2002
+  lfi_protection_expression = "evaluatePreconfiguredExpr('lfi-v33-stable')"
+
+  # RCE Protection
+  enable_rce_protection = true
+  rce_protection_priority = 2003
+  rce_protection_expression = "evaluatePreconfiguredExpr('rce-v33-stable')"
+
+  # Scanner/Bot Detection
+  enable_scanner_detection = true
+  scanner_detection_priority = 2004
+  scanner_detection_expression = <<-EOT
+    has(request.headers['user-agent']) && (
+      request.headers['user-agent'].contains('sqlmap') ||
+      request.headers['user-agent'].contains('nikto') ||
+      request.headers['user-agent'].contains('nmap') ||
+      request.headers['user-agent'].contains('masscan') ||
+      request.headers['user-agent'].contains('metasploit') ||
+      request.headers['user-agent'].contains('burpsuite')
+    )
+  EOT
+
+  # Protocol Attack Protection
+  enable_protocol_attack_protection = true
+  protocol_attack_protection_priority = 2005
+  protocol_attack_protection_expression = "evaluatePreconfiguredExpr('protocolattack-v33-stable')"
+
+  # Session Fixation Protection
+  enable_session_fixation_protection = true
+  session_fixation_protection_priority = 2006
+  session_fixation_protection_expression = "evaluatePreconfiguredExpr('sessionfixation-v33-stable')"
+
+  # Custom Rate Limiting Rules
+  custom_rules = [
+    # Rate limit for API endpoints (100 requests per minute per IP)
+    {
+      priority    = 3000
+      action      = "throttle"
+      description = "Rate limit API endpoints: 100 req/min per IP"
+      expression  = "request.path.matches('/api/.*')"
+      rate_limit_options = {
+        conform_action     = "allow"
+        exceed_action      = "deny(429)"
+        threshold_count    = 100
+        threshold_interval = 60
+        enforce_on_key     = "IP"
+        ban_threshold_count    = 300 # Ban after 300 requests
+        ban_threshold_interval = 60
+        ban_duration_sec       = 600 # Ban for 10 minutes
+      }
+    },
+    # Rate limit for authentication endpoints (10 requests per minute per IP)
+    {
+      priority    = 3001
+      action      = "throttle"
+      description = "Rate limit auth endpoints: 10 req/min per IP"
+      expression  = "request.path.matches('/api/v1/auth/.*')"
+      rate_limit_options = {
+        conform_action     = "allow"
+        exceed_action      = "deny(429)"
+        threshold_count    = 10
+        threshold_interval = 60
+        enforce_on_key     = "IP"
+        ban_threshold_count    = 30
+        ban_threshold_interval = 60
+        ban_duration_sec       = 1800 # Ban for 30 minutes
+      }
+    },
+    # Block common attack patterns in query strings
+    {
+      priority    = 3002
+      action      = "deny(403)"
+      description = "Block common attack patterns in query strings"
+      expression  = <<-EOT
+        request.query.contains('union%20select') ||
+        request.query.contains('base64_decode') ||
+        request.query.contains('eval(') ||
+        request.query.contains('system(') ||
+        request.query.contains('../') ||
+        request.query.contains('..\\')
+      EOT
+    },
+    # Allow health check endpoints (bypass all rules)
+    {
+      priority    = 100
+      action      = "allow"
+      description = "Allow health check endpoints"
+      expression  = "request.path.matches('/health|/healthz|/_healthz')"
+    }
+  ]
+
+  # IP Allowlist (optional - for admin access)
+  # ip_allowlist = ["203.0.113.0/24", "198.51.100.0/24"]
+  # ip_allowlist_priority = 200
+
+  # IP Denylist (optional - block known malicious IPs)
+  ip_denylist = []
+  ip_denylist_priority = 300
+
+  # Geographic restrictions (optional)
+  # For healthcare, you might want to restrict to specific regions
+  # geo_allowlist = ["US", "CA", "MX"] # North America only
+  # geo_allowlist_priority = 400
+
+  # Geographic blocking (optional - block high-risk countries)
+  # geo_denylist = ["CN", "RU", "KP"] # Block China, Russia, North Korea
+  # geo_denylist_priority = 500
+
+  # Enable logging headers for debugging
+  enable_logging_headers = true
+
+  # Enable preconfigured WAF rules (Google-managed)
+  enable_preconfigured_waf_rules = true
+  preconfigured_waf_config_exclusions = [
+    {
+      target_rule_set   = "sqli-v33-stable"
+      sensitivity_level = 1 # 0 = low, 1 = medium, 2 = high, 3 = paranoid
+      exclusions = []
+    },
+    {
+      target_rule_set   = "xss-v33-stable"
+      sensitivity_level = 1
+      exclusions = []
+    },
+    {
+      target_rule_set   = "lfi-v33-stable"
+      sensitivity_level = 1
+      exclusions = []
+    },
+    {
+      target_rule_set   = "rfi-v33-stable"
+      sensitivity_level = 1
+      exclusions = []
+    },
+    {
+      target_rule_set   = "rce-v33-stable"
+      sensitivity_level = 1
+      exclusions = []
+    },
+    {
+      target_rule_set   = "protocolattack-v33-stable"
+      sensitivity_level = 1
+      exclusions = []
+    },
+    {
+      target_rule_set   = "sessionfixation-v33-stable"
+      sensitivity_level = 1
+      exclusions = []
+    }
+  ]
+}
+
+# ================================================================================
+# Attach Cloud Armor Policy to Load Balancer Backend Service
+# ================================================================================
+
+# Note: The backend service is managed by the load-balancer module
+# To attach this policy, you need to reference the backend service from the load balancer
+# This will be done in the load-balancer module configuration
+
+# ================================================================================
+# Outputs
+# ================================================================================
+
+output "cloud_armor_policy_id" {
+  description = "ID of the Cloud Armor security policy"
+  value       = module.cloud_armor.security_policy_id
+}
+
+output "cloud_armor_policy_name" {
+  description = "Name of the Cloud Armor security policy"
+  value       = module.cloud_armor.security_policy_name
+}
+
+output "cloud_armor_policy_self_link" {
+  description = "Self-link of the Cloud Armor security policy"
+  value       = module.cloud_armor.security_policy_self_link
+}
+
+output "cloud_armor_rule_count" {
+  description = "Number of security rules configured"
+  value       = module.cloud_armor.rule_count
+}

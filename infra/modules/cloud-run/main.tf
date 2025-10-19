@@ -32,7 +32,7 @@ resource "google_cloud_run_v2_service" "api" {
     service_account = var.service_account_email
 
     # Configuración de timeout optimizada
-    timeout = "60s"  # Reducido de 300s (default) a 60s
+    timeout = "60s" # Reducido de 300s (default) a 60s
 
     scaling {
       min_instance_count = var.min_instances
@@ -48,10 +48,10 @@ resource "google_cloud_run_v2_service" "api" {
 
       resources {
         limits = {
-          cpu    = "1"       # Mantener 1 vCPU (requerido para concurrencia > 1)
-          memory = "512Mi"   # Mantener 512Mi (mínimo requerido con CPU = 1)
+          cpu    = "1"     # Mantener 1 vCPU (requerido para concurrencia > 1)
+          memory = "512Mi" # Mantener 512Mi (mínimo requerido con CPU = 1)
         }
-        
+
       }
 
       env {
@@ -86,7 +86,7 @@ resource "google_cloud_run_v2_service" "api" {
 
       env {
         name  = "CORS_ORIGINS"
-        value = "https://staging.adyela.care,https://adyela-staging.firebaseapp.com,https://adyela-staging.web.app"
+        value = "https://staging.adyela.care,https://patient.staging.adyela.care,https://professional.staging.adyela.care"
       }
 
       # HIPAA Secrets
@@ -137,7 +137,7 @@ resource "google_cloud_run_v2_service" "web" {
     service_account = var.service_account_email
 
     # Configuración de timeout optimizada
-    timeout = "60s"  # Reducido de 300s (default) a 60s
+    timeout = "60s" # Reducido de 300s (default) a 60s
 
     scaling {
       min_instance_count = var.min_instances
@@ -153,10 +153,10 @@ resource "google_cloud_run_v2_service" "web" {
 
       resources {
         limits = {
-          cpu    = "1"       # Mantener 1 vCPU (requerido para concurrencia > 1)
-          memory = "512Mi"   # Mantener 512Mi (mínimo requerido con CPU = 1)
+          cpu    = "1"     # Mantener 1 vCPU (requerido para concurrencia > 1)
+          memory = "512Mi" # Mantener 512Mi (mínimo requerido con CPU = 1)
         }
-        
+
       }
 
       env {

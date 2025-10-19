@@ -6,7 +6,7 @@ terraform {
   required_providers {
     google = {
       source  = "hashicorp/google"
-      version = "~> 5.0"
+      version = "~> 6.0"
     }
   }
 }
@@ -60,8 +60,8 @@ resource "google_billing_budget" "staging" {
 
   # Email notifications
   all_updates_rule {
-    pubsub_topic              = google_pubsub_topic.budget_alerts.id
-    disable_default_iam_recipients = false
+    pubsub_topic                     = google_pubsub_topic.budget_alerts.id
+    disable_default_iam_recipients   = false
     monitoring_notification_channels = var.notification_channel_ids
   }
 }
@@ -114,8 +114,8 @@ resource "google_billing_budget" "production" {
   }
 
   all_updates_rule {
-    pubsub_topic              = google_pubsub_topic.budget_alerts.id
-    disable_default_iam_recipients = false
+    pubsub_topic                     = google_pubsub_topic.budget_alerts.id
+    disable_default_iam_recipients   = false
     monitoring_notification_channels = var.notification_channel_ids
   }
 }

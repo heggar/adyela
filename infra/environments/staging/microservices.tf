@@ -17,16 +17,16 @@ module "api_auth" {
   container_port  = 8000
 
   # Resources - optimized for staging
-  cpu_limit              = "1"
-  memory_limit           = "512Mi"
-  cpu_always_allocated   = false # Scale-to-zero enabled
-  cpu_throttling         = true
-  startup_cpu_boost      = true
-  execution_environment  = "gen2"
+  cpu_limit             = "1"
+  memory_limit          = "512Mi"
+  cpu_always_allocated  = false # Scale-to-zero enabled
+  cpu_throttling        = true
+  startup_cpu_boost     = true
+  execution_environment = "gen2"
 
   # Scaling
-  min_instances          = 0  # Scale-to-zero for cost optimization
-  max_instances          = 5
+  min_instances           = 0 # Scale-to-zero for cost optimization
+  max_instances           = 5
   max_concurrent_requests = 80
 
   # Health checks
@@ -46,12 +46,12 @@ module "api_auth" {
 
   # Environment variables
   environment_variables = {
-    ENVIRONMENT      = "staging"
-    PROJECT_ID       = var.project_id
-    REGION           = var.region
-    LOG_LEVEL        = "INFO"
+    ENVIRONMENT        = "staging"
+    PROJECT_ID         = var.project_id
+    REGION             = var.region
+    LOG_LEVEL          = "INFO"
     FIRESTORE_DATABASE = "(default)"
-    CORS_ORIGINS     = "https://staging.adyela.care,https://admin.staging.adyela.care"
+    CORS_ORIGINS       = "https://staging.adyela.care,https://admin.staging.adyela.care,https://patient.staging.adyela.care,https://professional.staging.adyela.care"
   }
 
   # Secrets from Secret Manager
@@ -93,15 +93,15 @@ module "api_appointments" {
   container_port  = 8000
 
   # Resources
-  cpu_limit              = "1"
-  memory_limit           = "512Mi"
-  cpu_always_allocated   = false
-  cpu_throttling         = true
-  startup_cpu_boost      = true
+  cpu_limit            = "1"
+  memory_limit         = "512Mi"
+  cpu_always_allocated = false
+  cpu_throttling       = true
+  startup_cpu_boost    = true
 
   # Scaling
-  min_instances          = 0
-  max_instances          = 10
+  min_instances           = 0
+  max_instances           = 10
   max_concurrent_requests = 80
 
   # Health checks
@@ -121,12 +121,12 @@ module "api_appointments" {
   ]
 
   environment_variables = {
-    ENVIRONMENT        = "staging"
-    PROJECT_ID         = var.project_id
-    REGION             = var.region
-    LOG_LEVEL          = "INFO"
-    AUTH_SERVICE_URL   = module.api_auth.service_url
-    PUBSUB_TOPIC_NAME  = module.pubsub.appointments_topic_name
+    ENVIRONMENT       = "staging"
+    PROJECT_ID        = var.project_id
+    REGION            = var.region
+    LOG_LEVEL         = "INFO"
+    AUTH_SERVICE_URL  = module.api_auth.service_url
+    PUBSUB_TOPIC_NAME = module.pubsub.appointments_topic_name
   }
 
   secret_environment_variables = {
@@ -165,14 +165,14 @@ module "api_payments" {
   container_port  = 3000 # Node.js default
 
   # Resources
-  cpu_limit              = "1"
-  memory_limit           = "512Mi"
-  cpu_always_allocated   = false
-  cpu_throttling         = true
+  cpu_limit            = "1"
+  memory_limit         = "512Mi"
+  cpu_always_allocated = false
+  cpu_throttling       = true
 
   # Scaling
-  min_instances          = 0
-  max_instances          = 5
+  min_instances           = 0
+  max_instances           = 5
   max_concurrent_requests = 80
 
   # Health checks
@@ -191,12 +191,12 @@ module "api_payments" {
   ]
 
   environment_variables = {
-    NODE_ENV           = "staging"
-    PROJECT_ID         = var.project_id
-    REGION             = var.region
-    LOG_LEVEL          = "info"
-    AUTH_SERVICE_URL   = module.api_auth.service_url
-    PUBSUB_TOPIC_NAME  = module.pubsub.payments_topic_name
+    NODE_ENV          = "staging"
+    PROJECT_ID        = var.project_id
+    REGION            = var.region
+    LOG_LEVEL         = "info"
+    AUTH_SERVICE_URL  = module.api_auth.service_url
+    PUBSUB_TOPIC_NAME = module.pubsub.payments_topic_name
   }
 
   secret_environment_variables = {
@@ -235,14 +235,14 @@ module "api_notifications" {
   container_port  = 3000
 
   # Resources
-  cpu_limit              = "0.5" # Lower resources for notifications
-  memory_limit           = "256Mi"
-  cpu_always_allocated   = false
-  cpu_throttling         = true
+  cpu_limit            = "1" # Minimum 1 CPU required for concurrency > 1
+  memory_limit         = "512Mi"
+  cpu_always_allocated = false
+  cpu_throttling       = true
 
   # Scaling
-  min_instances          = 0
-  max_instances          = 10 # Can scale higher for burst notifications
+  min_instances           = 0
+  max_instances           = 10 # Can scale higher for burst notifications
   max_concurrent_requests = 100
 
   # Health checks
@@ -261,10 +261,10 @@ module "api_notifications" {
   ]
 
   environment_variables = {
-    NODE_ENV     = "staging"
-    PROJECT_ID   = var.project_id
-    REGION       = var.region
-    LOG_LEVEL    = "info"
+    NODE_ENV   = "staging"
+    PROJECT_ID = var.project_id
+    REGION     = var.region
+    LOG_LEVEL  = "info"
   }
 
   secret_environment_variables = {
@@ -309,14 +309,14 @@ module "api_admin" {
   container_port  = 8000
 
   # Resources
-  cpu_limit              = "1"
-  memory_limit           = "512Mi"
-  cpu_always_allocated   = false
-  cpu_throttling         = true
+  cpu_limit            = "1"
+  memory_limit         = "512Mi"
+  cpu_always_allocated = false
+  cpu_throttling       = true
 
   # Scaling
-  min_instances          = 0
-  max_instances          = 3 # Lower max for admin
+  min_instances           = 0
+  max_instances           = 3 # Lower max for admin
   max_concurrent_requests = 50
 
   # Health checks
@@ -379,14 +379,14 @@ module "api_analytics" {
   container_port  = 8000
 
   # Resources - can be lower for analytics processing
-  cpu_limit              = "1"
-  memory_limit           = "1Gi" # More memory for data processing
-  cpu_always_allocated   = false
-  cpu_throttling         = true
+  cpu_limit            = "1"
+  memory_limit         = "1Gi" # More memory for data processing
+  cpu_always_allocated = false
+  cpu_throttling       = true
 
   # Scaling
-  min_instances          = 0
-  max_instances          = 5
+  min_instances           = 0
+  max_instances           = 5
   max_concurrent_requests = 50
 
   # Health checks

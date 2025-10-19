@@ -1,0 +1,231 @@
+name: Deploy Flutter Web Apps
+
+on:
+  push:
+    branches:
+      - develop # Staging
+      - main # Production
+    paths:
+      - 'apps/mobile-patient/**'
+      - 'apps/mobile-professional/**'
+      - 'packages/flutter-core/**'
+      - 'packages/flutter-shared/**'
+      - '.github/workflows/deploy-flutter-web.yml'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        type: choice
+        options:
+          - staging
+          - production
+
+env:
+  FLUTTER_VERSION: '3.24.0'
+  GCP_REGION: 'us-central1'
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  # ============================================================================
+  # Determine Target Environment
+  # ============================================================================
+  determine-environment:
+    name: Determine Environment
+    runs-on: ubuntu-latest
+    outputs:
+      environment: ${{ steps.set-env.outputs.environment }}
+      project_id: ${{ steps.set-env.outputs.project_id }}
+      api_url: ${{ steps.set-env.outputs.api_url }}
+    steps:
+      - name: Set environment based on branch
+        id: set-env
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            ENVIRONMENT="${{ github.event.inputs.environment }}"
+          elif [ "${{ github.ref }}" == "refs/heads/main" ]; then
+            ENVIRONMENT="production"
+          else
+            ENVIRONMENT="staging"
+          fi
+
+          echo "environment=$ENVIRONMENT" >> $GITHUB_OUTPUT
+
+          # Set project ID based on environment
+          if [ "$ENVIRONMENT" == "production" ]; then
+            echo "project_id=${{ secrets.GCP_PROJECT_ID_PROD }}" >> $GITHUB_OUTPUT
+            echo "api_url=https://api.adyela.care" >> $GITHUB_OUTPUT
+          else
+            echo "project_id=${{ secrets.GCP_PROJECT_ID_STAGING }}" >> $GITHUB_OUTPUT
+            echo "api_url=https://api.staging.adyela.care" >> $GITHUB_OUTPUT
+          fi
+
+  # ============================================================================
+  # Build and Deploy Patient App
+  # ============================================================================
+  deploy-patient:
+    name: Deploy Patient App (Flutter Web)
+    runs-on: ubuntu-latest
+    needs: [determine-environment]
+    environment: ${{ needs.determine-environment.outputs.environment }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER_STAGING }}
+          service_account: ${{ secrets.SERVICE_ACCOUNT_STAGING }}
+
+      - name: Setup Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        run: |
+          gcloud auth configure-docker ${{ env.GCP_REGION }}-docker.pkg.dev
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and Push Patient App
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: apps/mobile-patient/Dockerfile.web
+          push: true
+          tags: |
+            ${{ env.GCP_REGION }}-docker.pkg.dev/${{ needs.determine-environment.outputs.project_id }}/adyela/adyela-patient-web-${{ needs.determine-environment.outputs.environment }}:latest
+            ${{ env.GCP_REGION }}-docker.pkg.dev/${{ needs.determine-environment.outputs.project_id }}/adyela/adyela-patient-web-${{ needs.determine-environment.outputs.environment }}:${{ github.sha }}
+          build-args: |
+            API_URL=${{ needs.determine-environment.outputs.api_url }}
+            ENVIRONMENT=${{ needs.determine-environment.outputs.environment }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy adyela-patient-web-${{ needs.determine-environment.outputs.environment }} \
+            --image=${{ env.GCP_REGION }}-docker.pkg.dev/${{ needs.determine-environment.outputs.project_id }}/adyela/adyela-patient-web-${{ needs.determine-environment.outputs.environment }}:${{ github.sha }} \
+            --region=${{ env.GCP_REGION }} \
+            --platform=managed \
+            --allow-unauthenticated \
+            --max-instances=10 \
+            --min-instances=0 \
+            --memory=512Mi \
+            --cpu=1 \
+            --timeout=60 \
+            --concurrency=80 \
+            --labels=environment=${{ needs.determine-environment.outputs.environment }},app=patient,type=flutter-web,managed-by=github-actions \
+            --set-env-vars=ENVIRONMENT=${{ needs.determine-environment.outputs.environment }},API_URL=${{ needs.determine-environment.outputs.api_url }}
+
+      - name: Get Service URL
+        id: get-url
+        run: |
+          SERVICE_URL=$(gcloud run services describe adyela-patient-web-${{ needs.determine-environment.outputs.environment }} \
+            --region=${{ env.GCP_REGION }} \
+            --format='value(status.url)')
+          echo "service_url=$SERVICE_URL" >> $GITHUB_OUTPUT
+          echo "✅ Patient App deployed to: $SERVICE_URL"
+
+  # ============================================================================
+  # Build and Deploy Professional App
+  # ============================================================================
+  deploy-professional:
+    name: Deploy Professional App (Flutter Web)
+    runs-on: ubuntu-latest
+    needs: [determine-environment]
+    environment: ${{ needs.determine-environment.outputs.environment }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER_STAGING }}
+          service_account: ${{ secrets.SERVICE_ACCOUNT_STAGING }}
+
+      - name: Setup Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        run: |
+          gcloud auth configure-docker ${{ env.GCP_REGION }}-docker.pkg.dev
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and Push Professional App
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: apps/mobile-professional/Dockerfile.web
+          push: true
+          tags: |
+            ${{ env.GCP_REGION }}-docker.pkg.dev/${{ needs.determine-environment.outputs.project_id }}/adyela/adyela-professional-web-${{ needs.determine-environment.outputs.environment }}:latest
+            ${{ env.GCP_REGION }}-docker.pkg.dev/${{ needs.determine-environment.outputs.project_id }}/adyela/adyela-professional-web-${{ needs.determine-environment.outputs.environment }}:${{ github.sha }}
+          build-args: |
+            API_URL=${{ needs.determine-environment.outputs.api_url }}
+            ENVIRONMENT=${{ needs.determine-environment.outputs.environment }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy adyela-professional-web-${{ needs.determine-environment.outputs.environment }} \
+            --image=${{ env.GCP_REGION }}-docker.pkg.dev/${{ needs.determine-environment.outputs.project_id }}/adyela/adyela-professional-web-${{ needs.determine-environment.outputs.environment }}:${{ github.sha }} \
+            --region=${{ env.GCP_REGION }} \
+            --platform=managed \
+            --allow-unauthenticated \
+            --max-instances=10 \
+            --min-instances=0 \
+            --memory=512Mi \
+            --cpu=1 \
+            --timeout=60 \
+            --concurrency=80 \
+            --labels=environment=${{ needs.determine-environment.outputs.environment }},app=professional,type=flutter-web,managed-by=github-actions \
+            --set-env-vars=ENVIRONMENT=${{ needs.determine-environment.outputs.environment }},API_URL=${{ needs.determine-environment.outputs.api_url }}
+
+      - name: Get Service URL
+        id: get-url
+        run: |
+          SERVICE_URL=$(gcloud run services describe adyela-professional-web-${{ needs.determine-environment.outputs.environment }} \
+            --region=${{ env.GCP_REGION }} \
+            --format='value(status.url)')
+          echo "service_url=$SERVICE_URL" >> $GITHUB_OUTPUT
+          echo "✅ Professional App deployed to: $SERVICE_URL"
+
+  # ============================================================================
+  # Post-Deployment Summary
+  # ============================================================================
+  summary:
+    name: Deployment Summary
+    runs-on: ubuntu-latest
+    needs: [determine-environment, deploy-patient, deploy-professional]
+    if: always()
+    steps:
+      - name: Create Summary
+        run: |
+          echo "## 🚀 Flutter Web Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Environment:** \`${{ needs.determine-environment.outputs.environment }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Project:** \`${{ needs.determine-environment.outputs.project_id }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**API URL:** \`${{ needs.determine-environment.outputs.api_url }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📱 Applications" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Application | Status | URL |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------------|--------|-----|" >> $GITHUB_STEP_SUMMARY
+          echo "| Patient Web | ${{ needs.deploy-patient.result == 'success' && '✅ Deployed' || '❌ Failed' }} | https://patient.${{ needs.determine-environment.outputs.environment == 'production' && 'adyela.care' || 'staging.adyela.care' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Professional Web | ${{ needs.deploy-professional.result == 'success' && '✅ Deployed' || '❌ Failed' }} | https://professional.${{ needs.determine-environment.outputs.environment == 'production' && 'adyela.care' || 'staging.adyela.care' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### ℹ️ Next Steps" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "1. Verify DNS records point to load balancer IP" >> $GITHUB_STEP_SUMMARY
+          echo "2. Wait for SSL certificates to provision (~15 minutes)" >> $GITHUB_STEP_SUMMARY
+          echo "3. Test applications at the URLs above" >> $GITHUB_STEP_SUMMARY
+          echo "4. Monitor Cloud Run logs for any issues" >> $GITHUB_STEP_SUMMARY

@@ -31,3 +31,27 @@ variable "budget_alert_emails" {
   type        = list(string)
   default     = ["hever_gonzalezg@adyela.care"]
 }
+
+variable "environment" {
+  description = "Environment name (e.g., staging, production)"
+  type        = string
+  default     = "staging"
+}
+
+variable "artifact_registry_repository" {
+  description = "Name of the Artifact Registry repository"
+  type        = string
+  default     = "adyela"
+}
+
+variable "allowed_ips" {
+  description = "List of allowed IP addresses for Cloud Armor"
+  type        = list(string)
+  default     = []
+}
+
+variable "contact_email" {
+  description = "Contact email for resource labels"
+  type        = string
+  default     = "hever_gonzalezg@adyela.care"
+}

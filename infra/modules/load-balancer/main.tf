@@ -43,6 +43,45 @@ resource "google_compute_region_network_endpoint_group" "api_neg" {
   }
 }
 
+# Serverless Network Endpoint Group for Patient App (Flutter Web)
+resource "google_compute_region_network_endpoint_group" "patient_neg" {
+  count = var.patient_service_name != null ? 1 : 0
+
+  name                  = "${var.project_name}-${var.environment}-patient-neg"
+  network_endpoint_type = "SERVERLESS"
+  region                = var.region
+
+  cloud_run {
+    service = var.patient_service_name
+  }
+}
+
+# Serverless Network Endpoint Group for Professional App (Flutter Web)
+resource "google_compute_region_network_endpoint_group" "professional_neg" {
+  count = var.professional_service_name != null ? 1 : 0
+
+  name                  = "${var.project_name}-${var.environment}-professional-neg"
+  network_endpoint_type = "SERVERLESS"
+  region                = var.region
+
+  cloud_run {
+    service = var.professional_service_name
+  }
+}
+
+# Serverless Network Endpoint Groups for Microservices (Dynamic)
+resource "google_compute_region_network_endpoint_group" "microservices_neg" {
+  for_each = var.microservices
+
+  name                  = "${var.project_name}-${var.environment}-${each.key}-neg"
+  network_endpoint_type = "SERVERLESS"
+  region                = var.region
+
+  cloud_run {
+    service = each.value.service_name
+  }
+}
+
 # Bucket for access logs
 resource "google_storage_bucket" "logs" {
   name          = "${var.project_name}-${var.environment}-logs"
@@ -80,7 +119,11 @@ resource "google_storage_bucket" "static_assets" {
   public_access_prevention    = "unspecified" # Allow public access for CDN
 
   cors {
-    origin          = ["https://${var.domain}", "https://api.${var.domain}"]
+    origin = concat(
+      ["https://${var.domain}", "https://api.${var.domain}"],
+      var.patient_service_name != null ? ["https://patient.${var.domain}"] : [],
+      var.professional_service_name != null ? ["https://professional.${var.domain}"] : []
+    )
     method          = ["GET", "HEAD", "OPTIONS"]
     response_header = ["*"]
     max_age_seconds = 3600
@@ -157,7 +200,7 @@ resource "google_compute_backend_service" "web_backend" {
   # Logging for audit trails - Optimizado para reducir costos
   log_config {
     enable      = true
-    sample_rate = 0.1  # Solo 10% de requests (suficiente para debugging)
+    sample_rate = 0.1 # Solo 10% de requests (suficiente para debugging)
   }
 }
 
@@ -187,7 +230,94 @@ resource "google_compute_backend_service" "api_backend" {
   # Logging for audit trails - Optimizado para reducir costos
   log_config {
     enable      = true
-    sample_rate = 0.1  # Solo 10% de requests (suficiente para debugging)
+    sample_rate = 0.1 # Solo 10% de requests (suficiente para debugging)
+  }
+}
+
+# Backend Service for Patient App (Flutter Web)
+resource "google_compute_backend_service" "patient_backend" {
+  count = var.patient_service_name != null ? 1 : 0
+
+  name        = "${var.project_name}-${var.environment}-patient-backend"
+  description = "Backend service for ${var.environment} patient app (Flutter web)"
+  protocol    = "HTTP"
+  port_name   = "http"
+  timeout_sec = 30
+
+  # Backend configuration
+  backend {
+    group = google_compute_region_network_endpoint_group.patient_neg[0].id
+  }
+
+  # Session affinity for better user experience
+  session_affinity        = "GENERATED_COOKIE"
+  affinity_cookie_ttl_sec = 3600
+
+  # Security settings
+  security_policy = null
+
+  # Logging
+  log_config {
+    enable      = true
+    sample_rate = 0.1
+  }
+}
+
+# Backend Service for Professional App (Flutter Web)
+resource "google_compute_backend_service" "professional_backend" {
+  count = var.professional_service_name != null ? 1 : 0
+
+  name        = "${var.project_name}-${var.environment}-professional-backend"
+  description = "Backend service for ${var.environment} professional app (Flutter web)"
+  protocol    = "HTTP"
+  port_name   = "http"
+  timeout_sec = 30
+
+  # Backend configuration
+  backend {
+    group = google_compute_region_network_endpoint_group.professional_neg[0].id
+  }
+
+  # Session affinity for better user experience
+  session_affinity        = "GENERATED_COOKIE"
+  affinity_cookie_ttl_sec = 3600
+
+  # Security settings
+  security_policy = null
+
+  # Logging
+  log_config {
+    enable      = true
+    sample_rate = 0.1
+  }
+}
+
+# Backend Services for Microservices (Dynamic)
+resource "google_compute_backend_service" "microservices_backend" {
+  for_each = var.microservices
+
+  name        = "${var.project_name}-${var.environment}-${each.key}-backend"
+  description = "Backend service for ${var.environment} ${each.key} microservice"
+  protocol    = "HTTP"
+  port_name   = "http"
+  timeout_sec = 60 # Longer timeout for microservices
+
+  # Backend configuration
+  backend {
+    group = google_compute_region_network_endpoint_group.microservices_neg[each.key].id
+  }
+
+  # Session affinity
+  session_affinity        = "GENERATED_COOKIE"
+  affinity_cookie_ttl_sec = 3600
+
+  # Security settings
+  security_policy = null
+
+  # Logging
+  log_config {
+    enable      = true
+    sample_rate = 0.1
   }
 }
 
@@ -226,35 +356,94 @@ resource "google_compute_health_check" "api_health_check" {
 # URL Map for routing
 resource "google_compute_url_map" "web_url_map" {
   name            = "${var.project_name}-${var.environment}-web-url-map"
-  description     = "URL map for ${var.environment} web application"
+  description     = "URL map for ${var.environment} web application with multi-app subdomain routing"
   default_service = google_compute_backend_service.web_backend.id
 
-  # HTTP to HTTPS redirect
+  # Host rule for admin web app (primary domain)
   host_rule {
-    hosts        = [var.domain, "api.${var.domain}"]
-    path_matcher = "allpaths"
+    hosts        = [var.domain]
+    path_matcher = "admin-matcher"
   }
 
+  # Host rule for API subdomain
+  host_rule {
+    hosts        = ["api.${var.domain}"]
+    path_matcher = "api-matcher"
+  }
+
+  # Host rule for patient app subdomain (if enabled)
+  dynamic "host_rule" {
+    for_each = var.patient_service_name != null ? [1] : []
+    content {
+      hosts        = ["patient.${var.domain}"]
+      path_matcher = "patient-matcher"
+    }
+  }
+
+  # Host rule for professional app subdomain (if enabled)
+  dynamic "host_rule" {
+    for_each = var.professional_service_name != null ? [1] : []
+    content {
+      hosts        = ["professional.${var.domain}"]
+      path_matcher = "professional-matcher"
+    }
+  }
+
+  # Path matcher for admin web app
   path_matcher {
-    name            = "allpaths"
+    name            = "admin-matcher"
     default_service = google_compute_backend_service.web_backend.id
 
-    # Route static assets to CDN - Solo assets hasheados de Vite
+    # Route static assets to CDN
     path_rule {
       paths   = ["/assets/*"]
       service = google_compute_backend_bucket.static_backend.id
     }
+  }
 
-    # Route health checks to API backend
+  # Path matcher for API subdomain with microservices routing
+  path_matcher {
+    name            = "api-matcher"
+    default_service = google_compute_backend_service.api_backend.id # Fallback to legacy API
+
+    # Microservices path-based routing (Strangler Pattern)
+    # Routes requests to new microservices based on path prefix
+    dynamic "path_rule" {
+      for_each = var.microservices
+      content {
+        paths   = ["${path_rule.value.path_prefix}/*"]
+        service = google_compute_backend_service.microservices_backend[path_rule.key].id
+      }
+    }
+
+    # Health checks (legacy API)
     path_rule {
       paths   = ["/health", "/readiness"]
       service = google_compute_backend_service.api_backend.id
     }
 
-    # Route API requests to API backend
+    # API docs (legacy API for now)
     path_rule {
-      paths   = ["/api/*"]
+      paths   = ["/docs", "/redoc", "/openapi.json"]
       service = google_compute_backend_service.api_backend.id
+    }
+  }
+
+  # Path matcher for patient app subdomain
+  dynamic "path_matcher" {
+    for_each = var.patient_service_name != null ? [1] : []
+    content {
+      name            = "patient-matcher"
+      default_service = google_compute_backend_service.patient_backend[0].id
+    }
+  }
+
+  # Path matcher for professional app subdomain
+  dynamic "path_matcher" {
+    for_each = var.professional_service_name != null ? [1] : []
+    content {
+      name            = "professional-matcher"
+      default_service = google_compute_backend_service.professional_backend[0].id
     }
   }
 }
@@ -277,7 +466,16 @@ resource "google_compute_managed_ssl_certificate" "web_ssl_cert" {
   name = "${var.project_name}-${var.environment}-web-ssl-cert"
 
   managed {
-    domains = [var.domain, "api.${var.domain}"]
+    domains = concat(
+      [var.domain, "api.${var.domain}"],
+      var.patient_service_name != null ? ["patient.${var.domain}"] : [],
+      var.professional_service_name != null ? ["professional.${var.domain}"] : [],
+      var.ssl_certificate_domains
+    )
+  }
+
+  lifecycle {
+    create_before_destroy = true
   }
 }
 

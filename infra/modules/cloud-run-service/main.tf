@@ -6,7 +6,7 @@ terraform {
   required_providers {
     google = {
       source  = "hashicorp/google"
-      version = "~> 5.0"
+      version = "~> 6.0"
     }
   }
 }
@@ -117,9 +117,9 @@ resource "google_cloud_run_v2_service" "service" {
 
     # Annotations for scaling behavior
     annotations = {
-      "autoscaling.knative.dev/minScale"      = tostring(var.min_instances)
-      "autoscaling.knative.dev/maxScale"      = tostring(var.max_instances)
-      "run.googleapis.com/cpu-throttling"     = var.cpu_throttling ? "true" : "false"
+      "autoscaling.knative.dev/minScale"         = tostring(var.min_instances)
+      "autoscaling.knative.dev/maxScale"         = tostring(var.max_instances)
+      "run.googleapis.com/cpu-throttling"        = var.cpu_throttling ? "true" : "false"
       "run.googleapis.com/execution-environment" = var.execution_environment
     }
   }
@@ -132,7 +132,7 @@ resource "google_cloud_run_v2_service" "service" {
   lifecycle {
     ignore_changes = [
       template[0].containers[0].image, # Allow CI/CD to update image
-      template[0].labels,               # Allow CI/CD to update labels
+      template[0].labels,              # Allow CI/CD to update labels
     ]
   }
 }

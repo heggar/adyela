@@ -40,10 +40,50 @@ variable "api_service_name" {
   type        = string
 }
 
+variable "patient_service_name" {
+  description = "Name of the Cloud Run patient app service (Flutter web)"
+  type        = string
+  default     = null
+}
+
+variable "professional_service_name" {
+  description = "Name of the Cloud Run professional app service (Flutter web)"
+  type        = string
+  default     = null
+}
+
+variable "microservices" {
+  description = "Map of microservice names to Cloud Run service names for path-based routing"
+  type = map(object({
+    service_name = string
+    path_prefix  = string
+  }))
+  default = {}
+  # Example:
+  # {
+  #   "auth" = {
+  #     service_name = "api-auth-staging"
+  #     path_prefix  = "/auth"
+  #   }
+  # }
+}
+
 variable "iap_enabled" {
   description = "Enable Identity-Aware Proxy for authentication"
   type        = bool
   default     = true
+}
+
+variable "enable_cdn" {
+  description = "Enable Cloud CDN for static assets"
+  type        = bool
+  default     = true
+}
+
+variable "ssl_certificate_domains" {
+  description = "Additional domains for SSL certificate (beyond primary domain and api subdomain)"
+  type        = list(string)
+  default     = []
 }
 
 variable "labels" {

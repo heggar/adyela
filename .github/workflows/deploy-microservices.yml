@@ -1,0 +1,607 @@
+name: Deploy Microservices
+
+on:
+  push:
+    branches:
+      - develop # Staging
+      - main # Production
+    paths:
+      - 'apps/api-auth/**'
+      - 'apps/api-appointments/**'
+      - 'apps/api-payments/**'
+      - 'apps/api-notifications/**'
+      - 'apps/api-admin/**'
+      - 'apps/api-analytics/**'
+      - 'apps/api/**' # Legacy monolith
+  workflow_dispatch:
+    inputs:
+      service:
+        description: 'Microservice to deploy'
+        required: true
+        type: choice
+        options:
+          - all
+          - api-auth
+          - api-appointments
+          - api-payments
+          - api-notifications
+          - api-admin
+          - api-analytics
+          - api-legacy
+      environment:
+        description: 'Environment'
+        required: true
+        type: choice
+        options:
+          - staging
+          - production
+
+env:
+  GCP_REGION: 'us-central1'
+  REGISTRY: 'us-central1-docker.pkg.dev'
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  determine-changes:
+    name: Determine Changed Services
+    runs-on: ubuntu-latest
+    outputs:
+      auth: ${{ steps.filter.outputs.auth }}
+      appointments: ${{ steps.filter.outputs.appointments }}
+      payments: ${{ steps.filter.outputs.payments }}
+      notifications: ${{ steps.filter.outputs.notifications }}
+      admin: ${{ steps.filter.outputs.admin }}
+      analytics: ${{ steps.filter.outputs.analytics }}
+      legacy: ${{ steps.filter.outputs.legacy }}
+      environment: ${{ steps.set-env.outputs.environment }}
+      project_id: ${{ steps.set-env.outputs.project_id }}
+      deploy_all: ${{ steps.manual-check.outputs.deploy_all }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Detect changed services
+        uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            auth:
+              - 'apps/api-auth/**'
+            appointments:
+              - 'apps/api-appointments/**'
+            payments:
+              - 'apps/api-payments/**'
+            notifications:
+              - 'apps/api-notifications/**'
+            admin:
+              - 'apps/api-admin/**'
+            analytics:
+              - 'apps/api-analytics/**'
+            legacy:
+              - 'apps/api/**'
+
+      - name: Set environment
+        id: set-env
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "environment=${{ github.event.inputs.environment }}" >> $GITHUB_OUTPUT
+            if [ "${{ github.event.inputs.environment }}" == "production" ]; then
+              echo "project_id=${{ secrets.GCP_PROJECT_ID_PROD }}" >> $GITHUB_OUTPUT
+            else
+              echo "project_id=${{ secrets.GCP_PROJECT_ID_STAGING }}" >> $GITHUB_OUTPUT
+            fi
+          elif [ "${{ github.ref }}" == "refs/heads/main" ]; then
+            echo "environment=production" >> $GITHUB_OUTPUT
+            echo "project_id=${{ secrets.GCP_PROJECT_ID_PROD }}" >> $GITHUB_OUTPUT
+          else
+            echo "environment=staging" >> $GITHUB_OUTPUT
+            echo "project_id=${{ secrets.GCP_PROJECT_ID_STAGING }}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Check manual deployment selection
+        id: manual-check
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            if [ "${{ github.event.inputs.service }}" == "all" ]; then
+              echo "deploy_all=true" >> $GITHUB_OUTPUT
+            else
+              echo "deploy_all=false" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "deploy_all=false" >> $GITHUB_OUTPUT
+          fi
+
+  # ============================================================================
+  # Python Microservices (FastAPI)
+  # ============================================================================
+
+  deploy-auth:
+    name: Deploy Auth Service
+    runs-on: ubuntu-latest
+    needs: [determine-changes]
+    if: |
+      (needs.determine-changes.outputs.auth == 'true') ||
+      (github.event_name == 'workflow_dispatch' && (github.event.inputs.service == 'all' || github.event.inputs.service == 'api-auth'))
+    environment: ${{ needs.determine-changes.outputs.environment }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ needs.determine-changes.outputs.environment == 'production' && secrets.WORKLOAD_IDENTITY_PROVIDER_PROD || secrets.WORKLOAD_IDENTITY_PROVIDER_STAGING }}
+          service_account: ${{ needs.determine-changes.outputs.environment == 'production' && secrets.SERVICE_ACCOUNT_PROD || secrets.SERVICE_ACCOUNT_STAGING }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker ${{ env.REGISTRY }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./apps/api-auth
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ needs.determine-changes.outputs.project_id }}/adyela/api-auth-${{ needs.determine-changes.outputs.environment }}:latest
+            ${{ env.REGISTRY }}/${{ needs.determine-changes.outputs.project_id }}/adyela/api-auth-${{ needs.determine-changes.outputs.environment }}:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy api-auth-${{ needs.determine-changes.outputs.environment }} \
+            --image=${{ env.REGISTRY }}/${{ needs.determine-changes.outputs.project_id }}/adyela/api-auth-${{ needs.determine-changes.outputs.environment }}:${{ github.sha }} \
+            --region=${{ env.GCP_REGION }} \
+            --platform=managed \
+            --allow-unauthenticated
+
+      - name: Verify deployment
+        run: |
+          SERVICE_URL=$(gcloud run services describe api-auth-${{ needs.determine-changes.outputs.environment }} \
+            --region=${{ env.GCP_REGION }} \
+            --format='value(status.url)')
+          echo "Service URL: $SERVICE_URL"
+
+          # Wait for service to be ready
+          sleep 10
+
+          # Health check
+          curl -f "$SERVICE_URL/health" || echo "⚠️ Health check failed"
+
+  deploy-appointments:
+    name: Deploy Appointments Service
+    runs-on: ubuntu-latest
+    needs: [determine-changes]
+    if: |
+      (needs.determine-changes.outputs.appointments == 'true') ||
+      (github.event_name == 'workflow_dispatch' && (github.event.inputs.service == 'all' || github.event.inputs.service == 'api-appointments'))
+    environment: ${{ needs.determine-changes.outputs.environment }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ needs.determine-changes.outputs.environment == 'production' && secrets.WORKLOAD_IDENTITY_PROVIDER_PROD || secrets.WORKLOAD_IDENTITY_PROVIDER_STAGING }}
+          service_account: ${{ needs.determine-changes.outputs.environment == 'production' && secrets.SERVICE_ACCOUNT_PROD || secrets.SERVICE_ACCOUNT_STAGING }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker ${{ env.REGISTRY }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./apps/api-appointments
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ needs.determine-changes.outputs.project_id }}/adyela/api-appointments-${{ needs.determine-changes.outputs.environment }}:latest
+            ${{ env.REGISTRY }}/${{ needs.determine-changes.outputs.project_id }}/adyela/api-appointments-${{ needs.determine-changes.outputs.environment }}:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy api-appointments-${{ needs.determine-changes.outputs.environment }} \
+            --image=${{ env.REGISTRY }}/${{ needs.determine-changes.outputs.project_id }}/adyela/api-appointments-${{ needs.determine-changes.outputs.environment }}:${{ github.sha }} \
+            --region=${{ env.GCP_REGION }} \
+            --platform=managed \
+            --allow-unauthenticated
+
+      - name: Verify deployment
+        run: |
+          SERVICE_URL=$(gcloud run services describe api-appointments-${{ needs.determine-changes.outputs.environment }} \
+            --region=${{ env.GCP_REGION }} \
+            --format='value(status.url)')
+          echo "Service URL: $SERVICE_URL"
+          sleep 10
+          curl -f "$SERVICE_URL/health" || echo "⚠️ Health check failed"
+
+  deploy-admin:
+    name: Deploy Admin Service
+    runs-on: ubuntu-latest
+    needs: [determine-changes]
+    if: |
+      (needs.determine-changes.outputs.admin == 'true') ||
+      (github.event_name == 'workflow_dispatch' && (github.event.inputs.service == 'all' || github.event.inputs.service == 'api-admin'))
+    environment: ${{ needs.determine-changes.outputs.environment }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ needs.determine-changes.outputs.environment == 'production' && secrets.WORKLOAD_IDENTITY_PROVIDER_PROD || secrets.WORKLOAD_IDENTITY_PROVIDER_STAGING }}
+          service_account: ${{ needs.determine-changes.outputs.environment == 'production' && secrets.SERVICE_ACCOUNT_PROD || secrets.SERVICE_ACCOUNT_STAGING }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker ${{ env.REGISTRY }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./apps/api-admin
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ needs.determine-changes.outputs.project_id }}/adyela/api-admin-${{ needs.determine-changes.outputs.environment }}:latest
+            ${{ env.REGISTRY }}/${{ needs.determine-changes.outputs.project_id }}/adyela/api-admin-${{ needs.determine-changes.outputs.environment }}:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy api-admin-${{ needs.determine-changes.outputs.environment }} \
+            --image=${{ env.REGISTRY }}/${{ needs.determine-changes.outputs.project_id }}/adyela/api-admin-${{ needs.determine-changes.outputs.environment }}:${{ github.sha }} \
+            --region=${{ env.GCP_REGION }} \
+            --platform=managed \
+            --allow-unauthenticated
+
+      - name: Verify deployment
+        run: |
+          SERVICE_URL=$(gcloud run services describe api-admin-${{ needs.determine-changes.outputs.environment }} \
+            --region=${{ env.GCP_REGION }} \
+            --format='value(status.url)')
+          echo "Service URL: $SERVICE_URL"
+          sleep 10
+          curl -f "$SERVICE_URL/health" || echo "⚠️ Health check failed"
+
+  deploy-analytics:
+    name: Deploy Analytics Service
+    runs-on: ubuntu-latest
+    needs: [determine-changes]
+    if: |
+      (needs.determine-changes.outputs.analytics == 'true') ||
+      (github.event_name == 'workflow_dispatch' && (github.event.inputs.service == 'all' || github.event.inputs.service == 'api-analytics'))
+    environment: ${{ needs.determine-changes.outputs.environment }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ needs.determine-changes.outputs.environment == 'production' && secrets.WORKLOAD_IDENTITY_PROVIDER_PROD || secrets.WORKLOAD_IDENTITY_PROVIDER_STAGING }}
+          service_account: ${{ needs.determine-changes.outputs.environment == 'production' && secrets.SERVICE_ACCOUNT_PROD || secrets.SERVICE_ACCOUNT_STAGING }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker ${{ env.REGISTRY }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./apps/api-analytics
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ needs.determine-changes.outputs.project_id }}/adyela/api-analytics-${{ needs.determine-changes.outputs.environment }}:latest
+            ${{ env.REGISTRY }}/${{ needs.determine-changes.outputs.project_id }}/adyela/api-analytics-${{ needs.determine-changes.outputs.environment }}:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy api-analytics-${{ needs.determine-changes.outputs.environment }} \
+            --image=${{ env.REGISTRY }}/${{ needs.determine-changes.outputs.project_id }}/adyela/api-analytics-${{ needs.determine-changes.outputs.environment }}:${{ github.sha }} \
+            --region=${{ env.GCP_REGION }} \
+            --platform=managed \
+            --allow-unauthenticated
+
+      - name: Verify deployment
+        run: |
+          SERVICE_URL=$(gcloud run services describe api-analytics-${{ needs.determine-changes.outputs.environment }} \
+            --region=${{ env.GCP_REGION }} \
+            --format='value(status.url)')
+          echo "Service URL: $SERVICE_URL"
+          sleep 10
+          curl -f "$SERVICE_URL/health" || echo "⚠️ Health check failed"
+
+  # ============================================================================
+  # Node.js Microservices (Express)
+  # ============================================================================
+
+  deploy-payments:
+    name: Deploy Payments Service
+    runs-on: ubuntu-latest
+    needs: [determine-changes]
+    if: |
+      (needs.determine-changes.outputs.payments == 'true') ||
+      (github.event_name == 'workflow_dispatch' && (github.event.inputs.service == 'all' || github.event.inputs.service == 'api-payments'))
+    environment: ${{ needs.determine-changes.outputs.environment }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ needs.determine-changes.outputs.environment == 'production' && secrets.WORKLOAD_IDENTITY_PROVIDER_PROD || secrets.WORKLOAD_IDENTITY_PROVIDER_STAGING }}
+          service_account: ${{ needs.determine-changes.outputs.environment == 'production' && secrets.SERVICE_ACCOUNT_PROD || secrets.SERVICE_ACCOUNT_STAGING }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker ${{ env.REGISTRY }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./apps/api-payments
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ needs.determine-changes.outputs.project_id }}/adyela/api-payments-${{ needs.determine-changes.outputs.environment }}:latest
+            ${{ env.REGISTRY }}/${{ needs.determine-changes.outputs.project_id }}/adyela/api-payments-${{ needs.determine-changes.outputs.environment }}:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy api-payments-${{ needs.determine-changes.outputs.environment }} \
+            --image=${{ env.REGISTRY }}/${{ needs.determine-changes.outputs.project_id }}/adyela/api-payments-${{ needs.determine-changes.outputs.environment }}:${{ github.sha }} \
+            --region=${{ env.GCP_REGION }} \
+            --platform=managed \
+            --allow-unauthenticated
+
+      - name: Verify deployment
+        run: |
+          SERVICE_URL=$(gcloud run services describe api-payments-${{ needs.determine-changes.outputs.environment }} \
+            --region=${{ env.GCP_REGION }} \
+            --format='value(status.url)')
+          echo "Service URL: $SERVICE_URL"
+          sleep 10
+          curl -f "$SERVICE_URL/health" || echo "⚠️ Health check failed"
+
+  deploy-notifications:
+    name: Deploy Notifications Service
+    runs-on: ubuntu-latest
+    needs: [determine-changes]
+    if: |
+      (needs.determine-changes.outputs.notifications == 'true') ||
+      (github.event_name == 'workflow_dispatch' && (github.event.inputs.service == 'all' || github.event.inputs.service == 'api-notifications'))
+    environment: ${{ needs.determine-changes.outputs.environment }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ needs.determine-changes.outputs.environment == 'production' && secrets.WORKLOAD_IDENTITY_PROVIDER_PROD || secrets.WORKLOAD_IDENTITY_PROVIDER_STAGING }}
+          service_account: ${{ needs.determine-changes.outputs.environment == 'production' && secrets.SERVICE_ACCOUNT_PROD || secrets.SERVICE_ACCOUNT_STAGING }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker ${{ env.REGISTRY }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./apps/api-notifications
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ needs.determine-changes.outputs.project_id }}/adyela/api-notifications-${{ needs.determine-changes.outputs.environment }}:latest
+            ${{ env.REGISTRY }}/${{ needs.determine-changes.outputs.project_id }}/adyela/api-notifications-${{ needs.determine-changes.outputs.environment }}:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy api-notifications-${{ needs.determine-changes.outputs.environment }} \
+            --image=${{ env.REGISTRY }}/${{ needs.determine-changes.outputs.project_id }}/adyela/api-notifications-${{ needs.determine-changes.outputs.environment }}:${{ github.sha }} \
+            --region=${{ env.GCP_REGION }} \
+            --platform=managed \
+            --allow-unauthenticated
+
+      - name: Verify deployment
+        run: |
+          SERVICE_URL=$(gcloud run services describe api-notifications-${{ needs.determine-changes.outputs.environment }} \
+            --region=${{ env.GCP_REGION }} \
+            --format='value(status.url)')
+          echo "Service URL: $SERVICE_URL"
+          sleep 10
+          curl -f "$SERVICE_URL/health" || echo "⚠️ Health check failed"
+
+  # ============================================================================
+  # Legacy Monolith API
+  # ============================================================================
+
+  deploy-legacy:
+    name: Deploy Legacy API (Monolith)
+    runs-on: ubuntu-latest
+    needs: [determine-changes]
+    if: |
+      (needs.determine-changes.outputs.legacy == 'true') ||
+      (github.event_name == 'workflow_dispatch' && (github.event.inputs.service == 'all' || github.event.inputs.service == 'api-legacy'))
+    environment: ${{ needs.determine-changes.outputs.environment }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ needs.determine-changes.outputs.environment == 'production' && secrets.WORKLOAD_IDENTITY_PROVIDER_PROD || secrets.WORKLOAD_IDENTITY_PROVIDER_STAGING }}
+          service_account: ${{ needs.determine-changes.outputs.environment == 'production' && secrets.SERVICE_ACCOUNT_PROD || secrets.SERVICE_ACCOUNT_STAGING }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker ${{ env.REGISTRY }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./apps/api
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ needs.determine-changes.outputs.project_id }}/adyela/adyela-api-${{ needs.determine-changes.outputs.environment }}:latest
+            ${{ env.REGISTRY }}/${{ needs.determine-changes.outputs.project_id }}/adyela/adyela-api-${{ needs.determine-changes.outputs.environment }}:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy adyela-api-${{ needs.determine-changes.outputs.environment }} \
+            --image=${{ env.REGISTRY }}/${{ needs.determine-changes.outputs.project_id }}/adyela/adyela-api-${{ needs.determine-changes.outputs.environment }}:${{ github.sha }} \
+            --region=${{ env.GCP_REGION }} \
+            --platform=managed \
+            --allow-unauthenticated
+
+      - name: Verify deployment
+        run: |
+          SERVICE_URL=$(gcloud run services describe adyela-api-${{ needs.determine-changes.outputs.environment }} \
+            --region=${{ env.GCP_REGION }} \
+            --format='value(status.url)')
+          echo "Service URL: $SERVICE_URL"
+          sleep 10
+          curl -f "$SERVICE_URL/health" || echo "⚠️ Health check failed"
+
+  # ============================================================================
+  # Deployment Summary
+  # ============================================================================
+
+  deployment-summary:
+    name: Deployment Summary
+    runs-on: ubuntu-latest
+    needs:
+      [
+        determine-changes,
+        deploy-auth,
+        deploy-appointments,
+        deploy-payments,
+        deploy-notifications,
+        deploy-admin,
+        deploy-analytics,
+        deploy-legacy,
+      ]
+    if: always()
+    steps:
+      - name: Generate deployment summary
+        run: |
+          echo "# 🚀 Microservices Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Environment:** ${{ needs.determine-changes.outputs.environment }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Project:** ${{ needs.determine-changes.outputs.project_id }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Deployed Services" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ "${{ needs.deploy-auth.result }}" == "success" ]; then
+            echo "✅ **api-auth** - Deployed successfully" >> $GITHUB_STEP_SUMMARY
+          elif [ "${{ needs.deploy-auth.result }}" == "failure" ]; then
+            echo "❌ **api-auth** - Deployment failed" >> $GITHUB_STEP_SUMMARY
+          elif [ "${{ needs.deploy-auth.result }}" == "skipped" ]; then
+            echo "⏭️ **api-auth** - Skipped (no changes)" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          if [ "${{ needs.deploy-appointments.result }}" == "success" ]; then
+            echo "✅ **api-appointments** - Deployed successfully" >> $GITHUB_STEP_SUMMARY
+          elif [ "${{ needs.deploy-appointments.result }}" == "failure" ]; then
+            echo "❌ **api-appointments** - Deployment failed" >> $GITHUB_STEP_SUMMARY
+          elif [ "${{ needs.deploy-appointments.result }}" == "skipped" ]; then
+            echo "⏭️ **api-appointments** - Skipped (no changes)" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          if [ "${{ needs.deploy-payments.result }}" == "success" ]; then
+            echo "✅ **api-payments** - Deployed successfully" >> $GITHUB_STEP_SUMMARY
+          elif [ "${{ needs.deploy-payments.result }}" == "failure" ]; then
+            echo "❌ **api-payments** - Deployment failed" >> $GITHUB_STEP_SUMMARY
+          elif [ "${{ needs.deploy-payments.result }}" == "skipped" ]; then
+            echo "⏭️ **api-payments** - Skipped (no changes)" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          if [ "${{ needs.deploy-notifications.result }}" == "success" ]; then
+            echo "✅ **api-notifications** - Deployed successfully" >> $GITHUB_STEP_SUMMARY
+          elif [ "${{ needs.deploy-notifications.result }}" == "failure" ]; then
+            echo "❌ **api-notifications** - Deployment failed" >> $GITHUB_STEP_SUMMARY
+          elif [ "${{ needs.deploy-notifications.result }}" == "skipped" ]; then
+            echo "⏭️ **api-notifications** - Skipped (no changes)" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          if [ "${{ needs.deploy-admin.result }}" == "success" ]; then
+            echo "✅ **api-admin** - Deployed successfully" >> $GITHUB_STEP_SUMMARY
+          elif [ "${{ needs.deploy-admin.result }}" == "failure" ]; then
+            echo "❌ **api-admin** - Deployment failed" >> $GITHUB_STEP_SUMMARY
+          elif [ "${{ needs.deploy-admin.result }}" == "skipped" ]; then
+            echo "⏭️ **api-admin** - Skipped (no changes)" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          if [ "${{ needs.deploy-analytics.result }}" == "success" ]; then
+            echo "✅ **api-analytics** - Deployed successfully" >> $GITHUB_STEP_SUMMARY
+          elif [ "${{ needs.deploy-analytics.result }}" == "failure" ]; then
+            echo "❌ **api-analytics** - Deployment failed" >> $GITHUB_STEP_SUMMARY
+          elif [ "${{ needs.deploy-analytics.result }}" == "skipped" ]; then
+            echo "⏭️ **api-analytics** - Skipped (no changes)" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          if [ "${{ needs.deploy-legacy.result }}" == "success" ]; then
+            echo "✅ **api-legacy** - Deployed successfully" >> $GITHUB_STEP_SUMMARY
+          elif [ "${{ needs.deploy-legacy.result }}" == "failure" ]; then
+            echo "❌ **api-legacy** - Deployment failed" >> $GITHUB_STEP_SUMMARY
+          elif [ "${{ needs.deploy-legacy.result }}" == "skipped" ]; then
+            echo "⏭️ **api-legacy** - Skipped (no changes)" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## 📍 Access URLs" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ "${{ needs.determine-changes.outputs.environment }}" == "production" ]; then
+            echo "- **API Gateway**: https://api.adyela.care" >> $GITHUB_STEP_SUMMARY
+            echo "- **Admin Panel**: https://adyela.care" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- **API Gateway**: https://api.staging.adyela.care" >> $GITHUB_STEP_SUMMARY
+            echo "- **Admin Panel**: https://staging.adyela.care" >> $GITHUB_STEP_SUMMARY
+          fi

@@ -1,0 +1,16 @@
+# Example terraform.tfvars for Staging Environment
+#
+# Copy this file to terraform.tfvars and update with your values
+# DO NOT commit terraform.tfvars to version control
+
+# GCP Configuration
+project_id  = "adyela-staging"
+region      = "us-central1"
+environment = "staging"
+
+# GitHub Configuration
+github_owner = "adyela"
+github_repo  = "adyela"
+
+# Network Configuration (optional - for production)
+# vpc_connector_name = "adyela-vpc-connector"

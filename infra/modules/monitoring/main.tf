@@ -36,7 +36,7 @@ resource "google_monitoring_uptime_check_config" "api_health" {
     type = "uptime_url"
     labels = {
       project_id = var.project_id
-      host       = var.domain  # Changed from "api.${var.domain}" - Load Balancer routes /health to API backend
+      host       = var.domain # Changed from "api.${var.domain}" - Load Balancer routes /health to API backend
     }
   }
 
@@ -303,6 +303,202 @@ resource "google_monitoring_custom_service" "api_service" {
 }
 
 # ================================================================================
+# LOG SINKS - Centralized Logging
+# ================================================================================
+
+# BigQuery Dataset for Log Analysis
+resource "google_bigquery_dataset" "log_dataset" {
+  count = var.enable_log_sinks ? 1 : 0
+
+  dataset_id  = "${var.project_name}_${var.environment}_logs"
+  project     = var.project_id
+  location    = var.region
+  description = "Centralized logs for ${var.project_name} ${var.environment} environment"
+
+  default_table_expiration_ms = 7776000000 # 90 days
+
+  labels = {
+    environment = var.environment
+    purpose     = "logging"
+  }
+}
+
+# Log Sink - Application Logs
+resource "google_logging_project_sink" "application_logs" {
+  count = var.enable_log_sinks ? 1 : 0
+
+  name        = "${var.project_name}-${var.environment}-app-logs"
+  description = "Application logs from Cloud Run services"
+  destination = "bigquery.googleapis.com/projects/${var.project_id}/datasets/${google_bigquery_dataset.log_dataset[0].dataset_id}"
+
+  filter = <<-EOT
+    resource.type="cloud_run_revision"
+    (resource.labels.service_name=~"adyela-.*-${var.environment}"
+    OR resource.labels.service_name=~"${var.project_name}-.*-${var.environment}")
+    severity >= DEFAULT
+  EOT
+
+  unique_writer_identity = true
+
+  bigquery_options {
+    use_partitioned_tables = true
+  }
+}
+
+# Log Sink - Error Logs
+resource "google_logging_project_sink" "error_logs" {
+  count = var.enable_log_sinks ? 1 : 0
+
+  name        = "${var.project_name}-${var.environment}-error-logs"
+  description = "Error and critical logs from all services"
+  destination = "bigquery.googleapis.com/projects/${var.project_id}/datasets/${google_bigquery_dataset.log_dataset[0].dataset_id}"
+
+  filter = <<-EOT
+    severity >= ERROR
+    resource.type="cloud_run_revision"
+  EOT
+
+  unique_writer_identity = true
+
+  bigquery_options {
+    use_partitioned_tables = true
+  }
+}
+
+# Log Sink - Security & Audit Logs (HIPAA Requirement)
+resource "google_logging_project_sink" "audit_logs" {
+  count = var.enable_log_sinks ? 1 : 0
+
+  name        = "${var.project_name}-${var.environment}-audit-logs"
+  description = "HIPAA-compliant audit logs for PHI access tracking"
+  destination = "bigquery.googleapis.com/projects/${var.project_id}/datasets/${google_bigquery_dataset.log_dataset[0].dataset_id}"
+
+  filter = <<-EOT
+    protoPayload.@type="type.googleapis.com/google.cloud.audit.AuditLog"
+    OR jsonPayload.labels.hipaa_audit="true"
+    OR jsonPayload.phi_access=true
+  EOT
+
+  unique_writer_identity = true
+
+  bigquery_options {
+    use_partitioned_tables = true
+  }
+}
+
+# Grant BigQuery Data Editor role to log sinks
+resource "google_bigquery_dataset_iam_member" "app_logs_writer" {
+  count = var.enable_log_sinks ? 1 : 0
+
+  dataset_id = google_bigquery_dataset.log_dataset[0].dataset_id
+  role       = "roles/bigquery.dataEditor"
+  member     = google_logging_project_sink.application_logs[0].writer_identity
+}
+
+resource "google_bigquery_dataset_iam_member" "error_logs_writer" {
+  count = var.enable_log_sinks ? 1 : 0
+
+  dataset_id = google_bigquery_dataset.log_dataset[0].dataset_id
+  role       = "roles/bigquery.dataEditor"
+  member     = google_logging_project_sink.error_logs[0].writer_identity
+}
+
+resource "google_bigquery_dataset_iam_member" "audit_logs_writer" {
+  count = var.enable_log_sinks ? 1 : 0
+
+  dataset_id = google_bigquery_dataset.log_dataset[0].dataset_id
+  role       = "roles/bigquery.dataEditor"
+  member     = google_logging_project_sink.audit_logs[0].writer_identity
+}
+
+# ================================================================================
+# ERROR REPORTING
+# ================================================================================
+
+# Error Reporting is enabled by default for Cloud Run
+# No explicit resources needed, but we can create notification channels
+
+resource "google_monitoring_alert_policy" "error_reporting_alert" {
+  display_name = "${var.project_name}-${var.environment}-error-reporting"
+  combiner     = "OR"
+
+  conditions {
+    display_name = "New Error Type Detected"
+
+    condition_threshold {
+      filter = join(" AND ", [
+        "resource.type=\"cloud_run_revision\"",
+        "resource.labels.service_name=~\"adyela-.*-${var.environment}\"",
+        "metric.type=\"logging.googleapis.com/user/error_count\""
+      ])
+
+      duration        = "60s"
+      comparison      = "COMPARISON_GT"
+      threshold_value = 0
+
+      aggregations {
+        alignment_period   = "60s"
+        per_series_aligner = "ALIGN_RATE"
+      }
+    }
+  }
+
+  notification_channels = [google_monitoring_notification_channel.email_alerts.id]
+
+  documentation {
+    content   = "New error type detected in Error Reporting. Check https://console.cloud.google.com/errors"
+    mime_type = "text/markdown"
+  }
+
+  enabled = var.enable_error_reporting_alerts
+}
+
+# ================================================================================
+# CLOUD TRACE - Distributed Tracing
+# ================================================================================
+
+# Cloud Trace is automatically enabled for Cloud Run
+# Configure sampling and create custom spans in application code
+
+# Alert on high trace latency
+resource "google_monitoring_alert_policy" "trace_latency" {
+  count = var.enable_trace_alerts ? 1 : 0
+
+  display_name = "${var.project_name}-${var.environment}-trace-latency"
+  combiner     = "OR"
+
+  conditions {
+    display_name = "Distributed Trace Latency >2s"
+
+    condition_threshold {
+      filter = join(" AND ", [
+        "resource.type=\"cloud_run_revision\"",
+        "metric.type=\"cloudtrace.googleapis.com/span/latencies\""
+      ])
+
+      duration        = "300s"
+      comparison      = "COMPARISON_GT"
+      threshold_value = 2000 # 2 seconds
+
+      aggregations {
+        alignment_period     = "60s"
+        per_series_aligner   = "ALIGN_DELTA"
+        cross_series_reducer = "REDUCE_PERCENTILE_95"
+      }
+    }
+  }
+
+  notification_channels = [google_monitoring_notification_channel.email_alerts.id]
+
+  documentation {
+    content   = "Distributed trace latency exceeds 2 seconds. Check trace details in Cloud Console."
+    mime_type = "text/markdown"
+  }
+
+  enabled = true
+}
+
+# ================================================================================
 # DASHBOARD
 # ================================================================================
 
@@ -418,4 +614,385 @@ resource "google_monitoring_dashboard" "main_dashboard" {
       ]
     }
   })
+}
+
+# ================================================================================
+# ADVANCED SLOs - Error Budgets & Burn Rate Alerts
+# ================================================================================
+
+# SLO - Latency SLI (P95 < target)
+resource "google_monitoring_slo" "api_latency" {
+  service      = google_monitoring_custom_service.api_service.service_id
+  slo_id       = "api-latency-slo"
+  display_name = "API Latency SLO (P95 < ${var.latency_slo_target_ms}ms)"
+
+  goal                = var.availability_slo_target # Use same target for simplicity
+  rolling_period_days = var.slo_rolling_period_days
+
+  request_based_sli {
+    distribution_cut {
+      distribution_filter = join(" AND ", [
+        "resource.type=\"cloud_run_revision\"",
+        "resource.labels.service_name=\"adyela-api-${var.environment}\"",
+        "metric.type=\"run.googleapis.com/request_latencies\""
+      ])
+
+      range {
+        min = 0
+        max = var.latency_slo_target_ms
+      }
+    }
+  }
+}
+
+# SLO - Error Rate (< target)
+resource "google_monitoring_slo" "api_error_rate" {
+  service      = google_monitoring_custom_service.api_service.service_id
+  slo_id       = "api-error-rate-slo"
+  display_name = "API Error Rate SLO (< ${var.error_rate_slo_target * 100}%)"
+
+  goal                = 1 - var.error_rate_slo_target # Invert for SLO
+  rolling_period_days = var.slo_rolling_period_days
+
+  request_based_sli {
+    good_total_ratio {
+      total_service_filter = join(" AND ", [
+        "resource.type=\"cloud_run_revision\"",
+        "resource.labels.service_name=\"adyela-api-${var.environment}\"",
+        "metric.type=\"run.googleapis.com/request_count\""
+      ])
+
+      good_service_filter = join(" AND ", [
+        "resource.type=\"cloud_run_revision\"",
+        "resource.labels.service_name=\"adyela-api-${var.environment}\"",
+        "metric.type=\"run.googleapis.com/request_count\"",
+        "(metric.labels.response_code_class=\"2xx\" OR metric.labels.response_code_class=\"3xx\")"
+      ])
+    }
+  }
+}
+
+# Alert Policy - SLO Burn Rate (Fast Burn: 2% budget in 1 hour)
+resource "google_monitoring_alert_policy" "slo_burn_rate_fast" {
+  display_name = "${var.project_name}-${var.environment}-slo-burn-fast"
+  combiner     = "OR"
+
+  conditions {
+    display_name = "SLO Error Budget Burning Too Fast"
+
+    condition_threshold {
+      filter = join(" AND ", [
+        "select_slo_burn_rate(\"${google_monitoring_slo.api_availability.id}\", 3600)" # 1 hour
+      ])
+
+      duration        = "0s" # Alert immediately
+      comparison      = "COMPARISON_GT"
+      threshold_value = 10 # 10x burn rate = 2% budget in 1 hour
+
+      aggregations {
+        alignment_period   = "60s"
+        per_series_aligner = "ALIGN_NEXT_OLDER"
+      }
+    }
+  }
+
+  notification_channels = concat(
+    [google_monitoring_notification_channel.email_alerts.id],
+    var.enable_sms_alerts ? [google_monitoring_notification_channel.sms_critical[0].id] : []
+  )
+
+  alert_strategy {
+    auto_close = "7200s" # 2 hours
+  }
+
+  documentation {
+    content   = <<-EOT
+      ## SLO Error Budget Burning Too Fast ⚠️
+
+      **Current Burn Rate**: >10x normal
+      **Risk**: May exhaust entire error budget in hours
+      **Action Required**: Immediate investigation
+
+      ### Check:
+      1. Recent deployments or config changes
+      2. Error logs and stack traces
+      3. Upstream service health
+      4. Database performance
+
+      ### Recovery Steps:
+      - Rollback recent changes if identified
+      - Scale up resources if capacity issue
+      - Enable circuit breakers if cascading failures
+    EOT
+    mime_type = "text/markdown"
+  }
+
+  enabled = true
+}
+
+# Alert Policy - SLO Burn Rate (Slow Burn: 10% budget in 24 hours)
+resource "google_monitoring_alert_policy" "slo_burn_rate_slow" {
+  display_name = "${var.project_name}-${var.environment}-slo-burn-slow"
+  combiner     = "OR"
+
+  conditions {
+    display_name = "SLO Error Budget Depleting"
+
+    condition_threshold {
+      filter = join(" AND ", [
+        "select_slo_burn_rate(\"${google_monitoring_slo.api_availability.id}\", 86400)" # 24 hours
+      ])
+
+      duration        = "0s"
+      comparison      = "COMPARISON_GT"
+      threshold_value = 3 # 3x burn rate = 10% budget in 24 hours
+
+      aggregations {
+        alignment_period   = "300s"
+        per_series_aligner = "ALIGN_NEXT_OLDER"
+      }
+    }
+  }
+
+  notification_channels = [google_monitoring_notification_channel.email_alerts.id]
+
+  alert_strategy {
+    auto_close = "86400s" # 24 hours
+  }
+
+  documentation {
+    content   = "SLO error budget depleting faster than expected. Review error trends and plan remediation."
+    mime_type = "text/markdown"
+  }
+
+  enabled = true
+}
+
+# ================================================================================
+# MICROSERVICES DASHBOARDS
+# ================================================================================
+
+# Dashboard per Microservice
+resource "google_monitoring_dashboard" "microservice_dashboard" {
+  for_each = var.enable_microservices_dashboards ? { for ms in var.microservices : ms.name => ms } : {}
+
+  dashboard_json = jsonencode({
+    displayName = "${each.value.display_name} - ${var.environment}"
+
+    mosaicLayout = {
+      columns = 12
+
+      tiles = concat(
+        # Golden Signals: Latency, Traffic, Errors, Saturation
+        [
+          # Latency (P50, P95, P99)
+          {
+            width  = 6
+            height = 4
+            widget = {
+              title = "Request Latency"
+              xyChart = {
+                dataSets = [
+                  {
+                    timeSeriesQuery = {
+                      timeSeriesFilter = {
+                        filter = "resource.type=\"cloud_run_revision\" AND resource.labels.service_name=\"${each.value.name}\" AND metric.type=\"run.googleapis.com/request_latencies\""
+                        aggregation = {
+                          alignmentPeriod    = "60s"
+                          perSeriesAligner   = "ALIGN_DELTA"
+                          crossSeriesReducer = "REDUCE_PERCENTILE_50"
+                        }
+                      }
+                    }
+                    plotType   = "LINE"
+                    targetAxis = "Y1"
+                  },
+                  {
+                    timeSeriesQuery = {
+                      timeSeriesFilter = {
+                        filter = "resource.type=\"cloud_run_revision\" AND resource.labels.service_name=\"${each.value.name}\" AND metric.type=\"run.googleapis.com/request_latencies\""
+                        aggregation = {
+                          alignmentPeriod    = "60s"
+                          perSeriesAligner   = "ALIGN_DELTA"
+                          crossSeriesReducer = "REDUCE_PERCENTILE_95"
+                        }
+                      }
+                    }
+                    plotType   = "LINE"
+                    targetAxis = "Y1"
+                  },
+                  {
+                    timeSeriesQuery = {
+                      timeSeriesFilter = {
+                        filter = "resource.type=\"cloud_run_revision\" AND resource.labels.service_name=\"${each.value.name}\" AND metric.type=\"run.googleapis.com/request_latencies\""
+                        aggregation = {
+                          alignmentPeriod    = "60s"
+                          perSeriesAligner   = "ALIGN_DELTA"
+                          crossSeriesReducer = "REDUCE_PERCENTILE_99"
+                        }
+                      }
+                    }
+                    plotType   = "LINE"
+                    targetAxis = "Y1"
+                  }
+                ]
+                yAxis = {
+                  label = "Latency (ms)"
+                  scale = "LINEAR"
+                }
+                thresholds = [
+                  {
+                    value = var.latency_slo_target_ms
+                    color = "YELLOW"
+                    label = "SLO Target"
+                  }
+                ]
+              }
+            }
+          },
+
+          # Traffic (Request Rate)
+          {
+            width  = 6
+            height = 4
+            xPos   = 6
+            widget = {
+              title = "Request Rate"
+              xyChart = {
+                dataSets = [{
+                  timeSeriesQuery = {
+                    timeSeriesFilter = {
+                      filter = "resource.type=\"cloud_run_revision\" AND resource.labels.service_name=\"${each.value.name}\" AND metric.type=\"run.googleapis.com/request_count\""
+                      aggregation = {
+                        alignmentPeriod  = "60s"
+                        perSeriesAligner = "ALIGN_RATE"
+                      }
+                    }
+                  }
+                  plotType   = "LINE"
+                  targetAxis = "Y1"
+                }]
+                yAxis = {
+                  label = "Requests/second"
+                  scale = "LINEAR"
+                }
+              }
+            }
+          },
+
+          # Errors (By Response Code)
+          {
+            width  = 6
+            height = 4
+            yPos   = 4
+            widget = {
+              title = "Errors by Response Code"
+              xyChart = {
+                dataSets = [{
+                  timeSeriesQuery = {
+                    timeSeriesFilter = {
+                      filter = "resource.type=\"cloud_run_revision\" AND resource.labels.service_name=\"${each.value.name}\" AND metric.type=\"run.googleapis.com/request_count\" AND metric.labels.response_code_class!=\"2xx\""
+                      aggregation = {
+                        alignmentPeriod    = "60s"
+                        perSeriesAligner   = "ALIGN_RATE"
+                        crossSeriesReducer = "REDUCE_SUM"
+                        groupByFields      = ["metric.response_code_class"]
+                      }
+                    }
+                  }
+                  plotType   = "STACKED_AREA"
+                  targetAxis = "Y1"
+                }]
+                yAxis = {
+                  label = "Errors/second"
+                  scale = "LINEAR"
+                }
+              }
+            }
+          },
+
+          # Saturation (Container Utilization)
+          {
+            width  = 6
+            height = 4
+            xPos   = 6
+            yPos   = 4
+            widget = {
+              title = "Container CPU & Memory"
+              xyChart = {
+                dataSets = [
+                  {
+                    timeSeriesQuery = {
+                      timeSeriesFilter = {
+                        filter = "resource.type=\"cloud_run_revision\" AND resource.labels.service_name=\"${each.value.name}\" AND metric.type=\"run.googleapis.com/container/cpu/utilizations\""
+                        aggregation = {
+                          alignmentPeriod    = "60s"
+                          perSeriesAligner   = "ALIGN_MEAN"
+                          crossSeriesReducer = "REDUCE_MEAN"
+                        }
+                      }
+                    }
+                    plotType   = "LINE"
+                    targetAxis = "Y1"
+                  },
+                  {
+                    timeSeriesQuery = {
+                      timeSeriesFilter = {
+                        filter = "resource.type=\"cloud_run_revision\" AND resource.labels.service_name=\"${each.value.name}\" AND metric.type=\"run.googleapis.com/container/memory/utilizations\""
+                        aggregation = {
+                          alignmentPeriod    = "60s"
+                          perSeriesAligner   = "ALIGN_MEAN"
+                          crossSeriesReducer = "REDUCE_MEAN"
+                        }
+                      }
+                    }
+                    plotType   = "LINE"
+                    targetAxis = "Y2"
+                  }
+                ]
+                yAxis = {
+                  label = "CPU Utilization (%)"
+                  scale = "LINEAR"
+                }
+              }
+            }
+          }
+        ]
+        # Removed API-specific tiles for simplified staging monitoring
+        # These can be re-enabled in production by setting enable_microservices_dashboards = true
+      )
+    }
+  })
+}
+
+# ================================================================================
+# SLACK & PAGERDUTY NOTIFICATIONS (Optional)
+# ================================================================================
+
+# Slack Notification Channel
+resource "google_monitoring_notification_channel" "slack" {
+  count = var.enable_slack_notifications && var.slack_webhook_url != "" ? 1 : 0
+
+  display_name = "${var.project_name}-${var.environment}-slack"
+  type         = "slack"
+
+  labels = {
+    url = var.slack_webhook_url
+  }
+
+  enabled = true
+}
+
+# PagerDuty Notification Channel
+resource "google_monitoring_notification_channel" "pagerduty" {
+  count = var.enable_pagerduty_notifications && var.pagerduty_integration_key != "" ? 1 : 0
+
+  display_name = "${var.project_name}-${var.environment}-pagerduty"
+  type         = "pagerduty"
+
+  labels = {
+    service_key = var.pagerduty_integration_key
+  }
+
+  enabled = true
 }

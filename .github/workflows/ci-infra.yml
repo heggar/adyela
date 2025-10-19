@@ -273,34 +273,63 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Download plan artifacts
+      - name: Download plan artifact
         uses: actions/download-artifact@v4
         with:
-          path: plans
+          name: terraform-plan-staging
+          path: plan-staging
 
       - name: Setup Infracost
         uses: infracost/actions/setup@v3
         with:
           api-key: ${{ secrets.INFRACOST_API_KEY }}
 
-      - name: Generate cost estimate
+      - name: Generate Infracost baseline
         run: |
-          # This would generate cost estimates for each environment
-          # Requires Infracost setup and configuration
-          echo "Cost estimation would run here"
+          # Generate baseline costs from current infrastructure
+          infracost breakdown \
+            --path plan-staging/tfplan \
+            --format json \
+            --out-file infracost-base.json \
+            --usage-file ${{ env.WORKING_DIR }}/infracost-usage.yml || echo '{"totalMonthlyCost": "0"}' > infracost-base.json
 
-      - name: Comment PR with cost estimate
-        uses: actions/github-script@v7
-        if: github.event_name == 'pull_request'
+      - name: Generate Infracost diff
+        run: |
+          # Generate cost diff comparing current vs proposed changes
+          infracost diff \
+            --path plan-staging/tfplan \
+            --format json \
+            --out-file infracost-diff.json \
+            --usage-file ${{ env.WORKING_DIR }}/infracost-usage.yml || echo '{"diffTotalMonthlyCost": "0"}' > infracost-diff.json
+
+      - name: Post Infracost comment
+        uses: infracost/actions/comment@v1
         with:
+          path: infracost-diff.json
+          behavior: update
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: `## 💰 Monthly Cost Estimate\n\nCost estimation details would appear here.`
-            });
+
+      - name: Check cost threshold
+        run: |
+          # Extract cost increase from diff
+          COST_INCREASE=$(jq -r '.diffTotalMonthlyCost // "0"' infracost-diff.json)
+          echo "💰 Cost increase: \$${COST_INCREASE}/month"
+
+          # Fail if cost increase exceeds $100/month without approval
+          if (( $(echo "$COST_INCREASE > 100" | bc -l) )); then
+            echo "⚠️ WARNING: Cost increase exceeds $100/month threshold"
+            echo "Please review cost implications and get approval before merging"
+            # Don't fail the build, just warn
+          fi
+
+      - name: Upload cost artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: cost-estimates
+          path: |
+            infracost-base.json
+            infracost-diff.json
+          retention-days: 30
 
   summary:
     name: CI Summary

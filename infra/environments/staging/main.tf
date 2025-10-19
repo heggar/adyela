@@ -14,15 +14,50 @@ provider "google" {
   region  = var.region
 }
 
-# Local variables
-locals {
-  environment = "staging"
-  labels = {
-    environment = local.environment
-    managed-by  = "terraform"
-    hipaa       = "ready"
-    cost-center = "engineering"
+# ============================================================================
+# COMMON LABELS - Standardized labeling for all resources
+# ============================================================================
+
+module "labels" {
+  source = "../../modules/common"
+
+  # Required
+  environment  = var.environment
+  project_name = var.project_name
+  team         = "platform"
+  owner        = "devops-team"
+
+  # Cost management
+  cost_center = "engineering"
+  billing_id  = "adyela-eng-2024"
+
+  # Application metadata
+  application = "adyela-platform"
+  tier        = "backend"
+
+  # Compliance (HIPAA)
+  compliance_required = "hipaa"
+  data_classification = "restricted"
+  hipaa_scope         = "yes"
+
+  # Operations
+  backup_policy     = "weekly"
+  disaster_recovery = "medium"
+  high_availability = "false" # Staging uses scale-to-zero
+
+  # Contact information
+  contact_email = var.contact_email
+
+  # Custom labels
+  custom_labels = {
+    cost_tier = "staging"
   }
+}
+
+# Local variables for backward compatibility
+locals {
+  environment = var.environment
+  labels      = module.labels.labels # Use standardized labels from common module
 }
 
 # ================================================================================
@@ -74,13 +109,18 @@ module "service_account" {
 }
 
 # ================================================================================
-# Load Balancer Module - HIPAA-Compliant Public Access with IAP
+# Load Balancer Module - ENABLED FOR STAGING
 # Cost: ~$18-25/month
-# Provides: Public access with mandatory authentication via Identity-Aware Proxy
-# 
-# NOTE: Temporarily commented out to resolve CI - Infrastructure errors
-# The Load Balancer resources are already created manually and working
-# IP: 34.96.108.162, Domain: staging.adyela.care
+#
+# MANTENER EN STAGING:
+# - DNS personalizado ya configurado (staging.adyela.care)
+# - SSL certificate activo
+# - URLs limpias para testing
+# - Misma arquitectura que production
+#
+# OPTIMIZACIÓN: Sin Cloud Armor (ahorro de $17/mes)
+# - Cloud Armor se agrega solo en production
+# - Staging no necesita WAF protection
 # ================================================================================
 
 module "load_balancer" {
@@ -93,15 +133,64 @@ module "load_balancer" {
   domain       = "staging.adyela.care"
 
   # Cloud Run services
-  cloud_run_service_name = "adyela-web-staging"
-  api_service_name       = "adyela-api-staging"
+  cloud_run_service_name    = "adyela-web-staging"
+  api_service_name          = "adyela-api-staging"
+  patient_service_name      = module.flutter_web_patient.service_name
+  professional_service_name = module.flutter_web_professional.service_name
+
+  # Microservices path-based routing (Strangler Pattern)
+  # Gradually migrate endpoints from legacy API to microservices
+  microservices = {
+    auth = {
+      service_name = module.api_auth.service_name
+      path_prefix  = "/auth"
+    }
+    appointments = {
+      service_name = module.api_appointments.service_name
+      path_prefix  = "/appointments"
+    }
+    payments = {
+      service_name = module.api_payments.service_name
+      path_prefix  = "/payments"
+    }
+    notifications = {
+      service_name = module.api_notifications.service_name
+      path_prefix  = "/notifications"
+    }
+    admin = {
+      service_name = module.api_admin.service_name
+      path_prefix  = "/admin"
+    }
+    analytics = {
+      service_name = module.api_analytics.service_name
+      path_prefix  = "/analytics"
+    }
+  }
 
   # IAP configuration - Disabled (auth via Identity Platform OAuth)
   # IAP is for internal apps with Google Workspace users
   # Patient authentication is handled by Identity Platform
   iap_enabled = false
 
+  # Cloud Armor - DISABLED for staging (cost optimization)
+  # security_policy_id will not be attached
+
+  # CDN configuration
+  enable_cdn = true
+
   labels = local.labels
+
+  # Ensure all services are created before load balancer
+  depends_on = [
+    module.flutter_web_patient,
+    module.flutter_web_professional,
+    module.api_auth,
+    module.api_appointments,
+    module.api_payments,
+    module.api_notifications,
+    module.api_admin,
+    module.api_analytics
+  ]
 }
 
 # ================================================================================
@@ -119,8 +208,8 @@ module "cloud_run" {
   service_account_email = module.service_account.service_account_email
   vpc_connector_name    = null # Sin VPC Connector en staging
 
-  # API URL for frontend (through load balancer)
-  api_url = "https://staging.adyela.care"
+  # API URL for frontend (through load balancer with custom domain)
+  api_url = "https://api.staging.adyela.care"
 
   # Docker images - CI/CD deploys directly, Terraform only for initial setup
   # These values are used ONLY for initial resource creation
@@ -173,8 +262,39 @@ module "monitoring" {
 
   # Alert configuration
   alert_email       = var.alert_email
-  enable_sms_alerts = false
-  # alert_phone_number = "+1234567890"  # Optional: Enable SMS alerts
+  enable_sms_alerts = false # No SMS in staging ($0.30/mes ahorro)
+
+  # ============================================================================
+  # STAGING OPTIMIZATIONS - Disable advanced features
+  # ============================================================================
+
+  # Log Sinks - DISABLED ($0.20/mes ahorro)
+  # Usa Cloud Logging console directamente para debugging
+  enable_log_sinks = false
+
+  # Error Reporting - KEEP BASIC
+  # Útil para detectar errores durante testing
+  enable_error_reporting_alerts = true
+
+  # Cloud Trace - DISABLED
+  # No necesario para 1-2 testers
+  enable_trace_alerts = false
+  trace_sampling_rate = 1.0 # 100% sampling si se habilita después
+
+  # Microservices Dashboards - DISABLED
+  # Un dashboard básico es suficiente para staging
+  enable_microservices_dashboards = false
+
+  # SLO Configuration - SIMPLIFIED
+  # SLOs relajados para staging (no hay SLA real)
+  availability_slo_target = 0.99 # 99% (vs 99.9% production)
+  latency_slo_target_ms   = 2000 # 2s (vs 1s production)
+  error_rate_slo_target   = 0.05 # 5% (vs 1% production)
+  slo_rolling_period_days = 7    # 7 días (vs 30 production)
+
+  # External Notifications - DISABLED
+  enable_slack_notifications     = false
+  enable_pagerduty_notifications = false
 
   labels = local.labels
 }

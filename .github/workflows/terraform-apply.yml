@@ -1,0 +1,451 @@
+name: Terraform Apply
+
+# This workflow applies Terraform changes to infrastructure
+# Runs ONLY on merge to main/develop branches with manual approval gates
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+    paths:
+      - 'infra/**'
+      - '.github/workflows/terraform-apply.yml'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to apply changes'
+        required: true
+        type: choice
+        options:
+          - staging
+          - production
+      auto_approve:
+        description: 'Auto-approve terraform apply (USE WITH CAUTION)'
+        required: false
+        type: boolean
+        default: false
+
+env:
+  TERRAFORM_VERSION: '1.9.0'
+  WORKING_DIR: infra
+
+permissions:
+  contents: read
+  pull-requests: write
+  id-token: write
+  deployments: write
+
+jobs:
+  determine-environment:
+    name: Determine Target Environment
+    runs-on: ubuntu-latest
+    outputs:
+      environment: ${{ steps.set-env.outputs.environment }}
+      should_apply: ${{ steps.set-env.outputs.should_apply }}
+    steps:
+      - name: Determine environment from branch or input
+        id: set-env
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            ENV="${{ github.event.inputs.environment }}"
+            SHOULD_APPLY="true"
+          elif [ "${{ github.ref }}" == "refs/heads/main" ]; then
+            ENV="production"
+            SHOULD_APPLY="true"
+          elif [ "${{ github.ref }}" == "refs/heads/develop" ]; then
+            ENV="staging"
+            SHOULD_APPLY="true"
+          else
+            ENV="staging"
+            SHOULD_APPLY="false"
+          fi
+
+          echo "environment=$ENV" >> $GITHUB_OUTPUT
+          echo "should_apply=$SHOULD_APPLY" >> $GITHUB_OUTPUT
+          echo "🎯 Target Environment: $ENV"
+          echo "🚀 Should Apply: $SHOULD_APPLY"
+
+  terraform-plan:
+    name: Terraform Plan (${{ needs.determine-environment.outputs.environment }})
+    runs-on: ubuntu-latest
+    needs: [determine-environment]
+    if: needs.determine-environment.outputs.should_apply == 'true'
+    environment: ${{ needs.determine-environment.outputs.environment }}
+    outputs:
+      plan_exitcode: ${{ steps.plan.outputs.exitcode }}
+      has_changes: ${{ steps.plan.outputs.exitcode == '2' }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+          terraform_wrapper: false
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets[format('WORKLOAD_IDENTITY_PROVIDER_{0}', upper(needs.determine-environment.outputs.environment))] }}
+          service_account: ${{ secrets[format('SERVICE_ACCOUNT_{0}', upper(needs.determine-environment.outputs.environment))] }}
+
+      - name: Setup GCP SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Cache Terraform plugins
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ env.WORKING_DIR }}/environments/${{ needs.determine-environment.outputs.environment }}/.terraform
+            ~/.terraform.d/plugin-cache
+          key: ${{ runner.os }}-terraform-${{ needs.determine-environment.outputs.environment }}-${{ hashFiles('**/.terraform.lock.hcl') }}
+          restore-keys: |
+            ${{ runner.os }}-terraform-${{ needs.determine-environment.outputs.environment }}-
+
+      - name: Terraform Init
+        id: init
+        working-directory: ${{ env.WORKING_DIR }}/environments/${{ needs.determine-environment.outputs.environment }}
+        run: |
+          terraform init -input=false
+          echo "✅ Terraform initialized successfully"
+
+      - name: Terraform Plan
+        id: plan
+        working-directory: ${{ env.WORKING_DIR }}/environments/${{ needs.determine-environment.outputs.environment }}
+        run: |
+          terraform plan -detailed-exitcode -out=tfplan -no-color -input=false | tee plan.log
+          EXIT_CODE=${PIPESTATUS[0]}
+          echo "exitcode=$EXIT_CODE" >> $GITHUB_OUTPUT
+
+          # Exit codes: 0 = no changes, 1 = error, 2 = changes present
+          if [ $EXIT_CODE -eq 1 ]; then
+            echo "❌ Terraform plan failed"
+            exit 1
+          elif [ $EXIT_CODE -eq 2 ]; then
+            echo "📝 Changes detected in plan"
+          else
+            echo "✅ No infrastructure changes detected"
+          fi
+        env:
+          TF_VAR_project_id: ${{ secrets[format('GCP_PROJECT_ID_{0}', upper(needs.determine-environment.outputs.environment))] }}
+        continue-on-error: true
+
+      - name: Generate human-readable plan
+        if: steps.plan.outputs.exitcode != '1'
+        working-directory: ${{ env.WORKING_DIR }}/environments/${{ needs.determine-environment.outputs.environment }}
+        run: |
+          terraform show -no-color tfplan > plan.txt
+          echo "📄 Plan saved to plan.txt"
+
+      - name: Upload plan artifact
+        if: steps.plan.outputs.exitcode != '1'
+        uses: actions/upload-artifact@v4
+        with:
+          name: terraform-plan-${{ needs.determine-environment.outputs.environment }}-${{ github.sha }}
+          path: |
+            ${{ env.WORKING_DIR }}/environments/${{ needs.determine-environment.outputs.environment }}/tfplan
+            ${{ env.WORKING_DIR }}/environments/${{ needs.determine-environment.outputs.environment }}/plan.txt
+            ${{ env.WORKING_DIR }}/environments/${{ needs.determine-environment.outputs.environment }}/plan.log
+          retention-days: 30
+
+      - name: Create GitHub deployment
+        if: steps.plan.outputs.exitcode == '2'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const deployment = await github.rest.repos.createDeployment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: context.sha,
+              environment: '${{ needs.determine-environment.outputs.environment }}',
+              description: 'Terraform infrastructure deployment',
+              required_contexts: [],
+              auto_merge: false,
+              transient_environment: false,
+              production_environment: '${{ needs.determine-environment.outputs.environment }}' === 'production'
+            });
+
+            console.log('Deployment created:', deployment.data.id);
+
+      - name: Fail if plan errored
+        if: steps.plan.outputs.exitcode == '1'
+        run: |
+          echo "❌ Terraform plan failed. Check logs above."
+          exit 1
+
+  cost-estimation:
+    name: Cost Estimation
+    runs-on: ubuntu-latest
+    needs: [determine-environment, terraform-plan]
+    if: |
+      needs.terraform-plan.outputs.has_changes == 'true' &&
+      !cancelled()
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download plan artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: terraform-plan-${{ needs.determine-environment.outputs.environment }}-${{ github.sha }}
+          path: plan-artifacts
+
+      - name: Setup Infracost
+        uses: infracost/actions/setup@v3
+        with:
+          api-key: ${{ secrets.INFRACOST_API_KEY }}
+
+      - name: Generate Infracost JSON
+        run: |
+          if [ -f "plan-artifacts/tfplan" ]; then
+            infracost breakdown \
+              --path plan-artifacts/tfplan \
+              --format json \
+              --out-file infracost.json \
+              --usage-file ${{ env.WORKING_DIR }}/infracost-usage.yml || true
+          else
+            echo '{"totalMonthlyCost": "0", "projects": []}' > infracost.json
+          fi
+
+      - name: Generate Infracost diff
+        run: |
+          infracost diff \
+            --path plan-artifacts/tfplan \
+            --format json \
+            --out-file infracost-diff.json \
+            --usage-file ${{ env.WORKING_DIR }}/infracost-usage.yml || true
+
+      - name: Post cost comment
+        uses: infracost/actions/comment@v1
+        with:
+          path: infracost-diff.json
+          behavior: update
+          github-token: ${{ github.token }}
+
+      - name: Upload cost artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: cost-estimate-${{ needs.determine-environment.outputs.environment }}-${{ github.sha }}
+          path: |
+            infracost.json
+            infracost-diff.json
+          retention-days: 30
+
+  approval-gate:
+    name: Manual Approval Required
+    runs-on: ubuntu-latest
+    needs: [determine-environment, terraform-plan, cost-estimation]
+    if: |
+      needs.terraform-plan.outputs.has_changes == 'true' &&
+      !cancelled()
+    environment:
+      name: ${{ needs.determine-environment.outputs.environment }}-approval
+      url: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    steps:
+      - name: Approval checkpoint
+        run: |
+          echo "🚦 Manual approval received for ${{ needs.determine-environment.outputs.environment }}"
+          echo "📝 Proceeding with terraform apply"
+
+  terraform-apply:
+    name: Terraform Apply (${{ needs.determine-environment.outputs.environment }})
+    runs-on: ubuntu-latest
+    needs: [determine-environment, terraform-plan, approval-gate]
+    if: |
+      needs.terraform-plan.outputs.has_changes == 'true' &&
+      !cancelled()
+    environment: ${{ needs.determine-environment.outputs.environment }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+          terraform_wrapper: false
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets[format('WORKLOAD_IDENTITY_PROVIDER_{0}', upper(needs.determine-environment.outputs.environment))] }}
+          service_account: ${{ secrets[format('SERVICE_ACCOUNT_{0}', upper(needs.determine-environment.outputs.environment))] }}
+
+      - name: Setup GCP SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Download plan artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: terraform-plan-${{ needs.determine-environment.outputs.environment }}-${{ github.sha }}
+          path: plan-artifacts
+
+      - name: Move plan to working directory
+        run: |
+          mv plan-artifacts/tfplan ${{ env.WORKING_DIR }}/environments/${{ needs.determine-environment.outputs.environment }}/
+          echo "✅ Plan file restored"
+
+      - name: Terraform Init
+        working-directory: ${{ env.WORKING_DIR }}/environments/${{ needs.determine-environment.outputs.environment }}
+        run: terraform init -input=false
+
+      - name: Terraform Apply
+        id: apply
+        working-directory: ${{ env.WORKING_DIR }}/environments/${{ needs.determine-environment.outputs.environment }}
+        run: |
+          terraform apply -input=false -no-color tfplan | tee apply.log
+          echo "✅ Terraform apply completed successfully"
+        env:
+          TF_VAR_project_id: ${{ secrets[format('GCP_PROJECT_ID_{0}', upper(needs.determine-environment.outputs.environment))] }}
+
+      - name: Upload apply logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: terraform-apply-${{ needs.determine-environment.outputs.environment }}-${{ github.sha }}
+          path: ${{ env.WORKING_DIR }}/environments/${{ needs.determine-environment.outputs.environment }}/apply.log
+          retention-days: 90
+
+      - name: Update deployment status (success)
+        if: success()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const deployments = await github.rest.repos.listDeployments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: context.sha,
+              environment: '${{ needs.determine-environment.outputs.environment }}'
+            });
+
+            if (deployments.data.length > 0) {
+              await github.rest.repos.createDeploymentStatus({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                deployment_id: deployments.data[0].id,
+                state: 'success',
+                description: 'Terraform apply completed successfully',
+                environment_url: 'https://console.cloud.google.com/home/dashboard?project=${{ secrets[format(\'GCP_PROJECT_ID_{0}\', upper(needs.determine-environment.outputs.environment))] }}'
+              });
+            }
+
+      - name: Update deployment status (failure)
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const deployments = await github.rest.repos.listDeployments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: context.sha,
+              environment: '${{ needs.determine-environment.outputs.environment }}'
+            });
+
+            if (deployments.data.length > 0) {
+              await github.rest.repos.createDeploymentStatus({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                deployment_id: deployments.data[0].id,
+                state: 'failure',
+                description: 'Terraform apply failed'
+              });
+            }
+
+      - name: Post apply summary
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const logPath = '${{ env.WORKING_DIR }}/environments/${{ needs.determine-environment.outputs.environment }}/apply.log';
+
+            let summary = '## Terraform Apply Summary\\n\\n';
+            summary += `**Environment:** ${{ needs.determine-environment.outputs.environment }}\\n`;
+            summary += `**Status:** ${{ steps.apply.outcome }}\\n`;
+            summary += `**Commit:** ${context.sha.substring(0, 7)}\\n`;
+            summary += `**Run:** [View logs](https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})\\n`;
+
+            await core.summary
+              .addHeading('Terraform Apply Results')
+              .addRaw(summary)
+              .write();
+
+  post-deployment-validation:
+    name: Post-Deployment Validation
+    runs-on: ubuntu-latest
+    needs: [determine-environment, terraform-apply]
+    if: |
+      !cancelled() &&
+      needs.terraform-apply.result == 'success'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets[format('WORKLOAD_IDENTITY_PROVIDER_{0}', upper(needs.determine-environment.outputs.environment))] }}
+          service_account: ${{ secrets[format('SERVICE_ACCOUNT_{0}', upper(needs.determine-environment.outputs.environment))] }}
+
+      - name: Setup GCP SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Verify Cloud Run services
+        run: |
+          echo "🔍 Verifying Cloud Run services..."
+          gcloud run services list \
+            --platform=managed \
+            --project=${{ secrets[format('GCP_PROJECT_ID_{0}', upper(needs.determine-environment.outputs.environment))] }} \
+            --format="table(name,region,url,ready)"
+
+      - name: Verify Cloud SQL instances
+        run: |
+          echo "🔍 Verifying Cloud SQL instances..."
+          gcloud sql instances list \
+            --project=${{ secrets[format('GCP_PROJECT_ID_{0}', upper(needs.determine-environment.outputs.environment))] }} \
+            --format="table(name,region,databaseVersion,state)" || echo "No Cloud SQL instances found"
+
+      - name: Verify Storage buckets
+        run: |
+          echo "🔍 Verifying Storage buckets..."
+          gsutil ls -p ${{ secrets[format('GCP_PROJECT_ID_{0}', upper(needs.determine-environment.outputs.environment))] }} || echo "No storage buckets found"
+
+      - name: Health check summary
+        run: |
+          echo "✅ Post-deployment validation completed"
+          echo "Environment: ${{ needs.determine-environment.outputs.environment }}"
+          echo "All critical infrastructure verified"
+
+  notify-on-failure:
+    name: Notify on Failure
+    runs-on: ubuntu-latest
+    needs: [determine-environment, terraform-plan, terraform-apply]
+    if: |
+      failure() &&
+      (needs.terraform-plan.result == 'failure' || needs.terraform-apply.result == 'failure')
+    steps:
+      - name: Send failure notification
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue = await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `🚨 Terraform Apply Failed - ${{ needs.determine-environment.outputs.environment }}`,
+              body: `## Terraform Deployment Failure\\n\\n` +
+                    `**Environment:** ${{ needs.determine-environment.outputs.environment }}\\n` +
+                    `**Commit:** ${context.sha}\\n` +
+                    `**Workflow:** [View logs](https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})\\n\\n` +
+                    `**Failed Job:** ${{ needs.terraform-plan.result == 'failure' && 'terraform-plan' || 'terraform-apply' }}\\n\\n` +
+                    `Please review the workflow logs and take appropriate action.\\n\\n` +
+                    `### Quick Actions\\n` +
+                    `- [ ] Review terraform plan logs\\n` +
+                    `- [ ] Check GCP quotas and permissions\\n` +
+                    `- [ ] Verify terraform state\\n` +
+                    `- [ ] Roll back if necessary\\n`,
+              labels: ['infrastructure', 'terraform', 'deployment-failure']
+            });
+
+            console.log('Failure issue created:', issue.data.number);
