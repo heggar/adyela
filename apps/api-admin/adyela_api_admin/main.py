@@ -1,9 +1,11 @@
 """Main FastAPI application for Admin microservice."""
 
-from fastapi import FastAPI, status
+from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from adyela_api_admin.config import get_settings
+from adyela_api_admin.presentation.api.v1 import router as api_v1_router
 
 settings = get_settings()
 
@@ -23,6 +25,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Include API routes
+app.include_router(api_v1_router, prefix=settings.api_prefix)
+
 
 @app.get("/health", status_code=status.HTTP_200_OK)
 async def health_check() -> dict[str, str]:
@@ -32,6 +37,18 @@ async def health_check() -> dict[str, str]:
         "service": "api-admin",
         "version": settings.app_version,
     }
+
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+    """Global exception handler."""
+    return JSONResponse(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        content={
+            "detail": "Internal server error",
+            "error": str(exc) if settings.debug else "An unexpected error occurred",
+        },
+    )
 
 
 if __name__ == "__main__":
