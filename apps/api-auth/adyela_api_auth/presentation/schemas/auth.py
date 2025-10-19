@@ -17,6 +17,7 @@ class RegisterRequest(BaseModel):
     password: str = Field(..., min_length=8, max_length=100)
     full_name: str = Field(..., min_length=2, max_length=100)
     phone: Optional[str] = None
+    role: Optional[str] = "patient"  # patient, professional, admin
 
     @field_validator("password")
     @classmethod
@@ -122,3 +123,105 @@ class TokenValidationResponse(BaseModel):
     valid: bool
     user: Optional[UserResponse] = None
     error: Optional[str] = None
+
+
+class OAuthLoginRequest(BaseModel):
+    """OAuth login request"""
+
+    provider: str = Field(..., description="OAuth provider (google, facebook, apple)")
+    id_token: str = Field(..., description="OAuth ID token from provider")
+    role: Optional[str] = "patient"  # Default role for new users
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "provider": "google",
+                "id_token": "eyJhbGciOiJSUzI1NiIsImtpZCI6IjU5MmU...",
+                "role": "patient",
+            }
+        }
+
+
+class OAuthLoginResponse(BaseModel):
+    """OAuth login response"""
+
+    user: UserResponse
+    access_token: str
+    refresh_token: str
+    token_type: str = "Bearer"
+    expires_in: int = 1800
+    is_new_user: bool = False
+
+
+class RefreshTokenRequest(BaseModel):
+    """Refresh token request"""
+
+    refresh_token: str
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+            }
+        }
+
+
+class RefreshTokenResponse(BaseModel):
+    """Refresh token response"""
+
+    access_token: str
+    token_type: str = "Bearer"
+    expires_in: int = 1800
+
+
+class ForgotPasswordRequest(BaseModel):
+    """Forgot password request"""
+
+    email: EmailStr
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "email": "patient@example.com",
+            }
+        }
+
+
+class ForgotPasswordResponse(BaseModel):
+    """Forgot password response"""
+
+    message: str
+    email: EmailStr
+
+
+class ResetPasswordRequest(BaseModel):
+    """Reset password request"""
+
+    token: str = Field(..., description="Password reset token from email")
+    new_password: str = Field(..., min_length=8, max_length=100)
+
+    @field_validator("new_password")
+    @classmethod
+    def validate_password(cls, v: str) -> str:
+        """Validate password strength"""
+        if not any(c.isupper() for c in v):
+            raise ValueError("Password must contain at least one uppercase letter")
+        if not any(c.islower() for c in v):
+            raise ValueError("Password must contain at least one lowercase letter")
+        if not any(c.isdigit() for c in v):
+            raise ValueError("Password must contain at least one digit")
+        return v
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "token": "abc123def456",
+                "new_password": "NewSecurePass123!",
+            }
+        }
+
+
+class ResetPasswordResponse(BaseModel):
+    """Reset password response"""
+
+    message: str
