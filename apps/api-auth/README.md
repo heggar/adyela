@@ -54,6 +54,7 @@ api-auth/
 ## API Endpoints
 
 ### Public Endpoints
+
 - `POST /auth/register` - Register new user
 - `POST /auth/login` - Login with credentials
 - `POST /auth/login/google` - Login with Google OAuth
@@ -63,17 +64,20 @@ api-auth/
 - `POST /auth/reset-password` - Reset password with token
 
 ### Protected Endpoints
+
 - `GET /auth/me` - Get current user info
 - `POST /auth/logout` - Logout (invalidate token)
 - `POST /auth/refresh` - Refresh access token
 - `GET /auth/verify-email/{token}` - Verify email address
 
 ### Internal Endpoints (Service-to-Service)
+
 - `POST /internal/auth/validate-token` - Validate JWT token
 - `GET /internal/auth/user/{user_id}` - Get user by ID
 - `POST /internal/auth/check-permission` - Check user permission
 
 ### Health & Monitoring
+
 - `GET /health` - Health check
 - `GET /metrics` - Prometheus metrics
 
@@ -142,6 +146,7 @@ k6 run tests/load/auth-load-test.js
 ## Deployment
 
 Deployed via GitHub Actions to Cloud Run:
+
 - **Staging**: `api-auth-staging.staging.adyela.care`
 - **Production**: `api-auth.adyela.care`
 

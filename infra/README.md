@@ -1,6 +1,7 @@
 # Adyela Infrastructure - Terraform
 
-This directory contains all Infrastructure as Code (IaC) for the Adyela microservices platform using Terraform.
+This directory contains all Infrastructure as Code (IaC) for the Adyela
+microservices platform using Terraform.
 
 ## 📁 Structure
 
@@ -61,7 +62,8 @@ terraform apply
 
 **Path**: `modules/cloud-run-service/`
 
-Reusable module for deploying any microservice to Cloud Run with scale-to-zero, health checks, secrets integration, and cost attribution.
+Reusable module for deploying any microservice to Cloud Run with scale-to-zero,
+health checks, secrets integration, and cost attribution.
 
 ### 2. Pub/Sub Messaging ✅
 
@@ -77,14 +79,14 @@ Budget monitoring with $150/month staging threshold and email alerts.
 
 ## 🏗️ Deployed Microservices (Staging)
 
-| Service | Port | Min | Max | CPU | Memory | Language |
-|---------|------|-----|-----|-----|--------|----------|
-| **api-auth** | 8000 | 0 | 5 | 1 | 512Mi | Python/FastAPI |
-| **api-appointments** | 8000 | 0 | 10 | 1 | 512Mi | Python/FastAPI |
-| **api-payments** | 3000 | 0 | 5 | 1 | 512Mi | Node.js |
-| **api-notifications** | 3000 | 0 | 10 | 0.5 | 256Mi | Node.js |
-| **api-admin** | 8000 | 0 | 3 | 1 | 512Mi | Python/FastAPI |
-| **api-analytics** | 8000 | 0 | 5 | 1 | 1Gi | Python |
+| Service               | Port | Min | Max | CPU | Memory | Language       |
+| --------------------- | ---- | --- | --- | --- | ------ | -------------- |
+| **api-auth**          | 8000 | 0   | 5   | 1   | 512Mi  | Python/FastAPI |
+| **api-appointments**  | 8000 | 0   | 10  | 1   | 512Mi  | Python/FastAPI |
+| **api-payments**      | 3000 | 0   | 5   | 1   | 512Mi  | Node.js        |
+| **api-notifications** | 3000 | 0   | 10  | 0.5 | 256Mi  | Node.js        |
+| **api-admin**         | 8000 | 0   | 3   | 1   | 512Mi  | Python/FastAPI |
+| **api-analytics**     | 8000 | 0   | 5   | 1   | 1Gi    | Python         |
 
 **Cost**: ~$100-150/month with scale-to-zero enabled
 
@@ -96,4 +98,5 @@ Budget monitoring with $150/month staging threshold and email alerts.
 - [Observability](../../docs/infrastructure/observability-distributed-systems.md)
 
 ---
+
 **Version**: 1.0.0 | **Last Updated**: 2025-10-18

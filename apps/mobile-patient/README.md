@@ -1,6 +1,7 @@
 # Mobile Patient App (Flutter)
 
-Native mobile application for patients to book appointments and manage their health.
+Native mobile application for patients to book appointments and manage their
+health.
 
 ## Platform Support
 
@@ -11,6 +12,7 @@ Native mobile application for patients to book appointments and manage their hea
 ## Features
 
 ### MVP Features (Phase 1)
+
 - [ ] User authentication (Google, Facebook, Apple, Email)
 - [ ] Professional search and discovery
 - [ ] Professional profile view
@@ -20,6 +22,7 @@ Native mobile application for patients to book appointments and manage their hea
 - [ ] Push notifications
 
 ### Post-MVP Features (Phase 2)
+
 - [ ] Video consultations (Jitsi integration)
 - [ ] Medical records
 - [ ] Prescription management
@@ -174,7 +177,8 @@ flutter build web --release
 
 1. Create Firebase project at https://console.firebase.google.com
 2. Add iOS and Android apps to project
-3. Download `google-services.json` (Android) and `GoogleService-Info.plist` (iOS)
+3. Download `google-services.json` (Android) and `GoogleService-Info.plist`
+   (iOS)
 4. Place files in respective platform directories
 
 ### Environment Variables
@@ -204,6 +208,7 @@ flutter run --dart-define=API_BASE_URL=https://staging.adyela.care/api --dart-de
 ## Screens
 
 ### Authentication Flow
+
 1. **Splash Screen** - App loading and initialization
 2. **Onboarding** - 3-screen intro for new users
 3. **Login** - Email/password or social login
@@ -211,6 +216,7 @@ flutter run --dart-define=API_BASE_URL=https://staging.adyela.care/api --dart-de
 5. **Forgot Password** - Password reset
 
 ### Main App Flow
+
 1. **Home** - Professional search and recommendations
 2. **Search** - Advanced search with filters
 3. **Professional Profile** - View details and availability
@@ -321,6 +327,7 @@ testWidgets('Login button triggers login event', (tester) async {
 ## Localization
 
 Supported languages:
+
 - 🇪🇸 Spanish (primary)
 - 🇺🇸 English
 - 🇧🇷 Portuguese (future)
@@ -330,6 +337,7 @@ Using `intl` package for translations.
 ## CI/CD
 
 GitHub Actions workflow:
+
 1. Lint and format check
 2. Unit and widget tests
 3. Build Android APK
@@ -345,6 +353,5 @@ GitHub Actions workflow:
 
 ---
 
-**Version**: 0.1.0
-**Platform**: iOS 14+, Android API 24+, Web
-**Status**: 🚧 In Development
+**Version**: 0.1.0 **Platform**: iOS 14+, Android API 24+, Web **Status**: 🚧 In
+Development

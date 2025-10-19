@@ -1,6 +1,7 @@
 # Mobile Professional App (Flutter)
 
-Native mobile application for healthcare professionals to manage appointments and patients.
+Native mobile application for healthcare professionals to manage appointments
+and patients.
 
 ## Platform Support
 
@@ -11,6 +12,7 @@ Native mobile application for healthcare professionals to manage appointments an
 ## Features
 
 ### MVP Features (Phase 1)
+
 - [ ] Professional registration and verification
 - [ ] Professional profile management
 - [ ] Availability and schedule management
@@ -20,6 +22,7 @@ Native mobile application for healthcare professionals to manage appointments an
 - [ ] Real-time appointment updates
 
 ### Post-MVP Features (Phase 2)
+
 - [ ] Video consultations (Jitsi integration)
 - [ ] Clinical notes and prescriptions
 - [ ] Revenue analytics
@@ -54,14 +57,14 @@ mobile-professional/
 
 ## Key Differences from Patient App
 
-| Feature | Patient App | Professional App |
-|---------|-------------|------------------|
-| **Onboarding** | 3 steps | 5 steps (includes credential verification) |
-| **Main Screen** | Search | Dashboard with today's appointments |
-| **Booking** | Book appointment | Manage availability |
-| **Calendar** | View own appointments | View all appointments |
-| **Profile** | Basic profile | Professional credentials + pricing |
-| **Permissions** | Patient role | Professional role |
+| Feature         | Patient App           | Professional App                           |
+| --------------- | --------------------- | ------------------------------------------ |
+| **Onboarding**  | 3 steps               | 5 steps (includes credential verification) |
+| **Main Screen** | Search                | Dashboard with today's appointments        |
+| **Booking**     | Book appointment      | Manage availability                        |
+| **Calendar**    | View own appointments | View all appointments                      |
+| **Profile**     | Basic profile         | Professional credentials + pricing         |
+| **Permissions** | Patient role          | Professional role                          |
 
 ## Unique Features
 
@@ -174,6 +177,7 @@ class AvailabilityScreen extends StatelessWidget {
 ## Role-Based Features
 
 Professional-only endpoints:
+
 - `GET /professionals/me/dashboard` - Dashboard data
 - `POST /professionals/me/availability` - Set availability
 - `GET /professionals/me/patients` - List patients
@@ -183,6 +187,7 @@ Professional-only endpoints:
 ## Testing
 
 Same testing approach as patient app, with additional tests for:
+
 - Schedule management
 - Availability conflict detection
 - Multi-timezone support
@@ -191,6 +196,7 @@ Same testing approach as patient app, with additional tests for:
 ## CI/CD
 
 Same pipeline as patient app:
+
 - Separate Firebase projects for staging/production
 - Firebase App Distribution for internal testing
 - App Store Connect and Google Play Console for production
@@ -203,6 +209,5 @@ Same pipeline as patient app:
 
 ---
 
-**Version**: 0.1.0
-**Platform**: iOS 14+, Android API 24+, Web
-**Status**: 🚧 In Development
+**Version**: 0.1.0 **Platform**: iOS 14+, Android API 24+, Web **Status**: 🚧 In
+Development

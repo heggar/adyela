@@ -17,7 +17,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Full history for better detection
+          fetch-depth: 0 # Full history for better detection
 
       - name: Run Gitleaks
         uses: gitleaks/gitleaks-action@v2
@@ -180,7 +180,8 @@ jobs:
     if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     strategy:
       matrix:
-        service: [api-auth, api-appointments, api-payments, api-notifications, api-admin, api-analytics]
+        service:
+          [api-auth, api-appointments, api-payments, api-notifications, api-admin, api-analytics]
     steps:
       - uses: actions/checkout@v4
 
@@ -238,7 +239,16 @@ jobs:
   security-report:
     name: Generate Security Report
     runs-on: ubuntu-latest
-    needs: [secret-scanning, dependency-scanning-python, dependency-scanning-nodejs, sast-scanning-python, sast-scanning-nodejs, container-scanning, iac-scanning]
+    needs:
+      [
+        secret-scanning,
+        dependency-scanning-python,
+        dependency-scanning-nodejs,
+        sast-scanning-python,
+        sast-scanning-nodejs,
+        container-scanning,
+        iac-scanning,
+      ]
     if: always()
     steps:
       - name: Download all artifacts

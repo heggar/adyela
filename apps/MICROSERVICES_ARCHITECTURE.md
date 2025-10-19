@@ -1,17 +1,18 @@
 # Adyela Microservices Architecture
 
-This document provides an overview of the 6 microservices that compose the Adyela platform.
+This document provides an overview of the 6 microservices that compose the
+Adyela platform.
 
 ## 🏗️ Microservices Overview
 
-| Service | Language | Port | Responsibilities | Dependencies |
-|---------|----------|------|------------------|--------------|
-| **api-auth** | Python/FastAPI | 8000 | Authentication, Authorization, RBAC | Firestore, Firebase Auth |
-| **api-appointments** | Python/FastAPI | 8000 | Appointment CRUD, Scheduling, Calendar | Firestore, Pub/Sub, api-auth |
-| **api-payments** | Node.js/Express | 3000 | Payment processing, Stripe integration | Stripe, Pub/Sub, api-auth |
-| **api-notifications** | Node.js/Express | 3000 | Email, SMS, Push notifications | SendGrid, Twilio, Pub/Sub |
-| **api-admin** | Python/FastAPI | 8000 | Admin operations, Professional approval | Firestore, api-auth |
-| **api-analytics** | Python | 8000 | Analytics aggregation, reporting | BigQuery, Pub/Sub |
+| Service               | Language        | Port | Responsibilities                        | Dependencies                 |
+| --------------------- | --------------- | ---- | --------------------------------------- | ---------------------------- |
+| **api-auth**          | Python/FastAPI  | 8000 | Authentication, Authorization, RBAC     | Firestore, Firebase Auth     |
+| **api-appointments**  | Python/FastAPI  | 8000 | Appointment CRUD, Scheduling, Calendar  | Firestore, Pub/Sub, api-auth |
+| **api-payments**      | Node.js/Express | 3000 | Payment processing, Stripe integration  | Stripe, Pub/Sub, api-auth    |
+| **api-notifications** | Node.js/Express | 3000 | Email, SMS, Push notifications          | SendGrid, Twilio, Pub/Sub    |
+| **api-admin**         | Python/FastAPI  | 8000 | Admin operations, Professional approval | Firestore, api-auth          |
+| **api-analytics**     | Python          | 8000 | Analytics aggregation, reporting        | BigQuery, Pub/Sub            |
 
 ## 📊 Architecture Diagram
 
@@ -84,6 +85,7 @@ This document provides an overview of the 6 microservices that compose the Adyel
 **Purpose**: Centralized authentication and authorization
 
 **Key Features**:
+
 - Multi-provider OAuth (Google, Facebook, Apple)
 - Email/password authentication
 - JWT token generation and validation
@@ -94,6 +96,7 @@ This document provides an overview of the 6 microservices that compose the Adyel
 **Tech Stack**: Python 3.12, FastAPI, Firebase Auth, Firestore
 
 **Endpoints**:
+
 - `POST /auth/login` - Login
 - `POST /auth/register` - Register
 - `POST /auth/validate-token` - Validate JWT (internal)
@@ -107,6 +110,7 @@ This document provides an overview of the 6 microservices that compose the Adyel
 **Purpose**: Appointment management and scheduling
 
 **Key Features**:
+
 - CRUD operations for appointments
 - Availability management
 - Conflict detection
@@ -117,12 +121,14 @@ This document provides an overview of the 6 microservices that compose the Adyel
 **Tech Stack**: Python 3.12, FastAPI, Firestore, Pub/Sub
 
 **Endpoints**:
+
 - `GET /appointments` - List appointments
 - `POST /appointments` - Create appointment
 - `PUT /appointments/{id}` - Update appointment
 - `DELETE /appointments/{id}` - Cancel appointment
 
 **Events Published**:
+
 - `AppointmentCreated`
 - `AppointmentUpdated`
 - `AppointmentCancelled`
@@ -137,6 +143,7 @@ This document provides an overview of the 6 microservices that compose the Adyel
 **Purpose**: Payment processing with Stripe
 
 **Key Features**:
+
 - Stripe payment intent creation
 - Subscription management
 - Webhook handling
@@ -147,11 +154,13 @@ This document provides an overview of the 6 microservices that compose the Adyel
 **Tech Stack**: Node.js 20, Express, Stripe SDK, Pub/Sub
 
 **Endpoints**:
+
 - `POST /payments/intent` - Create payment intent
 - `POST /payments/webhook` - Stripe webhook handler
 - `POST /payments/refund` - Process refund
 
 **Events Published**:
+
 - `PaymentSucceeded`
 - `PaymentFailed`
 - `SubscriptionCreated`
@@ -166,6 +175,7 @@ This document provides an overview of the 6 microservices that compose the Adyel
 **Purpose**: Multi-channel notification delivery
 
 **Key Features**:
+
 - Email notifications (SendGrid)
 - SMS notifications (Twilio)
 - Push notifications (Firebase Cloud Messaging)
@@ -176,15 +186,18 @@ This document provides an overview of the 6 microservices that compose the Adyel
 **Tech Stack**: Node.js 20, Express, SendGrid, Twilio, FCM
 
 **Endpoints**:
+
 - `POST /webhooks/pubsub` - Pub/Sub push endpoint
 - `POST /notifications/send` - Send notification (internal)
 
 **Events Subscribed**:
+
 - `AppointmentCreated` → Send confirmation email
 - `AppointmentReminder` → Send SMS reminder
 - `PaymentSucceeded` → Send receipt email
 
 **Notification Types**:
+
 - Appointment confirmation
 - Appointment reminder (24h before)
 - Appointment cancellation
@@ -198,6 +211,7 @@ This document provides an overview of the 6 microservices that compose the Adyel
 **Purpose**: Administrative operations
 
 **Key Features**:
+
 - Professional application review
 - Professional approval/rejection
 - User management
@@ -208,6 +222,7 @@ This document provides an overview of the 6 microservices that compose the Adyel
 **Tech Stack**: Python 3.12, FastAPI, Firestore
 
 **Endpoints**:
+
 - `GET /admin/professionals/pending` - List pending approvals
 - `POST /admin/professionals/{id}/approve` - Approve professional
 - `POST /admin/professionals/{id}/reject` - Reject professional
@@ -223,6 +238,7 @@ This document provides an overview of the 6 microservices that compose the Adyel
 **Purpose**: Data aggregation and reporting
 
 **Key Features**:
+
 - Event aggregation from Pub/Sub
 - Metrics calculation
 - Report generation
@@ -233,15 +249,18 @@ This document provides an overview of the 6 microservices that compose the Adyel
 **Tech Stack**: Python 3.12, BigQuery, Pub/Sub
 
 **Endpoints**:
+
 - `GET /analytics/dashboard` - Dashboard metrics
 - `GET /analytics/appointments/stats` - Appointment statistics
 - `GET /analytics/revenue` - Revenue reports
 - `POST /webhooks/pubsub` - Pub/Sub push endpoint
 
 **Events Subscribed**:
+
 - All events from all services (for analytics)
 
 **Data Stored**:
+
 - Appointment metrics
 - Payment metrics
 - User behavior
@@ -280,6 +299,7 @@ Firestore rules enforce tenant isolation at the database level.
 ### Logging
 
 All services use **structured logging** (JSON format) with:
+
 - Correlation IDs for request tracing
 - Tenant ID for cost attribution
 - Service name and version
@@ -288,6 +308,7 @@ All services use **structured logging** (JSON format) with:
 ### Tracing
 
 **Cloud Trace** with **OpenTelemetry**:
+
 - Trace ID propagates across services
 - Distributed tracing for multi-service requests
 - Performance bottleneck identification
@@ -295,6 +316,7 @@ All services use **structured logging** (JSON format) with:
 ### Metrics
 
 **Cloud Monitoring** + **Prometheus**:
+
 - Request rate, latency, error rate
 - Resource utilization (CPU, memory)
 - Business metrics (appointments created, payments processed)
@@ -312,20 +334,21 @@ All services use **structured logging** (JSON format) with:
 ### Scale-to-Zero
 
 All services configured with `min_instances = 0` in staging:
+
 - **Idle cost**: $0/month
 - **Active development**: $100-150/month
 - **Budget alert**: $150/month threshold
 
 ### Resource Allocation
 
-| Service | CPU | Memory | Cost Impact |
-|---------|-----|--------|-------------|
-| api-auth | 1 vCPU | 512Mi | Medium |
-| api-appointments | 1 vCPU | 512Mi | Medium |
-| api-payments | 1 vCPU | 512Mi | Medium |
-| api-notifications | 0.5 vCPU | 256Mi | Low |
-| api-admin | 1 vCPU | 512Mi | Low (infrequent) |
-| api-analytics | 1 vCPU | 1Gi | Medium |
+| Service           | CPU      | Memory | Cost Impact      |
+| ----------------- | -------- | ------ | ---------------- |
+| api-auth          | 1 vCPU   | 512Mi  | Medium           |
+| api-appointments  | 1 vCPU   | 512Mi  | Medium           |
+| api-payments      | 1 vCPU   | 512Mi  | Medium           |
+| api-notifications | 0.5 vCPU | 256Mi  | Low              |
+| api-admin         | 1 vCPU   | 512Mi  | Low (infrequent) |
+| api-analytics     | 1 vCPU   | 1Gi    | Medium           |
 
 ## 🚀 Deployment
 
@@ -404,6 +427,5 @@ make type-check-all
 
 ---
 
-**Version**: 1.0.0
-**Last Updated**: 2025-10-18
-**Status**: 🚧 In Development (scaffolding phase)
+**Version**: 1.0.0 **Last Updated**: 2025-10-18 **Status**: 🚧 In Development
+(scaffolding phase)
