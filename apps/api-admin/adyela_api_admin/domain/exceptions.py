@@ -23,3 +23,9 @@ class UnauthorizedOperationError(DomainException):
     """Raised when user lacks permission for operation."""
 
     pass
+
+
+class TenantNotFoundError(DomainException):
+    """Raised when a tenant is not found."""
+
+    pass

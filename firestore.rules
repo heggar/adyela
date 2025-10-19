@@ -1,39 +1,460 @@
 rules_version = '2';
+
+// Firestore Security Rules for Adyela Multi-Tenant Healthcare Platform
+// Version: 2.0
+// Date: 2025-10-19
+// HIPAA Compliant - Enforces tenant isolation and PHI protection
+
 service cloud.firestore {
   match /databases/{database}/documents {
-    // HIPAA-compliant rules for Adyela Health System
-    // Only authenticated users with verified email can access
-    
-    // General rule: Require authentication and email verification
-    match /{document=**} {
-      allow read, write: if request.auth != null 
-        && request.auth.token.email_verified == true;
+
+    // =========================================================================
+    // HELPER FUNCTIONS
+    // =========================================================================
+
+    // Check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
     }
-    
-    // Patient data - only accessible by the patient themselves
-    match /patients/{patientId} {
-      allow read, write: if request.auth != null 
-        && request.auth.uid == patientId
-        && request.auth.token.email_verified == true;
+
+    // Get current user ID
+    function getUserId() {
+      return request.auth.uid;
     }
-    
-    // Appointments - accessible by patient and assigned doctor
-    match /appointments/{appointmentId} {
-      allow read, write: if request.auth != null 
-        && request.auth.token.email_verified == true
-        && (resource.data.patientId == request.auth.uid 
-            || resource.data.doctorId == request.auth.uid);
+
+    // Get user document data
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(getUserId())).data;
     }
-    
-    // Medical records - strict access control
-    match /medical_records/{recordId} {
-      allow read, write: if request.auth != null 
-        && request.auth.token.email_verified == true
-        && request.auth.token.role in ['doctor', 'admin']
-        && resource.data.patientId == request.auth.uid;
+
+    // Get user role from user document
+    function getUserRole() {
+      return getUserData().role;
     }
-    
-    // Deny all other access by default
+
+    // Get tenant owner ID
+    function getTenantOwner(tenantId) {
+      return get(/databases/$(database)/documents/tenants/$(tenantId)).data.owner_id;
+    }
+
+    // Check if user belongs to a specific tenant
+    function belongsToTenant(tenantId) {
+      return exists(/databases/$(database)/documents/users/$(getUserId())/tenants/$(tenantId));
+    }
+
+    // Check if user is the tenant owner
+    function isTenantOwner(tenantId) {
+      return getUserId() == getTenantOwner(tenantId);
+    }
+
+    // Check if user is a practitioner in the tenant
+    function isPractitioner(tenantId) {
+      let userTenant = get(/databases/$(database)/documents/users/$(getUserId())/tenants/$(tenantId)).data;
+      return userTenant.role_in_tenant == 'practitioner';
+    }
+
+    // Check if user is admin (super admin or org admin)
+    function isAdmin() {
+      let role = getUserRole();
+      return role == 'super_admin' || role == 'org_admin';
+    }
+
+    // Check if data contains valid tenant_id matching document path
+    function tenantIdMatches(tenantId) {
+      return request.resource.data.tenant_id == tenantId;
+    }
+
+    // Validate appointment time is in the future (for creation)
+    function isValidAppointmentTime() {
+      return request.resource.data.start_time > request.time;
+    }
+
+    // Check if appointment belongs to user (patient or practitioner)
+    function isAppointmentParticipant(appointmentData) {
+      return getUserId() == appointmentData.patient_id ||
+             getUserId() == appointmentData.practitioner_id;
+    }
+
+    // =========================================================================
+    // TENANTS COLLECTION
+    // =========================================================================
+
+    match /tenants/{tenantId} {
+      // Read: User must belong to tenant
+      allow read: if isAuthenticated() && (
+        belongsToTenant(tenantId) || isAdmin()
+      );
+
+      // Create: Only backend (Cloud Functions) or admins
+      allow create: if isAuthenticated() && isAdmin();
+
+      // Update: Only tenant owner or admins
+      allow update: if isAuthenticated() && (
+        isTenantOwner(tenantId) || isAdmin()
+      );
+
+      // Delete: Only admins (soft delete preferred)
+      allow delete: if isAuthenticated() && isAdmin();
+
+      // -----------------------------------------------------------------------
+      // APPOINTMENTS SUBCOLLECTION
+      // -----------------------------------------------------------------------
+
+      match /appointments/{appointmentId} {
+        // Read: Patient, practitioner, or tenant owner can read
+        allow read: if isAuthenticated() && (
+          isAppointmentParticipant(resource.data) ||
+          isTenantOwner(tenantId) ||
+          isAdmin()
+        );
+
+        // Create: Patient or practitioner can create
+        // Must ensure tenant_id matches and user belongs to tenant
+        allow create: if isAuthenticated() &&
+          belongsToTenant(tenantId) &&
+          tenantIdMatches(tenantId) &&
+          (
+            getUserId() == request.resource.data.patient_id ||
+            getUserId() == request.resource.data.practitioner_id
+          );
+
+        // Update: Patient or practitioner can update their appointments
+        allow update: if isAuthenticated() && (
+          isAppointmentParticipant(resource.data) ||
+          isTenantOwner(tenantId) ||
+          isAdmin()
+        ) &&
+        // Prevent changing tenant_id
+        (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['tenant_id']));
+
+        // Delete: Only practitioner/owner can cancel (soft delete via status update preferred)
+        allow delete: if isAuthenticated() && (
+          getUserId() == resource.data.practitioner_id ||
+          isTenantOwner(tenantId) ||
+          isAdmin()
+        );
+      }
+
+      // -----------------------------------------------------------------------
+      // PATIENTS SUBCOLLECTION (Metadata only, not PII)
+      // -----------------------------------------------------------------------
+
+      match /patients/{patientId} {
+        // Read: Patient reads themselves, practitioner/owner reads their patients
+        allow read: if isAuthenticated() && (
+          getUserId() == patientId ||
+          isTenantOwner(tenantId) ||
+          isPractitioner(tenantId) ||
+          isAdmin()
+        );
+
+        // Create: Only practitioner/owner
+        allow create: if isAuthenticated() && (
+          isTenantOwner(tenantId) ||
+          isPractitioner(tenantId) ||
+          isAdmin()
+        ) && tenantIdMatches(tenantId);
+
+        // Update: Only practitioner/owner
+        allow update: if isAuthenticated() && (
+          isTenantOwner(tenantId) ||
+          isPractitioner(tenantId) ||
+          isAdmin()
+        );
+
+        // Delete: Only admins (soft delete preferred)
+        allow delete: if isAuthenticated() && isAdmin();
+      }
+
+      // -----------------------------------------------------------------------
+      // PRACTITIONERS SUBCOLLECTION (Staff in multi-professional practices)
+      // -----------------------------------------------------------------------
+
+      match /practitioners/{practitionerId} {
+        // Read: Anyone in tenant
+        allow read: if isAuthenticated() && (
+          belongsToTenant(tenantId) || isAdmin()
+        );
+
+        // Create: Only tenant owner or admins
+        allow create: if isAuthenticated() && (
+          isTenantOwner(tenantId) || isAdmin()
+        ) && tenantIdMatches(tenantId);
+
+        // Update: Owner or the practitioner themselves
+        allow update: if isAuthenticated() && (
+          isTenantOwner(tenantId) ||
+          getUserId() == practitionerId ||
+          isAdmin()
+        );
+
+        // Delete: Only tenant owner or admins
+        allow delete: if isAuthenticated() && (
+          isTenantOwner(tenantId) || isAdmin()
+        );
+      }
+
+      // -----------------------------------------------------------------------
+      // PRESCRIPTIONS SUBCOLLECTION (PHI - Highly Sensitive)
+      // -----------------------------------------------------------------------
+
+      match /prescriptions/{prescriptionId} {
+        // Read: Patient, prescribing practitioner, or owner
+        allow read: if isAuthenticated() && (
+          getUserId() == resource.data.patient_id ||
+          getUserId() == resource.data.prescribed_by ||
+          isTenantOwner(tenantId) ||
+          isAdmin()
+        );
+
+        // Create: Only practitioners
+        allow create: if isAuthenticated() && (
+          isPractitioner(tenantId) || isAdmin()
+        ) &&
+        tenantIdMatches(tenantId) &&
+        request.resource.data.prescribed_by == getUserId();
+
+        // Update: Only prescribing practitioner (within 24 hours)
+        allow update: if isAuthenticated() && (
+          (getUserId() == resource.data.prescribed_by &&
+           request.time < resource.data.created_at + duration.value(24, 'h')) ||
+          isAdmin()
+        );
+
+        // Delete: Only admins (prescriptions should never be deleted)
+        allow delete: if isAuthenticated() && isAdmin();
+      }
+
+      // -----------------------------------------------------------------------
+      // MEDICAL RECORDS SUBCOLLECTION (PHI - Highly Sensitive)
+      // -----------------------------------------------------------------------
+
+      match /medical_records/{recordId} {
+        // Read: Patient, treating practitioner, or owner
+        allow read: if isAuthenticated() && (
+          getUserId() == resource.data.patient_id ||
+          isPractitioner(tenantId) ||
+          isTenantOwner(tenantId) ||
+          isAdmin()
+        );
+
+        // Create: Only practitioners
+        allow create: if isAuthenticated() && (
+          isPractitioner(tenantId) || isAdmin()
+        ) && tenantIdMatches(tenantId);
+
+        // Update: Only the practitioner who created it
+        allow update: if isAuthenticated() && (
+          getUserId() == resource.data.created_by ||
+          isAdmin()
+        );
+
+        // Delete: Only admins (records should never be deleted)
+        allow delete: if isAuthenticated() && isAdmin();
+      }
+
+      // -----------------------------------------------------------------------
+      // AVAILABILITY SUBCOLLECTION
+      // -----------------------------------------------------------------------
+
+      match /availability/{availabilityId} {
+        // Read: Anyone in tenant (to see available slots)
+        allow read: if isAuthenticated() && (
+          belongsToTenant(tenantId) || isAdmin()
+        );
+
+        // Create: Only practitioners managing their availability
+        allow create: if isAuthenticated() && (
+          isPractitioner(tenantId) ||
+          isTenantOwner(tenantId) ||
+          isAdmin()
+        ) && tenantIdMatches(tenantId);
+
+        // Update: Only the practitioner or owner
+        allow update: if isAuthenticated() && (
+          getUserId() == resource.data.practitioner_id ||
+          isTenantOwner(tenantId) ||
+          isAdmin()
+        );
+
+        // Delete: Only the practitioner or owner
+        allow delete: if isAuthenticated() && (
+          getUserId() == resource.data.practitioner_id ||
+          isTenantOwner(tenantId) ||
+          isAdmin()
+        );
+      }
+
+      // -----------------------------------------------------------------------
+      // TENANT SETTINGS
+      // -----------------------------------------------------------------------
+
+      match /settings/configuration {
+        // Read: Anyone in tenant
+        allow read: if isAuthenticated() && (
+          belongsToTenant(tenantId) || isAdmin()
+        );
+
+        // Write: Only tenant owner or admins
+        allow write: if isAuthenticated() && (
+          isTenantOwner(tenantId) || isAdmin()
+        );
+      }
+
+      // Catch-all for other subcollections within tenant
+      match /{document=**} {
+        // Deny by default - be explicit about permissions
+        allow read, write: if false;
+      }
+    }
+
+    // =========================================================================
+    // USERS COLLECTION (Global - Cross-Tenant)
+    // =========================================================================
+
+    match /users/{userId} {
+      // Read: User reads themselves or admins
+      allow read: if isAuthenticated() && (
+        getUserId() == userId || isAdmin()
+      );
+
+      // Create: User creates themselves during signup
+      allow create: if isAuthenticated() &&
+        getUserId() == userId &&
+        request.resource.data.firebase_uid == request.auth.uid;
+
+      // Update: User updates themselves or admins
+      // Cannot change role (only admins can)
+      allow update: if isAuthenticated() && (
+        (getUserId() == userId &&
+         !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'firebase_uid'])) ||
+        isAdmin()
+      );
+
+      // Delete: Only admins (soft delete via account_locked preferred)
+      allow delete: if isAuthenticated() && isAdmin();
+
+      // -----------------------------------------------------------------------
+      // USER TENANTS SUBCOLLECTION
+      // -----------------------------------------------------------------------
+
+      match /tenants/{tenantId} {
+        // Read: User reads their own tenant memberships
+        allow read: if isAuthenticated() && (
+          getUserId() == userId || isAdmin()
+        );
+
+        // Create/Update/Delete: Only backend (Cloud Functions) or admins
+        // This prevents users from self-associating with tenants
+        allow write: if isAuthenticated() && isAdmin();
+      }
+
+      // -----------------------------------------------------------------------
+      // USER SESSIONS SUBCOLLECTION
+      // -----------------------------------------------------------------------
+
+      match /sessions/{sessionId} {
+        // Read: Only the user or admins
+        allow read: if isAuthenticated() && (
+          getUserId() == userId || isAdmin()
+        );
+
+        // Write: Only the user or admins
+        allow write: if isAuthenticated() && (
+          getUserId() == userId || isAdmin()
+        );
+      }
+
+      // Catch-all for other user subcollections
+      match /{document=**} {
+        allow read, write: if false;
+      }
+    }
+
+    // =========================================================================
+    // ORGANIZATIONS COLLECTION (Enterprise Tier)
+    // =========================================================================
+
+    match /organizations/{orgId} {
+      // Read: Org members or admins
+      allow read: if isAuthenticated() && (
+        exists(/databases/$(database)/documents/organizations/$(orgId)/members/$(getUserId())) ||
+        isAdmin()
+      );
+
+      // Write: Only admins
+      allow write: if isAuthenticated() && isAdmin();
+
+      // Organization members
+      match /members/{memberId} {
+        allow read: if isAuthenticated() && (
+          exists(/databases/$(database)/documents/organizations/$(orgId)/members/$(getUserId())) ||
+          isAdmin()
+        );
+        allow write: if isAuthenticated() && isAdmin();
+      }
+
+      // Organization tenants
+      match /tenants/{tenantId} {
+        allow read: if isAuthenticated() && (
+          exists(/databases/$(database)/documents/organizations/$(orgId)/members/$(getUserId())) ||
+          isAdmin()
+        );
+        allow write: if isAuthenticated() && isAdmin();
+      }
+
+      // Organization settings
+      match /settings/{document=**} {
+        allow read: if isAuthenticated() && (
+          exists(/databases/$(database)/documents/organizations/$(orgId)/members/$(getUserId())) ||
+          isAdmin()
+        );
+        allow write: if isAuthenticated() && isAdmin();
+      }
+    }
+
+    // =========================================================================
+    // AUDIT LOGS (Global - HIPAA Compliance)
+    // =========================================================================
+
+    match /audit_logs/{logId} {
+      // Read: Only admins (for compliance reporting)
+      allow read: if isAuthenticated() && isAdmin();
+
+      // Write: Only backend (Cloud Functions)
+      // Audit logs should be immutable once created
+      allow create: if false;  // Backend uses admin SDK
+      allow update, delete: if false;  // Immutable
+    }
+
+    // =========================================================================
+    // NOTIFICATIONS QUEUE (Global)
+    // =========================================================================
+
+    match /notifications_queue/{notificationId} {
+      // Read: Only the recipient or admins
+      allow read: if isAuthenticated() && (
+        getUserId() == resource.data.recipient_id || isAdmin()
+      );
+
+      // Create: Backend or admins
+      allow create: if isAuthenticated() && isAdmin();
+
+      // Update: Only to mark as read/delivered
+      allow update: if isAuthenticated() &&
+        getUserId() == resource.data.recipient_id &&
+        request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['read', 'delivered_at', 'read_at']);
+
+      // Delete: Backend after processing or admins
+      allow delete: if isAuthenticated() && isAdmin();
+    }
+
+    // =========================================================================
+    // DEFAULT DENY
+    // =========================================================================
+
+    // Catch-all rule: Deny everything else
     match /{document=**} {
       allow read, write: if false;
     }

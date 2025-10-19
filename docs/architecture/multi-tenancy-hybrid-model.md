@@ -86,7 +86,9 @@ Un tenant califica para silo model si cumple >= 2 de:
 
 ## 🗄️ Diseño de Datos: Firestore Multi-Tenant
 
-### Estructura Actual (Single-Tenant)
+### Estructura Actual (Single-Tenant) ⚠️ ESTADO ACTUAL
+
+**Estado (2025-10-18)**: El sistema actualmente usa estructura single-tenant
 
 ```
 /users/{userId}
@@ -97,6 +99,8 @@ Un tenant califica para silo model si cumple >= 2 de:
 
 **Problema**: No hay aislamiento por tenant, todos los datos en flat
 collections.
+
+**Migración**: PENDIENTE - Crítica para modelo de negocio multi-profesional
 
 ### Estructura Objetivo (Multi-Tenant - Pool Model)
 
@@ -724,5 +728,7 @@ async def rollback_migration():
 
 ---
 
-**Documento**: `docs/architecture/multi-tenancy-hybrid-model.md` **Version**:
-1.0 **Última actualización**: 2025-10-18 **Owner**: Architecture + Backend Team
+**Documento**: `docs/architecture/multi-tenancy-hybrid-model.md` **Versión**:
+1.1 **Última actualización**: 2025-10-18 **Estado Actual**: Single-tenant
+(migración a multi-tenant PENDIENTE) **Owner**: Architecture + Backend Team
+**Próxima revisión**: Antes de Fase 0 (migración Firestore)

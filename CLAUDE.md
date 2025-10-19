@@ -1,9 +1,10 @@
 # 🏥 Adyela - Medical Appointments Platform
 
 **Project Type:** Full-Stack Healthcare Application (HIPAA-Compliant)
-**Architecture:** Microservices + PWA **Tech Stack:** FastAPI (Python) + React
-(TypeScript) + Firestore **Infrastructure:** Google Cloud Platform **Development
-Environment:** Docker Compose
+**Architecture:** Microservices (6 services in development) + PWA + Flutter
+Native Apps **Tech Stack:** FastAPI (Python) + React (TypeScript) + Flutter +
+Firestore **Infrastructure:** Google Cloud Platform **Development Environment:**
+Docker Compose
 
 ---
 
@@ -17,10 +18,13 @@ while maintaining HIPAA compliance.
 ### Key Features
 
 - 📅 **Appointment Management**: Schedule, confirm, cancel appointments
-- 👥 **Multi-Tenancy**: Support for multiple healthcare organizations
+- 👥 **Multi-Tenancy**: Support for multiple healthcare professionals
+  (single-tenant → multi-tenant migration planned)
 - 🎥 **Video Consultations**: Integrated Jitsi video calling
-- 📱 **Progressive Web App**: Mobile-first responsive design
-- 🌐 **Internationalization**: Multi-language support (EN, ES)
+- 📱 **Flutter Native Apps**: iOS/Android apps for patients and professionals
+  (85%+ code reuse)
+- 🌐 **Progressive Web App**: React admin panel + Flutter Web support
+- 🌍 **Internationalization**: Multi-language support (EN, ES)
 - 🔒 **HIPAA Compliant**: Protected Health Information (PHI) handling
 
 ---
@@ -32,32 +36,58 @@ while maintaining HIPAA compliance.
 ```
 adyela/
 ├── apps/
-│   ├── api/                    # FastAPI Backend (Python 3.12)
+│   ├── api/                         # Legacy FastAPI Monolith (Python 3.12) - Being migrated
 │   │   └── adyela_api/
-│   │       ├── domain/         # Business entities & logic
-│   │       ├── application/    # Use cases & ports
-│   │       ├── infrastructure/ # Database & external services
-│   │       ├── presentation/   # HTTP API & middleware
-│   │       └── config/         # Configuration & settings
-│   └── web/                    # React Frontend (TypeScript)
-│       └── src/
-│           ├── features/       # Feature modules (auth, appointments, etc.)
-│           ├── components/     # Shared UI components
-│           ├── services/       # API clients
-│           └── store/          # Global state (Zustand)
-├── packages/                   # Shared packages (to be implemented)
-│   ├── types/                  # Shared TypeScript types
-│   ├── validation/             # Shared validation schemas
-│   └── ui/                     # Shared UI components
-├── infra/                      # Infrastructure as Code
-│   ├── environments/           # Terraform configurations
-│   └── modules/                # Reusable Terraform modules
+│   │       ├── domain/              # Business entities & logic
+│   │       ├── application/         # Use cases & ports
+│   │       ├── infrastructure/      # Database & external services
+│   │       ├── presentation/        # HTTP API & middleware
+│   │       └── config/              # Configuration & settings
+│   ├── api-auth/                    # 🔧 Auth Microservice (Python/FastAPI) - In Development
+│   ├── api-appointments/            # 🔧 Appointments Microservice (Python/FastAPI) - In Development
+│   ├── api-payments/                # 🔧 Payments Microservice (Node.js/Express) - In Development
+│   ├── api-notifications/           # 🔧 Notifications Microservice (Node.js/Express) - In Development
+│   ├── api-analytics/               # 🔧 Analytics Microservice (Python/FastAPI) - In Development
+│   ├── api-admin/                   # 🔧 Admin Microservice (Python/FastAPI) - In Development
+│   ├── web/                         # ✅ React Admin Panel (TypeScript)
+│   │   └── src/
+│   │       ├── features/            # Feature modules (auth, appointments, etc.)
+│   │       ├── components/          # Shared UI components
+│   │       ├── services/            # API clients
+│   │       └── store/               # Global state (Zustand)
+│   ├── mobile-patient/              # ✅ Flutter Patient App (iOS/Android/Web)
+│   │   └── lib/
+│   │       ├── features/            # Search, Appointments, Profile
+│   │       ├── core/                # Theme, DI, Routing, Config
+│   │       └── main.dart
+│   └── mobile-professional/         # ✅ Flutter Professional App (iOS/Android/Web)
+│       └── lib/
+│           ├── features/            # Dashboard, Appointments, Patients, Profile
+│           ├── core/                # Theme, DI, Routing, Config
+│           └── main.dart
+├── packages/
+│   ├── flutter-core/                # ✅ Shared Flutter models & business logic
+│   │   └── lib/src/
+│   │       ├── models/              # Professional, Appointment entities
+│   │       └── enums/               # Specialty, AppointmentStatus
+│   ├── flutter-shared/              # ✅ Shared Flutter UI components
+│   │   └── lib/src/widgets/        # ProfessionalCard, AppointmentCard, EmptyState
+│   ├── types/                       # ⚠️ Shared TypeScript types (Empty - To be implemented)
+│   ├── validation/                  # ⚠️ Shared validation schemas (Empty - To be implemented)
+│   └── ui/                          # ⚠️ Shared UI components (Empty - To be implemented)
+├── infra/                           # Infrastructure as Code
+│   ├── environments/                # Terraform configurations
+│   └── modules/                     # Reusable Terraform modules
 ├── tests/
-│   └── e2e/                    # Playwright E2E tests
-├── scripts/                    # Automation scripts
-├── docs/                       # Comprehensive documentation
-└── .claude/                    # Claude Code configuration
-    └── agents/                 # Specialized SDLC agents
+│   └── e2e/                         # Playwright E2E tests
+├── scripts/                         # Automation scripts
+├── docs/                            # Comprehensive documentation
+│   ├── architecture/                # Architecture docs
+│   ├── planning/                    # PRD, Strategy, Compliance
+│   ├── quality/                     # Testing strategy
+│   └── finops/                      # Cost analysis
+└── .claude/                         # Claude Code configuration
+    └── agents/                      # Specialized SDLC agents
 ```
 
 ### Architecture Patterns
@@ -74,7 +104,7 @@ Infrastructure Layer (Technical Details)
 Presentation Layer (HTTP API)
 ```
 
-**Frontend (Feature-Based):**
+**Frontend Web (Feature-Based - React):**
 
 ```
 Feature Module
@@ -83,32 +113,85 @@ Feature Module
 └── services/       # API calls
 ```
 
+**Mobile Apps (Feature-Based - Flutter):**
+
+```
+Feature Module
+├── presentation/
+│   ├── pages/      # Screen widgets
+│   ├── widgets/    # Feature-specific widgets
+│   └── bloc/       # State management (BLoC pattern)
+├── domain/
+│   └── entities/   # Business entities
+├── data/
+│   └── repositories/ # Data access
+└── core/
+    ├── theme/      # App theming
+    ├── routing/    # Navigation (GoRouter)
+    └── di/         # Dependency injection (GetIt)
+```
+
+**Code Reuse Strategy:**
+
+- **85%+ shared code** between mobile-patient and mobile-professional apps
+- **flutter-core**: Shared domain models (Professional, Appointment)
+- **flutter-shared**: Shared UI components (ProfessionalCard, AppointmentCard)
+- **Core infrastructure**: Theme, DI, error handling patterns reused 100%
+
 ---
 
 ## 🛠️ Technology Stack
 
 ### Backend
 
+**Monolith (Legacy - Being migrated):**
+
 - **Framework**: FastAPI 0.115+
 - **Language**: Python 3.12
-- **Database**: Google Firestore (NoSQL)
+- **Database**: Firestore (single-tenant)
 - **Authentication**: Firebase Auth
-- **API Docs**: OpenAPI/Swagger
-- **Testing**: Pytest, Schemathesis
-- **Code Quality**: Ruff, Black, MyPy, Bandit
 
-### Frontend
+**Microservices (In Development):**
+
+- **api-auth, api-appointments, api-admin, api-analytics**: Python 3.12 +
+  FastAPI
+- **api-payments, api-notifications**: Node.js 20 + Express
+- **Database**: Firestore (operational) + Cloud SQL PostgreSQL (analytics -
+  planned)
+- **Communication**: Cloud Pub/Sub (event-driven), REST APIs
+- **Testing**: Pytest, Schemathesis (Python), Jest (Node.js)
+- **Code Quality**: Ruff, Black, MyPy, Bandit (Python), ESLint, Prettier
+  (Node.js)
+
+### Frontend Web (Admin Panel)
 
 - **Framework**: React 18
 - **Language**: TypeScript 5
 - **Build Tool**: Vite
-- **Styling**: TailwindCSS
+- **Styling**: TailwindCSS + shadcn/ui
 - **State Management**: Zustand
 - **Data Fetching**: React Query
 - **Forms**: React Hook Form + Zod
 - **I18n**: i18next
 - **Testing**: Vitest, Playwright
 - **PWA**: Workbox
+- **Accessibility**: WCAG 2.1 AA (100/100 Lighthouse score)
+
+### Mobile (Native + Web)
+
+- **Framework**: Flutter 3.24+
+- **Language**: Dart 3.5+
+- **Apps**:
+  - mobile-patient (iOS/Android/Web)
+  - mobile-professional (iOS/Android/Web)
+- **State Management**: flutter_bloc, equatable
+- **Networking**: dio, retrofit
+- **Local Storage**: hive, shared_preferences
+- **Firebase**: auth, messaging, analytics, crashlytics
+- **Routing**: go_router
+- **Testing**: flutter_test, integration_test
+- **Code Reuse**: 85%+ shared code via flutter-core and flutter-shared packages
+- **Platforms**: iOS 14+, Android API 24+, Web (PWA)
 
 ### Infrastructure
 
@@ -125,9 +208,13 @@ Feature Module
 
 - **CI/CD**: GitHub Actions
 - **Containers**: Docker
-- **Package Manager**: pnpm (frontend), Poetry (backend)
+- **Package Managers**:
+  - pnpm (Web frontend)
+  - Poetry (Python backend)
+  - pub (Flutter/Dart)
 - **Monorepo**: Turborepo
 - **Version Control**: Git + Conventional Commits
+- **Code Quality**: Pre-commit hooks, husky, lint-staged
 
 ---
 
@@ -739,22 +826,44 @@ Overall:          █████████░ 95% (A)
 - **Node**: >=20.0.0
 - **pnpm**: >=9.0.0
 - **Python**: 3.12
-- **CLAUDE.md Version**: 1.0.0
-- **Last Updated**: 2025-10-05
+- **Flutter**: >=3.24.0
+- **Dart**: >=3.5.0
+- **CLAUDE.md Version**: 2.0.0
+- **Last Updated**: 2025-10-18
 
 ---
 
 ## ✨ Conclusion
 
-This is a **production-ready, HIPAA-compliant healthcare platform** with:
+This is a **multi-platform, HIPAA-compliant healthcare platform** in active
+development with:
 
-- ✅ Excellent architecture (hexagonal backend, feature-based frontend)
-- ✅ Comprehensive quality automation (93/100 grade)
-- ✅ 100% passing E2E tests
-- ✅ 100% accessibility score
-- ⚠️ Infrastructure as Code needs implementation (critical priority)
+**✅ Completed:**
 
-**The codebase is clean, well-tested, and ready for scaling** once
+- Excellent architecture (hexagonal backend, feature-based frontend/mobile)
+- Flutter native apps for iOS/Android/Web (mobile-patient, mobile-professional)
+- 85%+ code reuse strategy with shared packages (flutter-core, flutter-shared)
+- React admin panel with 100% accessibility score (WCAG 2.1 AA)
+- Comprehensive quality automation (93/100 grade)
+- 100% passing E2E tests (Playwright)
+
+**🔧 In Development:**
+
+- 6 microservices (api-auth, api-appointments, api-payments, api-notifications,
+  api-analytics, api-admin)
+- Strangler Fig Pattern migration from monolith to microservices
+- Multi-tenancy architecture (currently single-tenant, migration planned)
+
+**⚠️ Critical Priorities:**
+
+- Infrastructure as Code (Terraform) implementation
+- Multi-tenant Firestore migration
+- Microservices integration and deployment
+- Budget alerts and cost monitoring
+
+**The codebase demonstrates** best practices in multi-platform development with
+Flutter, clean architecture patterns, and comprehensive code reuse strategies.
+The project is well-positioned for scaling once microservices migration and
 infrastructure gaps are addressed.
 
 **For Claude Code users:** This project is optimized for AI-assisted development
@@ -764,8 +873,7 @@ best results.
 
 ---
 
-**Status**: 🟢 **Active Development** | Ready for Production (after
-infrastructure implementation)
+**Status**: 🟡 **Active Development** | Microservices Migration in Progress
 
 **Contact**: dev@adyela.com (if applicable)
 

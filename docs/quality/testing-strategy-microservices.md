@@ -301,15 +301,31 @@ pnpm test:coverage
 pnpm test --watch
 ```
 
-### Mobile Unit Tests (Flutter)
+### Mobile Unit Tests (Flutter) ✅ IMPLEMENTADO
 
-**Ejemplo - Widget Test**:
+**Estructura de Tests Flutter**:
+
+```
+apps/mobile-patient/
+└── test/
+    ├── unit/              # Tests de lógica de negocio
+    ├── widget/            # Tests de widgets (UI)
+    └── integration/       # Tests de integración Flutter
+
+packages/flutter-shared/
+└── test/
+    ├── professional_card_test.dart  # ✅ Shared widget tests
+    ├── appointment_card_test.dart   # ✅ Shared widget tests
+    └── empty_state_test.dart        # ✅ Shared widget tests
+```
+
+**Ejemplo - Widget Test (Shared Component)**:
 
 ```dart
-// apps/mobile-patient/test/features/appointments/appointment_card_test.dart
+// packages/flutter-shared/test/appointment_card_test.dart
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mobile_patient/features/appointments/widgets/appointment_card.dart';
-import 'package:mobile_patient/features/appointments/models/appointment.dart';
+import 'package:flutter_shared/flutter_shared.dart';
+import 'package:flutter_core/flutter_core.dart';
 
 void main() {
   group('AppointmentCard', () {
@@ -1034,5 +1050,7 @@ jobs:
 
 ---
 
-**Documento**: `docs/quality/testing-strategy-microservices.md` **Version**: 1.0
-**Última actualización**: 2025-10-18 **Owner**: QA + Engineering Team
+**Documento**: `docs/quality/testing-strategy-microservices.md` **Versión**: 1.1
+**Última actualización**: 2025-10-18 **Estado**: Flutter testing section
+agregada, E2E tests pending **Owner**: QA + Engineering Team **Próxima
+revisión**: Implementación de tests E2E Flutter

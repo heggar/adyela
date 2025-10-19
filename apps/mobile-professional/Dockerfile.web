@@ -1,0 +1,137 @@
+# Multi-stage Dockerfile for Flutter Web Application (Professional)
+# Stage 1: Build Flutter web app
+# Stage 2: Serve with nginx
+
+# ============================================================================
+# Stage 1: Build Flutter Web App
+# ============================================================================
+FROM ghcr.io/cirruslabs/flutter:3.24.0 AS builder
+
+WORKDIR /app
+
+# Copy pubspec files for dependency resolution
+COPY pubspec.yaml pubspec.lock ./
+COPY packages/flutter-core/pubspec.yaml packages/flutter-core/
+COPY packages/flutter-shared/pubspec.yaml packages/flutter-shared/
+
+# Install dependencies
+RUN flutter pub get
+
+# Copy shared packages
+COPY packages/ ./packages/
+
+# Copy application source
+COPY lib/ ./lib/
+COPY web/ ./web/
+COPY assets/ ./assets/
+
+# Build Flutter web app with optimizations
+# --web-renderer=canvaskit: Use CanvasKit for better graphics performance
+# --release: Production build with optimizations
+# --dart-define: Pass environment variables to the app
+ARG API_URL=https://api.staging.adyela.care
+ARG ENVIRONMENT=staging
+
+RUN flutter build web \
+    --web-renderer=canvaskit \
+    --release \
+    --dart-define=API_URL=${API_URL} \
+    --dart-define=ENVIRONMENT=${ENVIRONMENT} \
+    --no-tree-shake-icons
+
+# ============================================================================
+# Stage 2: Serve with Nginx
+# ============================================================================
+FROM nginx:1.27-alpine
+
+# Install runtime dependencies
+RUN apk add --no-cache \
+    ca-certificates \
+    tzdata
+
+# Copy nginx configuration
+COPY <<EOF /etc/nginx/conf.d/default.conf
+server {
+    listen 8080;
+    server_name _;
+
+    # Security headers
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-XSS-Protection "1; mode=block" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+
+    # Content Security Policy for Flutter web
+    add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.gstatic.com https://www.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: https: blob:; connect-src 'self' https://api.staging.adyela.care https://*.googleapis.com https://*.firebaseapp.com wss://*.firebaseio.com; frame-src 'self' https://*.firebaseapp.com; worker-src 'self' blob:; object-src 'none';" always;
+
+    # Root directory
+    root /usr/share/nginx/html;
+    index index.html;
+
+    # Compression
+    gzip on;
+    gzip_vary on;
+    gzip_min_length 1024;
+    gzip_types text/plain text/css text/xml text/javascript application/javascript application/xml+rss application/json image/svg+xml;
+
+    # Cache control for Flutter web assets
+    location /assets/ {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+    }
+
+    location /canvaskit/ {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+    }
+
+    location ~* \.(js|css|woff|woff2|ttf|eot)$ {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+    }
+
+    # No cache for HTML files
+    location ~* \.html$ {
+        expires -1;
+        add_header Cache-Control "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0";
+    }
+
+    # SPA fallback - serve index.html for all routes
+    location / {
+        try_files \$uri \$uri/ /index.html;
+    }
+
+    # Health check endpoint
+    location /health {
+        access_log off;
+        return 200 "healthy\n";
+        add_header Content-Type text/plain;
+    }
+}
+EOF
+
+# Copy built Flutter web app from builder stage
+COPY --from=builder /app/build/web /usr/share/nginx/html
+
+# Use non-root user for security
+RUN chown -R nginx:nginx /usr/share/nginx/html && \
+    chmod -R 755 /usr/share/nginx/html
+
+# Create nginx cache directory
+RUN mkdir -p /var/cache/nginx && \
+    chown -R nginx:nginx /var/cache/nginx && \
+    chown -R nginx:nginx /var/log/nginx && \
+    chown -R nginx:nginx /etc/nginx/conf.d
+
+# Switch to non-root user
+USER nginx
+
+# Expose port 8080 (Cloud Run requirement)
+EXPOSE 8080
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD wget --quiet --tries=1 --spider http://localhost:8080/health || exit 1
+
+# Start nginx
+CMD ["nginx", "-g", "daemon off;"]

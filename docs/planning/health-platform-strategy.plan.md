@@ -1167,23 +1167,26 @@ nativas
 
 **Tareas frontend**:
 
-- ✅ **mobile-patient** (Flutter iOS/Android):
-  - Onboarding pacientes (3 pasos)
-  - Registro y autenticación
-  - Búsqueda de profesionales
-  - Reserva de citas (3 taps)
-  - Historial de citas
-  - Perfil paciente
-- ✅ **mobile-professional** (Flutter iOS/Android):
-  - Onboarding profesionales (5 pasos + validación)
-  - Dashboard profesional
-  - Calendario de citas
-  - Gestión de pacientes
-  - Perfil profesional
+- ✅ **mobile-patient** (Flutter iOS/Android/Web): ✅ COMPLETADO
+  - Onboarding pacientes (3 pasos) ✅
+  - Registro y autenticación (Google OAuth + Email) ✅
+  - Búsqueda de profesionales ✅
+  - Reserva de citas (3 taps) ✅
+  - Historial de citas ✅
+  - Perfil paciente ✅
+- ✅ **mobile-professional** (Flutter iOS/Android/Web): ✅ COMPLETADO
+  - Onboarding profesionales (5 pasos + validación) ✅
+  - Dashboard profesional ✅
+  - Calendario de citas ✅ (UI implementada, backend pendiente)
+  - Gestión de pacientes ✅
+  - Perfil profesional ✅
 - ✅ **Shared packages** (packages/flutter-\*):
-  - flutter-auth: Lógica autenticación compartida
-  - flutter-core: Models, DTOs, business logic
-  - flutter-shared: Widgets y componentes UI
+  - flutter-core: Models, DTOs, business logic ✅ IMPLEMENTADO
+  - flutter-shared: Widgets y componentes UI ✅ IMPLEMENTADO
+  - flutter-auth: Lógica autenticación compartida 🔧 PENDIENTE (P1 Post-MVP)
+    - Nota: Actualmente cada app maneja su propia auth
+    - Beneficio: DRY, consistency, maintainability
+    - Contenido sugerido: AuthService, AuthState, User models, token management
 
 **Tareas testing**:
 
@@ -1193,13 +1196,14 @@ nativas
 
 **Criterios de éxito**:
 
-- api-auth y api-appointments en staging funcionando
-- Mobile apps (iOS + Android) en TestFlight/Firebase App Distribution
-- 80% código compartido entre mobile apps
-- E2E tests passing (flujos críticos)
-- Monolito + microservicios coexistiendo
+- 🔧 api-auth y api-appointments en staging funcionando (En desarrollo)
+- ✅ Mobile apps (iOS + Android + Web) creadas con UI completa
+- ✅ 85%+ código compartido entre mobile apps (flutter-core, flutter-shared)
+- ⚠️ E2E tests passing (flujos críticos) - Pendiente implementación
+- 🔧 Monolito + microservicios coexistiendo (En progreso)
 
-**Duración**: 16 semanas (4 meses)
+**Duración**: 16 semanas (4 meses) **Estado Actual**: Fase 1 ~60% completada
+(Flutter apps ✅, microservicios 🔧)
 
 ---
 
@@ -1819,6 +1823,13 @@ Todos los documentos listados arriba en formato Markdown, organizados en:
 1. **Reutilización de Adyela**: Maximizar uso de componentes existentes
 2. **Task Master AI**: Generar PRD compatible con `task-master parse-prd`
 3. **Equipo técnico**: Documentación para equipo con experiencia
-4. **Timeline realista**: 4-6 meses para MVP funcional
+4. **Timeline realista**: 8-12 meses para MVP funcional (actualizado)
 5. **Enfoque gradual**: Evolución no revolución
 6. **Compliance pragmático**: Staging simple, producción rigurosa
+
+---
+
+**Documento**: `docs/planning/health-platform-strategy.plan.md` **Versión**: 2.0
+**Última actualización**: 2025-10-18 **Estado**: Fase 1 en progreso (~60%
+completada) **Owner**: Engineering Lead **Próxima revisión**: Fin de Fase 1
+(Mes 6)

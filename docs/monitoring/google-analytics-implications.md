@@ -489,5 +489,5 @@ def log_metric(metric_name: str, value: float):
 
 ---
 
-**Última actualización:** 2025-10-07 **Proyecto:** Adyela (Healthcare
+**Última actualización:** 2025-10-18 **Proyecto:** Adyela (Healthcare
 Application) **Compliance:** HIPAA, GDPR

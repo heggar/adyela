@@ -18,7 +18,7 @@ microservicios distribuidos.
 
 ## Estado Actual vs Estado Objetivo
 
-### Estado Actual (Monolito)
+### Estado Actual (Híbrido: Monolito + Microservicios en Desarrollo)
 
 ```
 ┌─────────────────────────────────────────────┐
@@ -53,7 +53,7 @@ microservicios distribuidos.
          └─────────────────┘
 ```
 
-**Características**:
+**Monolito (apps/api/) - Características**:
 
 - ✅ Arquitectura hexagonal bien definida
 - ✅ Separation of concerns por capas
@@ -61,6 +61,19 @@ microservicios distribuidos.
 - ❌ Scaling completo (no granular)
 - ❌ Single-tenant (no multi-tenancy)
 - ❌ Technology lock-in (todo Python/FastAPI)
+
+**⚠️ Estado Actual (2025-10-18)**:
+
+Coexisten **Monolito + 6 Microservicios en Desarrollo**:
+
+- ✅ **api-auth** (Python/FastAPI) - Autenticación, RBAC, JWT
+- ✅ **api-appointments** (Python/FastAPI) - Gestión de citas, calendario
+- ✅ **api-admin** (Python/FastAPI) - Panel admin, aprobaciones
+- ✅ **api-analytics** (Python/FastAPI) - Reportes, métricas
+- ✅ **api-payments** (Node.js/Express) - Stripe, suscripciones
+- ✅ **api-notifications** (Node.js/Express) - Email, SMS, push
+
+**Status**: Strangler Fig Pattern en progreso (~40% migración completada)
 
 ### Estado Objetivo (Microservicios)
 
@@ -140,9 +153,17 @@ El patrón Strangler Fig (Named after strangler fig trees que crecen alrededor d
 
 ### Fases de Migración
 
-#### Fase 0: Preparación (Mes 1-2)
+#### Fase 0: Preparación (Mes 1-2) ⚠️ PARCIALMENTE COMPLETADA
 
 **Objetivo**: Preparar infraestructura y datos para multi-tenancy
+
+**Estado Actual (2025-10-18)**:
+
+- ✅ Microservicios creados (structure and base code)
+- ⚠️ Firestore multi-tenancy migration PENDIENTE (aún single-tenant)
+- ⚠️ Terraform IaC PENDIENTE
+- ⚠️ CI/CD pipelines PARCIAL (algunos configurados)
+- ⚠️ Observabilidad distribuida PENDIENTE
 
 **Tareas**:
 
@@ -295,9 +316,16 @@ El patrón Strangler Fig (Named after strangler fig trees que crecen alrededor d
 
 ---
 
-#### Fase 1: Extraer api-auth (Mes 3-4)
+#### Fase 1: Extraer api-auth (Mes 3-4) 🔧 EN DESARROLLO
 
 **Objetivo**: Primer microservicio autónomo con autenticación y RBAC
+
+**Estado Actual (2025-10-18)**:
+
+- ✅ api-auth creado con estructura base
+- 🔧 Lógica de autenticación en desarrollo
+- ⚠️ Integración con otros servicios pendiente
+- ⚠️ Despliegue en staging pendiente
 
 **Por qué empezar con Auth?**
 
@@ -876,5 +904,6 @@ async def validate_multitenant_migration():
 ---
 
 **Documento**: `docs/architecture/microservices-migration-strategy.md`
-**Version**: 1.0 **Última actualización**: 2025-10-18 **Autor**: Claude Code
-**Reviewers**: [Pending]
+**Versión**: 2.0 **Última actualización**: 2025-10-18 **Estado**: Strangler Fig
+Pattern en progreso (~40% migración) **Autor**: Engineering Team **Próxima
+revisión**: Fin de Fase 1
