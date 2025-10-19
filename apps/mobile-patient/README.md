@@ -13,7 +13,8 @@ health.
 
 ### MVP Features (Phase 1)
 
-- [ ] User authentication (Google, Facebook, Apple, Email)
+- [x] User authentication (Email, Google) - ✅ Implemented
+- [ ] User authentication (Facebook, Apple) - 🚧 Planned
 - [ ] Professional search and discovery
 - [ ] Professional profile view
 - [ ] Appointment booking (3-tap flow)
