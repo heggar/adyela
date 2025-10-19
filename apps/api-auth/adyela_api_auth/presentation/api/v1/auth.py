@@ -1,28 +1,53 @@
 """
 Authentication endpoints
 """
-from fastapi import APIRouter, HTTPException, status
-from fastapi.responses import JSONResponse
+import logging
 
+from fastapi import APIRouter, Depends, HTTPException, status
+
+from adyela_api_auth.application.ports import (
+    get_login_user_use_case,
+    get_oauth_login_use_case,
+    get_refresh_token_use_case,
+    get_register_user_use_case,
+    get_validate_token_use_case,
+)
+from adyela_api_auth.application.use_cases import (
+    LoginUserUseCase,
+    OAuthLoginUseCase,
+    RefreshTokenUseCase,
+    RegisterUserUseCase,
+    ValidateTokenUseCase,
+)
+from adyela_api_auth.domain.entities.user import UserRole
 from adyela_api_auth.presentation.schemas.auth import (
     LoginRequest,
     LoginResponse,
+    OAuthLoginRequest,
+    OAuthLoginResponse,
+    RefreshTokenRequest,
+    RefreshTokenResponse,
     RegisterRequest,
     RegisterResponse,
     TokenValidationRequest,
     TokenValidationResponse,
 )
 
+logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
 @router.post("/register", response_model=RegisterResponse, status_code=status.HTTP_201_CREATED)
-async def register(request: RegisterRequest):
+async def register(
+    request: RegisterRequest,
+    use_case: RegisterUserUseCase = Depends(get_register_user_use_case),
+):
     """
     Register a new user with email and password.
 
     Args:
         request: Registration data (email, password, full_name)
+        use_case: Register user use case (injected)
 
     Returns:
         RegisterResponse with user data and access token
@@ -30,27 +55,45 @@ async def register(request: RegisterRequest):
     Raises:
         HTTPException: If email already exists or validation fails
     """
-    # TODO: Implement registration logic
-    # 1. Validate email doesn't exist
-    # 2. Hash password
-    # 3. Create user in Firestore
-    # 4. Create Firebase Auth account
-    # 5. Generate JWT token
-    # 6. Send verification email
+    try:
+        # Get role from request (default: PATIENT)
+        role = UserRole(request.role) if request.role else UserRole.PATIENT
 
-    raise HTTPException(
-        status_code=status.HTTP_501_NOT_IMPLEMENTED,
-        detail="Registration endpoint not yet implemented",
-    )
+        # Execute registration use case
+        result = await use_case.execute(
+            email=request.email,
+            password=request.password,
+            full_name=request.full_name,
+            role=role,
+        )
+
+        return RegisterResponse(**result)
+
+    except ValueError as e:
+        logger.error(f"Registration failed: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        )
+    except Exception as e:
+        logger.error(f"Unexpected error during registration: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Registration failed",
+        )
 
 
 @router.post("/login", response_model=LoginResponse)
-async def login(request: LoginRequest):
+async def login(
+    request: LoginRequest,
+    use_case: LoginUserUseCase = Depends(get_login_user_use_case),
+):
     """
     Login with email and password.
 
     Args:
         request: Login credentials (email, password)
+        use_case: Login user use case (injected)
 
     Returns:
         LoginResponse with user data and access token
@@ -58,17 +101,27 @@ async def login(request: LoginRequest):
     Raises:
         HTTPException: If credentials are invalid
     """
-    # TODO: Implement login logic
-    # 1. Validate credentials
-    # 2. Check user is active
-    # 3. Update last_login_at
-    # 4. Generate JWT token
-    # 5. Return user data and token
+    try:
+        # Execute login use case
+        result = await use_case.execute(
+            email=request.email,
+            password=request.password,
+        )
 
-    raise HTTPException(
-        status_code=status.HTTP_501_NOT_IMPLEMENTED,
-        detail="Login endpoint not yet implemented",
-    )
+        return LoginResponse(**result)
+
+    except ValueError as e:
+        logger.error(f"Login failed for {request.email}: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid email or password",
+        )
+    except Exception as e:
+        logger.error(f"Unexpected error during login: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Login failed",
+        )
 
 
 @router.post("/login/google")
