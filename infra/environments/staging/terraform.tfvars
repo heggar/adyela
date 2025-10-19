@@ -12,7 +12,7 @@ environment = "staging"
 artifact_registry_repository = "adyela"
 
 # Network configuration
-allowed_ips = []  # Empty for staging (allow all)
+allowed_ips = [] # Empty for staging (allow all)
 
 # Contact information
 contact_email = "hever_gonzalezg@adyela.care"
