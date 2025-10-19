@@ -1,0 +1,31 @@
+name: flutter_core
+description: Core models, entities, and business logic shared across Adyela Flutter apps
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: ">=3.5.0 <4.0.0"
+
+dependencies:
+  # Functional programming
+  dartz: ^0.10.1
+
+  # Value equality
+  equatable: ^2.0.5
+
+  # JSON serialization
+  json_annotation: ^4.8.1
+
+  # Date/time utilities
+  intl: ^0.18.1
+
+dev_dependencies:
+  # Testing
+  test: ^1.24.0
+
+  # Code generation
+  build_runner: ^2.4.6
+  json_serializable: ^6.7.1
+
+  # Linting
+  flutter_lints: ^3.0.0

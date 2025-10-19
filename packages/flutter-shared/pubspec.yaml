@@ -1,0 +1,29 @@
+name: flutter_shared
+description: Shared widgets, theme, and UI components for Adyela Flutter apps
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: ">=3.5.0 <4.0.0"
+  flutter: ">=3.24.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Core package
+  flutter_core:
+    path: ../flutter-core
+
+  # UI
+  cached_network_image: ^3.3.1
+  shimmer: ^3.0.0
+
+  # Utils
+  intl: ^0.18.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^3.0.0
